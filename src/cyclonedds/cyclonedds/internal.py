@@ -15,8 +15,27 @@ import uuid
 import inspect
 import platform
 import ctypes as ct
+from typing import Optional
 from functools import wraps
 from dataclasses import dataclass
+
+
+def _load_in_wheel() -> Optional[ct.CDLL]:
+    """If cyclonedds is running from a wheel installation the CycloneDDS library is
+    added to the installation by 'auditwheel'. It will be in a predictable location under
+    site-packages/cyclone.libs. If it is there we should use it, because ddspy for sure will
+    (auditwheel hard-links to that particular ddsc and ignores any system ones)
+    """
+    try:
+        import ddspy
+        dir = os.path.join(os.path.abspath(os.path.dirname(ddspy.__file__)), "cyclonedds.libs")
+        for file in os.listdir(dir):
+            if "ddsc" in file:
+                return ct.CDLL(os.path.join(dir, file))
+    except Exception:
+        pass
+
+    return None
 
 
 def load_cyclonedds() -> ct.CDLL:
@@ -29,6 +48,10 @@ def load_cyclonedds() -> ct.CDLL:
 
     if 'CDDS_NO_IMPORT_LIBS' in os.environ:
         return None
+
+    wheel_lib = _load_in_wheel()
+    if wheel_lib:
+        return wheel_lib
 
     if 'ddsc' in os.environ:
         # library was directly specified in environment variables
@@ -152,16 +175,6 @@ def c_callable(return_type, argument_types) -> ct.CFUNCTYPE:
         Decorator. Make a C function type based on python type annotations.
     """
     return ct.CFUNCTYPE(return_type, *argument_types)
-
-
-class DDS:
-    """
-        Common class for all DDS related classes. This class enables the c_call magic.
-    """
-    _dll_handle = load_cyclonedds()
-
-    def __init__(self, reference: int) -> None:
-        self._ref = reference
 
 
 @dataclass
@@ -289,3 +302,13 @@ class dds_c_t:  # noqa N801
             ('buf', ct.c_void_p),
             ('len', ct.c_size_t)
         ]
+
+
+class DDS:
+    """
+        Common class for all DDS related classes. This class enables the c_call magic.
+    """
+    _dll_handle = load_cyclonedds()
+
+    def __init__(self, reference: int) -> None:
+        self._ref = reference

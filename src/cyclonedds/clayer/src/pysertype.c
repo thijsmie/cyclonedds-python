@@ -1677,7 +1677,7 @@ PyMethodDef ddspy_funcs[] = {
 char ddspymod_docs[] = "This is hello world module.";
 
 void free_ddspy(void) {
-    Py_DECREF(sampleinfo_descriptor);
+    Py_XDECREF(sampleinfo_descriptor);
 }
 
 PyModuleDef ddspy_mod = {
@@ -1693,7 +1693,7 @@ PyModuleDef ddspy_mod = {
 };
 
 PyMODINIT_FUNC PyInit_ddspy(void) {
-    PyObject* import = PyImport_ImportModule("cyclonedds.internal"); 
+    PyObject* import = PyImport_ImportModule("cyclonedds.internal");
     sampleinfo_descriptor = PyObject_GetAttrString(import, "SampleInfo");
     Py_DECREF(import);
 	return PyModule_Create(&ddspy_mod);
