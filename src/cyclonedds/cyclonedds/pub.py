@@ -10,11 +10,13 @@
  * SPDX-License-Identifier: EPL-2.0 OR BSD-3-Clause
 """
 
-from typing import Optional, TYPE_CHECKING
+from typing import Union, Optional, Generic, TypeVar
 
-from .internal import c_call, dds_c_t
-from .core import Entity, DDSException
-from .qos import _CQos
+from .internal import SupportsSerialization, c_call, dds_c_t
+from .core import Entity, Listener, DDSException
+from .domain import DomainParticipant
+from .topic import Topic
+from .qos import Qos, _CQos
 
 from ddspy import ddspy_write, ddspy_write_ts, ddspy_dispose, ddspy_writedispose, ddspy_writedispose_ts, \
     ddspy_dispose_handle, ddspy_dispose_handle_ts, ddspy_register_instance, ddspy_unregister_instance,   \
@@ -22,16 +24,12 @@ from ddspy import ddspy_write, ddspy_write_ts, ddspy_dispose, ddspy_writedispose
     ddspy_lookup_instance, ddspy_dispose_ts
 
 
-if TYPE_CHECKING:
-    import cyclonedds
-
-
 class Publisher(Entity):
     def __init__(
             self,
-            domain_participant: 'cyclonedds.domain.DomainParticipant',
-            qos: Optional['cyclonedds.core.Qos'] = None,
-            listener: Optional['cyclonedds.core.Listener'] = None):
+            domain_participant: DomainParticipant,
+            qos: Optional[Qos] = None,
+            listener: Optional[Listener] = None):
         cqos = _CQos.qos_to_cqos(qos) if qos else None
         super().__init__(
             self._create_publisher(
@@ -44,19 +42,19 @@ class Publisher(Entity):
         if cqos:
             _CQos.cqos_destroy(cqos)
 
-    def suspend(self):
+    def suspend(self) -> None:
         ret = self._suspend(self._ref)
         if ret == 0:
             return
         raise DDSException(ret, f"Occurred while suspending {repr(self)}")
 
-    def resume(self):
+    def resume(self) -> None:
         ret = self._resume(self._ref)
         if ret == 0:
             return
         raise DDSException(ret, f"Occurred while resuming {repr(self)}")
 
-    def wait_for_acks(self, timeout: int):
+    def wait_for_acks(self, timeout: int) -> bool:
         ret = self._wait_for_acks(self._ref, timeout)
         if ret == 0:
             return True
@@ -82,12 +80,19 @@ class Publisher(Entity):
         pass
 
 
-class DataWriter(Entity):
-    def __init__(self, publisher: 'cyclonedds.pub.Publisher', topic: 'cyclonedds.topic.Topic', qos=None, listener=None):
+_T = TypeVar("_T", bound=SupportsSerialization)
+
+
+class DataWriter(Entity, Generic[_T]):
+    def __init__(self,
+            publisher_or_participant: Union[Publisher, DomainParticipant],
+            topic: Topic[_T],
+            qos: Optional[Qos] = None,
+            listener: Optional[Listener] = None) -> None:
         cqos = _CQos.qos_to_cqos(qos) if qos else None
         super().__init__(
             self._create_writer(
-                publisher._ref,
+                publisher_or_participant._ref,
                 topic._ref,
                 cqos,
                 listener._ref if listener else None
@@ -97,7 +102,7 @@ class DataWriter(Entity):
         if cqos:
             _CQos.cqos_destroy(cqos)
 
-    def write(self, sample, timestamp=None):
+    def write(self, sample: _T, timestamp: int = None) -> None:
         if timestamp is not None:
             ret = ddspy_write_ts(self._ref, sample.serialize(), timestamp)
         else:
@@ -106,7 +111,7 @@ class DataWriter(Entity):
         if ret < 0:
             raise DDSException(ret, f"Occurred while writing sample in {repr(self)}")
 
-    def write_dispose(self, sample, timestamp=None):
+    def write_dispose(self, sample: _T, timestamp: int = None) -> None:
         if timestamp is not None:
             ret = ddspy_writedispose_ts(self._ref, sample.serialize(), timestamp)
         else:
@@ -115,7 +120,7 @@ class DataWriter(Entity):
         if ret < 0:
             raise DDSException(ret, f"Occurred while writedisposing sample in {repr(self)}")
 
-    def dispose(self, sample, timestamp=None):
+    def dispose(self, sample: _T, timestamp: int = None) -> None:
         if timestamp is not None:
             ret = ddspy_dispose_ts(self._ref, sample.serialize(), timestamp)
         else:
@@ -124,7 +129,7 @@ class DataWriter(Entity):
         if ret < 0:
             raise DDSException(ret, f"Occurred while disposing in {repr(self)}")
 
-    def dispose_instance_handle(self, handle, timestamp=None):
+    def dispose_instance_handle(self, handle: int, timestamp: int = None) -> None:
         if timestamp is not None:
             ret = ddspy_dispose_handle_ts(self._ref, handle, timestamp)
         else:
@@ -133,13 +138,13 @@ class DataWriter(Entity):
         if ret < 0:
             raise DDSException(ret, f"Occurred while disposing in {repr(self)}")
 
-    def register_instance(self, sample):
+    def register_instance(self, sample: _T) -> int:
         ret = ddspy_register_instance(self._ref, sample.serialize())
         if ret < 0:
             raise DDSException(ret, f"Occurred while registering instance in {repr(self)}")
         return ret
 
-    def unregister_instance(self, sample, timestamp: int = None):
+    def unregister_instance(self, sample: _T, timestamp: int = None) -> None:
         if timestamp is not None:
             ret = ddspy_unregister_instance_ts(self._ref, sample.serialize(), timestamp)
         else:
@@ -148,7 +153,7 @@ class DataWriter(Entity):
         if ret < 0:
             raise DDSException(ret, f"Occurred while unregistering instance in {repr(self)}")
 
-    def unregister_instance_handle(self, handle, timestamp: int = None):
+    def unregister_instance_handle(self, handle: int, timestamp: int = None) -> None:
         if timestamp is not None:
             ret = ddspy_unregister_instance_handle_ts(self._ref, handle, timestamp)
         else:
@@ -157,7 +162,7 @@ class DataWriter(Entity):
         if ret < 0:
             raise DDSException(ret, f"Occurred while unregistering instance handle n {repr(self)}")
 
-    def wait_for_acks(self, timeout: int):
+    def wait_for_acks(self, timeout: int) -> bool:
         ret = self._wait_for_acks(self._ref, timeout)
         if ret == 0:
             return True
@@ -165,7 +170,7 @@ class DataWriter(Entity):
             return False
         raise DDSException(ret, f"Occurred while waiting for acks from {repr(self)}")
 
-    def lookup_instance(self, sample):
+    def lookup_instance(self, sample: _T) -> Optional[int]:
         ret = ddspy_lookup_instance(self._ref, sample.serialize())
         if ret < 0:
             raise DDSException(ret, f"Occurred while lookup up instance from {repr(self)}")

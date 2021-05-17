@@ -17,6 +17,7 @@ import platform
 import ctypes as ct
 from functools import wraps
 from dataclasses import dataclass
+from typing import TYPE_CHECKING, Type, TypeVar, Generic
 
 
 def load_cyclonedds() -> ct.CDLL:
@@ -289,3 +290,11 @@ class dds_c_t:  # noqa N801
             ('buf', ct.c_void_p),
             ('len', ct.c_size_t)
         ]
+
+
+_U = TypeVar("_U", bound="SupportsSerialization")
+
+class SupportsSerialization(Generic[_U]):
+    def serialize(self: _U) -> bytes: ...
+    @classmethod
+    def deserialize(self: _U, data: bytes) -> _U: ...

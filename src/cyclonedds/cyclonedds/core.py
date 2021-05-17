@@ -23,6 +23,7 @@ if TYPE_CHECKING:
     import cyclonedds
 
 
+
 class DDSException(Exception):
     """This exception is thrown when a return code from the underlying C api indicates non-valid use of the API.
     Print the exception directly or convert it to string for a detailed description.
