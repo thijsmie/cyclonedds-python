@@ -4,6 +4,8 @@ build-windows/
 .vscode/*
 __pycache__
 docs/_build
+.mypy_cache
+.pytest_cache
 .coverage
 .env
 cov.xml

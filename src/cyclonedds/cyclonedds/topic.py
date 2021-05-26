@@ -52,6 +52,7 @@ class Topic(Entity, Generic[_T]):
             _CQos.cqos_destroy(cqos)
 
     def get_name(self, max_size=256) -> str:
+        """Get topic name"""
         name = (ct.c_char * max_size)()
         name_pt = ct.cast(name, ct.c_char_p)
         ret = self._get_name(self._ref, name_pt, max_size)
@@ -59,9 +60,13 @@ class Topic(Entity, Generic[_T]):
             raise DDSException(ret, f"Occurred while fetching a topic name for {repr(self)}")
         return bytes(name).split(b'\0', 1)[0].decode("ASCII")
 
-    name: str = property(get_name, doc="Get topic name")
+    @property
+    def name(self) -> str:
+        """Get topic name"""
+        return self.get_name()
 
     def get_type_name(self, max_size=256) -> str:
+        """Get type name"""
         name = (ct.c_char * max_size)()
         name_pt = ct.cast(name, ct.c_char_p)
         ret = self._get_type_name(self._ref, name_pt, max_size)
@@ -69,7 +74,10 @@ class Topic(Entity, Generic[_T]):
             raise DDSException(ret, f"Occurred while fetching a topic type name for {repr(self)}")
         return bytes(name).split(b'\0', 1)[0].decode("ASCII")
 
-    typename: str = property(get_type_name, doc="Get topic type name")
+    @property
+    def typename(self) -> str:
+        """Get type name"""
+        return self.get_type_name()
 
     @c_call("dds_get_name")
     def _get_name(self, topic: dds_c_t.entity, name: ct.c_char_p, size: ct.c_size_t) -> dds_c_t.returnv:

@@ -15,7 +15,7 @@ except ImportError:
     # In python 3.6 time_ns does not exist.
     from time import time as _time
 
-    def _time_ns():
+    def _time_ns() -> int:
         return int(_time() * 1_000_000_000)
 
 from .core import Entity
@@ -75,8 +75,8 @@ def duration(*, weeks: float = 0, days: float = 0, hours: float = 0, minutes: fl
     seconds += minutes * 60
     milliseconds += seconds * 1000
     microseconds += milliseconds * 1000
-    nanoseconds += microseconds * 1000
-    return int(nanoseconds)
+    nanoseconds += int(microseconds * 1000)
+    return nanoseconds
 
 
 class timestamp:

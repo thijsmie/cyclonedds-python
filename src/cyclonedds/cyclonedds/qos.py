@@ -83,10 +83,10 @@ class Policy:
         __init__ = _no_init
         __scope__ = "Durability"
 
-        Volatile: 'Policy.Durability.Volatile' = _policy_singleton("Durability", "Volatile")
-        TransientLocal: 'Policy.Durability.TransientLocal' = _policy_singleton("Durability", "TransientLocal")
-        Transient: 'Policy.Durability.Transient' = _policy_singleton("Durability", "Transient")
-        Persistent: 'Policy.Durability.Persistent' = _policy_singleton("Durability", "Persistent")
+        Volatile = _policy_singleton("Durability", "Volatile")
+        TransientLocal = _policy_singleton("Durability", "TransientLocal")
+        Transient = _policy_singleton("Durability", "Transient")
+        Persistent = _policy_singleton("Durability", "Persistent")
 
     class History:
         """ The History Qos Policy
@@ -104,7 +104,7 @@ class Policy:
         __init__ = _no_init
         __scope__ = "History"
 
-        KeepAll: 'Policy.History.KeepAll' = _policy_singleton("History", "KeepAll")
+        KeepAll = _policy_singleton("History", "KeepAll")
 
         @dataclass(frozen=True)
         class KeepLast(BasePolicy):
@@ -264,8 +264,8 @@ class Policy:
         __init__ = _no_init
         __scope__ = "Ownership"
 
-        Shared: 'Policy.Ownership.Shared' = _policy_singleton("Ownership", "Shared")
-        Exclusive: 'Policy.Ownership.Exclusive' = _policy_singleton("Ownership", "Exclusive")
+        Shared = _policy_singleton("Ownership", "Shared")
+        Exclusive = _policy_singleton("Ownership", "Exclusive")
 
     @dataclass(frozen=True)
     class OwnershipStrength(BasePolicy):
@@ -397,10 +397,8 @@ class Policy:
         >>> Policy.DestinationOrder.BySourceTimestamp
         """
         __scope__: ClassVar[str] = "DestinationOrder"
-        ByReceptionTimestamp: 'Policy.DestinationOrder.ByReceptionTimestamp' = \
-            _policy_singleton("DestinationOrder", "ByReceptionTimestamp")
-        BySourceTimestamp: 'Policy.DestinationOrder.BySourceTimestamp' = \
-            _policy_singleton("DestinationOrder", "BySourceTimestamp")
+        ByReceptionTimestamp = _policy_singleton("DestinationOrder", "ByReceptionTimestamp")
+        BySourceTimestamp = _policy_singleton("DestinationOrder", "BySourceTimestamp")
 
     @dataclass(frozen=True)
     class WriterDataLifecycle(BasePolicy):
@@ -461,7 +459,8 @@ class Policy:
         """
         __scope__: ClassVar[str] = "DurabilityService"
         cleanup_delay: int
-        history: Union['Policy.History.KeepAll', 'Policy.History.KeepLast']
+        history: Union[BasePolicy, 'Policy.History.KeepLast']
+        # Can't type singletons with mypy, BasePolicy here refers to KeepAll
         max_samples: int
         max_instances: int
         max_samples_per_instance: int
@@ -478,9 +477,9 @@ class Policy:
         __init__ = _no_init
         __scope__ = "IgnoreLocal"
 
-        Nothing: 'Policy.IgnoreLocal.Nothing' = _policy_singleton("IgnoreLocal", "Nothing")
-        Participant: 'Policy.IgnoreLocal.Participant' = _policy_singleton("IgnoreLocal", "Participant")
-        Process: 'Policy.IgnoreLocal.Process' = _policy_singleton("IgnoreLocal", "Process")
+        Nothing = _policy_singleton("IgnoreLocal", "Nothing")
+        Participant = _policy_singleton("IgnoreLocal", "Participant")
+        Process = _policy_singleton("IgnoreLocal", "Process")
 
     @dataclass(frozen=True)
     class Userdata(BasePolicy):
@@ -613,8 +612,8 @@ class Qos:
             If you pass two overlapping Policies, for example ``Policy.History.KeepLast(10)`` and
             ``Policy.History.KeepAll`` this will be treated as a ValueError.
         """
-        policies = list(policies)
-        for p in policies:
+        _policies = list(policies)
+        for p in _policies:
             if not isinstance(p, BasePolicy):
                 raise TypeError(f"{repr(p)} is not a Policy.")
 
@@ -622,13 +621,13 @@ class Qos:
             if not isinstance(base, Qos):
                 raise TypeError("base takes a Qos as argument.")
             for policy in base.policies:
-                for p in policies:
+                for p in _policies:
                     if p.__scope__ == policy.__scope__:
                         break
                 else:
-                    policies.append(policy)
+                    _policies.append(policy)
 
-        self.__policies = tuple(sorted(policies, key=lambda x: x.__scope__))
+        self.__policies = tuple(sorted(_policies, key=lambda x: x.__scope__))
         self._assert_consistency()
 
     def _assert_consistency(self):
@@ -970,7 +969,7 @@ class _CQos(DDS):
         cls._set_partition(qos, len(ps), p_pt)
 
     @static_c_call("dds_qset_partition")
-    def _set_partition(self, qos: dds_c_t.qos_p, n: ct.c_uint32, ps: ct.POINTER(ct.c_char_p)) -> None:
+    def _set_partition(self, qos: dds_c_t.qos_p, n: ct.c_uint32, ps: ct.pointer[ct.c_char_p]) -> None:
         pass
 
     # Transport priority
@@ -1146,8 +1145,8 @@ class _CQos(DDS):
         return Policy.Reliability.Reliable(max_blocking_time=cls._gc_max_blocking_time.value)
 
     @static_c_call("dds_qget_reliability")
-    def _get_reliability(self, qos: dds_c_t.qos_p, reliability_kind: ct.POINTER(dds_c_t.reliability),
-                         blocking_time: ct.POINTER(dds_c_t.duration)) -> bool:
+    def _get_reliability(self, qos: dds_c_t.qos_p, reliability_kind: ct.pointer[dds_c_t.reliability],
+                         blocking_time: ct.pointer[dds_c_t.duration]) -> bool:
         pass
 
     # Durability
@@ -1166,7 +1165,7 @@ class _CQos(DDS):
         return Policy.Durability.Persistent
 
     @static_c_call("dds_qget_durability")
-    def _get_durability(self, qos: dds_c_t.qos_p, durability_kind: ct.POINTER(dds_c_t.durability)) -> bool:
+    def _get_durability(self, qos: dds_c_t.qos_p, durability_kind: ct.pointer[dds_c_t.durability]) -> bool:
         pass
 
     # History
@@ -1181,8 +1180,8 @@ class _CQos(DDS):
         return Policy.History.KeepLast(depth=cls._gc_history_depth.value)
 
     @static_c_call("dds_qget_history")
-    def _get_history(self, qos: dds_c_t.qos_p, history_kind: ct.POINTER(dds_c_t.history),
-                     depth: ct.POINTER(ct.c_int32)) -> bool:
+    def _get_history(self, qos: dds_c_t.qos_p, history_kind: ct.pointer[dds_c_t.history],
+                     depth: ct.pointer[ct.c_int32]) -> bool:
         pass
 
     # Resource limits
@@ -1202,9 +1201,9 @@ class _CQos(DDS):
         )
 
     @static_c_call("dds_qget_resource_limits")
-    def _get_resource_limits(self, qos: dds_c_t.qos_p, max_samples: ct.POINTER(ct.c_int32),
-                             max_instances: ct.POINTER(ct.c_int32),
-                             max_samples_per_instance: ct.POINTER(ct.c_int32)) -> bool:
+    def _get_resource_limits(self, qos: dds_c_t.qos_p, max_samples: ct.pointer[ct.c_int32],
+                             max_instances: ct.pointer[ct.c_int32],
+                             max_samples_per_instance: ct.pointer[ct.c_int32]) -> bool:
         pass
 
     # Presentation access scope
@@ -1233,8 +1232,8 @@ class _CQos(DDS):
         )
 
     @static_c_call("dds_qget_presentation")
-    def _get_presentation(self, qos: dds_c_t.qos_p, access_scope: ct.POINTER(dds_c_t.presentation_access_scope),
-                          coherent_access: ct.POINTER(ct.c_bool), ordered_access: ct.POINTER(ct.c_bool)) -> bool:
+    def _get_presentation(self, qos: dds_c_t.qos_p, access_scope: ct.pointer[dds_c_t.presentation_access_scope],
+                          coherent_access: ct.pointer[ct.c_bool], ordered_access: ct.pointer[ct.c_bool]) -> bool:
         pass
 
     # Lifespan
@@ -1247,7 +1246,7 @@ class _CQos(DDS):
         return Policy.Lifespan(lifespan=cls._gc_lifespan.value)
 
     @static_c_call("dds_qget_lifespan")
-    def _get_lifespan(self, qos: dds_c_t.qos_p, lifespan: ct.POINTER(dds_c_t.duration)) -> bool:
+    def _get_lifespan(self, qos: dds_c_t.qos_p, lifespan: ct.pointer[dds_c_t.duration]) -> bool:
         pass
 
     # Deadline
@@ -1260,7 +1259,7 @@ class _CQos(DDS):
         return Policy.Deadline(deadline=cls._gc_deadline.value)
 
     @static_c_call("dds_qget_deadline")
-    def _get_deadline(self, qos: dds_c_t.qos_p, deadline: ct.POINTER(dds_c_t.duration)) -> bool:
+    def _get_deadline(self, qos: dds_c_t.qos_p, deadline: ct.pointer[dds_c_t.duration]) -> bool:
         pass
 
     # Latency Budget
@@ -1273,7 +1272,7 @@ class _CQos(DDS):
         return Policy.LatencyBudget(budget=cls._gc_latency_budget.value)
 
     @static_c_call("dds_qget_latency_budget")
-    def _get_latency_budget(self, qos: dds_c_t.qos_p, latency_budget: ct.POINTER(dds_c_t.duration)) -> bool:
+    def _get_latency_budget(self, qos: dds_c_t.qos_p, latency_budget: ct.pointer[dds_c_t.duration]) -> bool:
         pass
 
     # Ownership
@@ -1288,7 +1287,7 @@ class _CQos(DDS):
         return Policy.Ownership.Exclusive
 
     @static_c_call("dds_qget_ownership")
-    def _get_ownership(self, qos: dds_c_t.qos_p, ownership_kind: ct.POINTER(dds_c_t.ownership)) -> bool:
+    def _get_ownership(self, qos: dds_c_t.qos_p, ownership_kind: ct.pointer[dds_c_t.ownership]) -> bool:
         pass
 
     # Ownership strength
@@ -1301,7 +1300,7 @@ class _CQos(DDS):
         return Policy.OwnershipStrength(strength=cls._gc_ownership_strength.value)
 
     @static_c_call("dds_qget_ownership_strength")
-    def _get_ownership_strength(self, qos: dds_c_t.qos_p, strength: ct.POINTER(ct.c_int32)) -> bool:
+    def _get_ownership_strength(self, qos: dds_c_t.qos_p, strength: ct.pointer[ct.c_int32]) -> bool:
         pass
 
     # Liveliness
@@ -1318,8 +1317,8 @@ class _CQos(DDS):
         return Policy.Liveliness.ManualByTopic(lease_duration=cls._gc_lease_duration.value)
 
     @static_c_call("dds_qget_liveliness")
-    def _get_liveliness(self, qos: dds_c_t.qos_p, liveliness_kind: ct.POINTER(dds_c_t.liveliness),
-                        lease_duration: ct.POINTER(dds_c_t.duration)) -> bool:
+    def _get_liveliness(self, qos: dds_c_t.qos_p, liveliness_kind: ct.pointer[dds_c_t.liveliness],
+                        lease_duration: ct.pointer[dds_c_t.duration]) -> bool:
         pass
 
     # Time based filter
@@ -1331,7 +1330,7 @@ class _CQos(DDS):
         return Policy.TimeBasedFilter(filter_time=cls._gc_time_based_filter.value)
 
     @static_c_call("dds_qget_time_based_filter")
-    def _get_time_based_filter(self, qos: dds_c_t.qos_p, minimum_separation: ct.POINTER(dds_c_t.duration)) -> bool:
+    def _get_time_based_filter(self, qos: dds_c_t.qos_p, minimum_separation: ct.pointer[dds_c_t.duration]) -> bool:
         pass
 
     # Partition
@@ -1351,7 +1350,7 @@ class _CQos(DDS):
         return Policy.Partition(partitions=names)
 
     @static_c_call("dds_qget_partition")
-    def _get_partition(self, qos: dds_c_t.qos_p, n: ct.POINTER(ct.c_uint32), ps: ct.POINTER(ct.POINTER(ct.c_char_p))) -> bool:
+    def _get_partition(self, qos: dds_c_t.qos_p, n: ct.pointer[ct.c_uint32], ps: ct.pointer[ct.pointer[ct.c_char_p]]) -> bool:
         pass
 
     # Transport priority
@@ -1364,7 +1363,7 @@ class _CQos(DDS):
         return Policy.TransportPriority(priority=cls._gc_transport_priority.value)
 
     @static_c_call("dds_qget_transport_priority")
-    def _get_transport_priority(self, qos: dds_c_t.qos_p, value: ct.POINTER(ct.c_int32)) -> bool:
+    def _get_transport_priority(self, qos: dds_c_t.qos_p, value: ct.pointer[ct.c_int32]) -> bool:
         pass
 
     # Destination order
@@ -1380,7 +1379,7 @@ class _CQos(DDS):
 
     @static_c_call("dds_qget_destination_order")
     def _get_destination_order(self, qos: dds_c_t.qos_p,
-                               destination_order_kind: ct.POINTER(dds_c_t.destination_order)) -> bool:
+                               destination_order_kind: ct.pointer[dds_c_t.destination_order]) -> bool:
         pass
 
     # Writer data lifecycle
@@ -1393,7 +1392,7 @@ class _CQos(DDS):
         return Policy.WriterDataLifecycle(autodispose=cls._gc_writer_autodispose.value)
 
     @static_c_call("dds_qget_writer_data_lifecycle")
-    def _get_writer_data_lifecycle(self, qos: dds_c_t.qos_p, autodispose: ct.POINTER(ct.c_bool)) -> bool:
+    def _get_writer_data_lifecycle(self, qos: dds_c_t.qos_p, autodispose: ct.pointer[ct.c_bool]) -> bool:
         pass
 
     # Reader data lifecycle
@@ -1411,8 +1410,8 @@ class _CQos(DDS):
 
     @static_c_call("dds_qget_reader_data_lifecycle")
     def _get_reader_data_lifecycle(self, qos: dds_c_t.qos_p,
-                                   autopurge_nowriter_samples_delay: ct.POINTER(dds_c_t.duration),
-                                   autopurge_disposed_samples_delay: ct.POINTER(dds_c_t.duration)) -> bool:
+                                   autopurge_nowriter_samples_delay: ct.pointer[dds_c_t.duration],
+                                   autopurge_disposed_samples_delay: ct.pointer[dds_c_t.duration]) -> bool:
         pass
 
     # Durability service
@@ -1443,10 +1442,10 @@ class _CQos(DDS):
         )
 
     @static_c_call("dds_qget_durability_service")
-    def _get_durability_service(self, qos: dds_c_t.qos_p, service_cleanup_delay: ct.POINTER(dds_c_t.duration),
-                                history_kind: ct.POINTER(dds_c_t.history), history_depth: ct.POINTER(ct.c_int32),
-                                max_samples: ct.POINTER(ct.c_int32), max_instances: ct.POINTER(ct.c_int32),
-                                max_samples_per_instance: ct.POINTER(ct.c_int32)) -> bool:
+    def _get_durability_service(self, qos: dds_c_t.qos_p, service_cleanup_delay: ct.pointer[dds_c_t.duration],
+                                history_kind: ct.pointer[dds_c_t.history], history_depth: ct.pointer[ct.c_int32],
+                                max_samples: ct.pointer[ct.c_int32], max_instances: ct.pointer[ct.c_int32],
+                                max_samples_per_instance: ct.pointer[ct.c_int32]) -> bool:
         pass
 
     # Ignore local
@@ -1463,7 +1462,7 @@ class _CQos(DDS):
         return Policy.IgnoreLocal.Process
 
     @static_c_call("dds_qget_ignorelocal")
-    def _get_ignorelocal(self, qos: dds_c_t.qos_p, ingorelocal_kind: ct.POINTER(dds_c_t.ingnorelocal)) -> bool:
+    def _get_ignorelocal(self, qos: dds_c_t.qos_p, ingorelocal_kind: ct.pointer[dds_c_t.ingnorelocal]) -> bool:
         pass
 
     # Userdata
@@ -1479,7 +1478,7 @@ class _CQos(DDS):
         return Policy.Userdata(data=ct.string_at(cls._gc_data_value, cls._gc_data_size.value))
 
     @static_c_call("dds_qget_userdata")
-    def _get_userdata(self, qos: dds_c_t.qos_p, value: ct.POINTER(ct.c_void_p), size: ct.POINTER(ct.c_size_t)) -> bool:
+    def _get_userdata(self, qos: dds_c_t.qos_p, value: ct.pointer[ct.c_void_p], size: ct.pointer[ct.c_size_t]) -> bool:
         pass
 
     # Topicdata
@@ -1493,12 +1492,12 @@ class _CQos(DDS):
             return None
 
         byte_type = ct.c_byte * cls._gc_data_size.value
-        mybytes = bytes(ct.cast(cls._gc_data_value, ct.POINTER(byte_type))[0])
+        mybytes = bytes(ct.cast(cls._gc_data_value, ct.pointer[byte_type])[0])
 
         return Policy.Topicdata(data=mybytes)
 
     @static_c_call("dds_qget_topicdata")
-    def _get_topicdata(self, qos: dds_c_t.qos_p, value: ct.POINTER(ct.c_void_p), size: ct.POINTER(ct.c_size_t)) -> bool:
+    def _get_topicdata(self, qos: dds_c_t.qos_p, value: ct.pointer[ct.c_void_p], size: ct.pointer[ct.c_size_t]) -> bool:
         pass
 
     # Groupdata
@@ -1512,10 +1511,10 @@ class _CQos(DDS):
             return None
 
         byte_type = ct.c_byte * cls._gc_data_size.value
-        mybytes = bytes(ct.cast(cls._gc_data_value, ct.POINTER(byte_type))[0])
+        mybytes = bytes(ct.cast(cls._gc_data_value, ct.pointer[byte_type])[0])
 
         return Policy.Groupdata(data=mybytes)
 
     @static_c_call("dds_qget_groupdata")
-    def _get_groupdata(self, qos: dds_c_t.qos_p, value: ct.POINTER(ct.c_void_p), size: ct.POINTER(ct.c_size_t)) -> bool:
+    def _get_groupdata(self, qos: dds_c_t.qos_p, value: ct.pointer[ct.c_void_p], size: ct.pointer[ct.c_size_t]) -> bool:
         pass

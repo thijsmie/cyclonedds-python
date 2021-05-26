@@ -14,7 +14,7 @@ import asyncio
 import concurrent.futures
 from typing import AsyncGenerator, List, Optional, Union, Generator, Generic, TypeVar, TYPE_CHECKING
 
-from .core import Entity, DDSException, Listener, WaitSet, ReadCondition, SampleState, InstanceState, ViewState
+from .core import Entity, DDSException, Listener, WaitSet, ReadCondition, SampleState, InstanceState, ViewState, _Condition
 from .internal import SupportsSerialization, c_call, dds_c_t
 from .qos import _CQos, Qos
 from .topic import Topic
@@ -98,11 +98,11 @@ class DataReader(Entity, Generic[_T]):
             listener=listener
         )
         self._topic = topic
-        self._next_condition = None
+        self._next_condition: Optional[_Condition] = None
         if cqos:
             _CQos.cqos_destroy(cqos)
 
-    def read(self, N: int = 1, condition: Entity = None, instance_handle: int = None) -> List[_T]:
+    def read(self, N: int = 1, condition: Optional[_Condition] = None, instance_handle: int = None) -> List[_T]:
         """Read a maximum of N samples, non-blocking. Optionally use a read/query-condition to select which samples
         you are interested in.
 
@@ -132,7 +132,7 @@ class DataReader(Entity, Generic[_T]):
             samples[-1].sample_info = info
         return samples
 
-    def take(self, N: int = 1, condition: Entity = None, instance_handle: int = None) -> List[_T]:
+    def take(self, N: int = 1, condition: Optional[_Condition] = None, instance_handle: int = None) -> List[_T]:
         """Take a maximum of N samples, non-blocking. Optionally use a read/query-condition to select which samples
         you are interested in.
 
@@ -192,7 +192,7 @@ class DataReader(Entity, Generic[_T]):
             return samples[0]
         return None
 
-    def read_iter(self, condition: Entity = None, timeout: int = None) -> Generator[_T, None, None]:
+    def read_iter(self, condition: _Condition = None, timeout: int = None) -> Generator[_T, None, None]:
         """Shortcut method to iterate reading samples. Iteration will stop once the timeout you supply expires.
         Every time a sample is received the timeout is reset.
 
@@ -201,6 +201,7 @@ class DataReader(Entity, Generic[_T]):
         DDSException
             If any error code is returned by the DDS API it is converted into an exception.
         """
+        assert self.participant is not None
         waitset = WaitSet(self.participant)
         condition = ReadCondition(self, ViewState.Any | InstanceState.Any | SampleState.NotRead)
         waitset.attach(condition)
@@ -215,7 +216,7 @@ class DataReader(Entity, Generic[_T]):
             if waitset.wait(timeout) == 0:
                 break
 
-    def take_iter(self, condition: Entity = None, timeout: int = None) -> Generator[_T, None, None]:
+    def take_iter(self, condition: _Condition = None, timeout: int = None) -> Generator[_T, None, None]:
         """Shortcut method to iterate taking samples. Iteration will stop once the timeout you supply expires.
         Every time a sample is received the timeout is reset.
 
@@ -224,6 +225,7 @@ class DataReader(Entity, Generic[_T]):
         DDSException
             If any error code is returned by the DDS API it is converted into an exception.
         """
+        assert self.participant is not None
         waitset = WaitSet(self.participant)
         condition = condition or ReadCondition(self, ViewState.Any | InstanceState.Any | SampleState.NotRead)
         waitset.attach(condition)
@@ -238,7 +240,7 @@ class DataReader(Entity, Generic[_T]):
             if waitset.wait(timeout) == 0:
                 break
 
-    async def read_aiter(self, condition: Entity = None, timeout: int = None) -> AsyncGenerator[_T, None]:
+    async def read_aiter(self, condition: _Condition = None, timeout: int = None) -> AsyncGenerator[_T, None]:
         """Shortcut method to asycn iterate reading samples. Iteration will stop once the timeout you supply expires.
         Every time a sample is received the timeout is reset.
 
@@ -247,6 +249,7 @@ class DataReader(Entity, Generic[_T]):
         DDSException
             If any error code is returned by the DDS API it is converted into an exception.
         """
+        assert self.participant is not None
         waitset = WaitSet(self.participant)
         condition = condition or ReadCondition(self, ViewState.Any | InstanceState.Any | SampleState.NotRead)
         waitset.attach(condition)
@@ -264,7 +267,7 @@ class DataReader(Entity, Generic[_T]):
                 if result == 0:
                     break
 
-    async def take_aiter(self, condition: Entity = None, timeout: int = None) -> AsyncGenerator[_T, None]:
+    async def take_aiter(self, condition: _Condition = None, timeout: int = None) -> AsyncGenerator[_T, None]:
         """Shortcut method to asycn iterate taking samples. Iteration will stop once the timeout you supply expires.
         Every time a sample is received the timeout is reset.
 
@@ -273,6 +276,7 @@ class DataReader(Entity, Generic[_T]):
         DDSException
             If any error code is returned by the DDS API it is converted into an exception.
         """
+        assert self.participant is not None
         waitset = WaitSet(self.participant)
         condition = condition or ReadCondition(self, ViewState.Any | InstanceState.Any | SampleState.NotRead)
         waitset.attach(condition)
@@ -299,7 +303,7 @@ class DataReader(Entity, Generic[_T]):
             return False
         raise DDSException(ret, f"Occured while waiting for historical data in {repr(self)}")
 
-    def lookup_instance(self, sample: _T) -> int:
+    def lookup_instance(self, sample: _T) -> Optional[int]:
         ret = ddspy_lookup_instance(self._ref, sample.serialize())
         if ret < 0:
             raise DDSException(ret, f"Occurred while lookup up instance from {repr(self)}")

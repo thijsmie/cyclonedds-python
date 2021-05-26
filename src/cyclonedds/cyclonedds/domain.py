@@ -11,7 +11,7 @@
 """
 
 import ctypes as ct
-from typing import List, Optional, TYPE_CHECKING
+from typing import List, Optional, TYPE_CHECKING, cast
 
 from .internal import c_call, dds_c_t
 from .core import Entity, DDSException
@@ -47,7 +47,7 @@ class Domain(Entity):
         )
 
         if ret >= 0:
-            return [Entity.get_entity(participants_list[i]) for i in range(ret)]
+            return [cast(Entity, Entity.get_entity(participants_list[i])) for i in range(ret)]
 
         raise DDSException(ret, f"Occurred when getting the participants of domain {self._id}")
 
@@ -56,7 +56,7 @@ class Domain(Entity):
         pass
 
     @c_call("dds_lookup_participant")
-    def _lookup_participant(self, id: dds_c_t.domainid, participants: ct.POINTER(dds_c_t.entity), size: ct.c_size_t) \
+    def _lookup_participant(self, id: dds_c_t.domainid, participants: ct.pointer[dds_c_t.entity], size: ct.c_size_t) \
             -> dds_c_t.entity:
         pass
 

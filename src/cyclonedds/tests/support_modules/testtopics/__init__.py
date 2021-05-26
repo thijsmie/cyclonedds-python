@@ -1,1 +1,1 @@
-from .message import Message, MessageAlt, MessageKeyed
+from testtopics.message import Message, MessageAlt, MessageKeyed

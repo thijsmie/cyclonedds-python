@@ -11,31 +11,23 @@
 """
 
 import uuid
+import asyncio
+import concurrent
 import ctypes as ct
 from dataclasses import dataclass
-from typing import Optional, Union, ClassVar, TYPE_CHECKING
+from typing import Optional, Union, Generic, TypeVar, Generator, AsyncGenerator, TYPE_CHECKING
 
-from .core import Entity, DDSException, Qos, ReadCondition, ViewState, InstanceState, SampleState
-from .topic import Topic
-from .sub import DataReader
-from .internal import c_call, dds_c_t, SampleInfo
-from .qos import _CQos
+from .core import Entity, Listener, DDSException, Qos, ReadCondition, ViewState, InstanceState, SampleState, \
+    _Condition, WaitSet
+from .internal import c_call, dds_c_t
+from .qos import Qos, _CQos
+from .util import duration
 
 from ddspy import ddspy_read_participant, ddspy_take_participant, ddspy_read_endpoint, ddspy_take_endpoint
 
 
 if TYPE_CHECKING:
     import cyclonedds
-
-
-class BuiltinTopic(Topic):
-    """ Represent a built-in CycloneDDS Topic by magic reference number. """
-    def __init__(self, _ref, data_type):
-        self._ref = _ref
-        self.data_type = data_type
-
-    def __del__(self):
-        pass
 
 
 @dataclass
@@ -84,16 +76,29 @@ class DcpsEndpoint:
     qos: Qos
 
 
-class BuiltinDataReader(DataReader):
+_T = TypeVar("_T", DcpsParticipant, DcpsEndpoint)
+
+
+class BuiltinTopic(Generic[_T]):
+    """ Represent a built-in CycloneDDS Topic by magic reference number. """
+    def __init__(self, _ref, data_type):
+        self._ref = _ref
+        self.data_type = data_type
+
+    def __del__(self):
+        pass
+
+
+class BuiltinDataReader(Entity, Generic[_T]):
     """
     Builtin topics have sligtly different behaviour than normal topics, so you should use this BuiltinDataReader
     instead of the normal DataReader. They are identical in the rest of their functionality.
     """
     def __init__(self,
                  subscriber_or_participant: Union['cyclonedds.sub.Subscriber', 'cyclonedds.domain.DomainParticipant'],
-                 builtin_topic: 'cyclonedds.builtin.BuiltinTopic',
-                 qos: Optional['cyclonedds.core.Qos'] = None,
-                 listener: Optional['cyclonedds.core.Listener'] = None) -> None:
+                 builtin_topic: BuiltinTopic[_T],
+                 qos: Optional[Qos] = None,
+                 listener: Optional[Listener] = None) -> None:
         """Initialize the BuiltinDataReader
 
         Parameters
@@ -110,7 +115,7 @@ class BuiltinDataReader(DataReader):
         listener: cyclonedds.core.Listener = None
             Optionally supply a Listener.
         """
-        self._topic = builtin_topic
+        self._topic: BuiltinTopic[_T] = builtin_topic
 
         cqos = _CQos.qos_to_cqos(qos) if qos else None
         Entity.__init__(
@@ -159,7 +164,7 @@ class BuiltinDataReader(DataReader):
             self._constructor = endpoint_constructor
         self._cqos_conv = cqos_to_qos
 
-    def read(self, N: int = 1, condition: Union['cyclonedds.core.ReadCondition', 'cyclonedds.core.QueryCondition']=None):
+    def read(self, N: int = 1, condition: Optional[_Condition] = None):
         """Read a maximum of N samples, non-blocking. Optionally use a read/query-condition to select which samples
         you are interested in.
 
@@ -207,6 +212,157 @@ class BuiltinDataReader(DataReader):
             raise DDSException(ret, f"Occurred when calling read() in {repr(self)}")
 
         return ret
+
+    def read_next(self) -> Optional[_T]:
+        """Shortcut method to read exactly one sample or return None.
+
+        Raises
+        ------
+        DDSException
+            If any error code is returned by the DDS API it is converted into an exception.
+        """
+        self._next_condition = self._next_condition or \
+            ReadCondition(self, ViewState.Any | SampleState.NotRead | InstanceState.Any)
+        samples = self.read(condition=self._next_condition)
+        if samples:
+            return samples[0]
+        return None
+
+    def take_next(self) -> Optional[_T]:
+        """Shortcut method to take exactly one sample or return None.
+
+        Raises
+        ------
+        DDSException
+            If any error code is returned by the DDS API it is converted into an exception.
+        """
+        self._next_condition = self._next_condition or \
+            ReadCondition(self, ViewState.Any | SampleState.NotRead | InstanceState.Any)
+        samples = self.take(condition=self._next_condition)
+        if samples:
+            return samples[0]
+        return None
+
+    def read_iter(self, condition: _Condition = None, timeout: int = None) -> Generator[_T, None, None]:
+        """Shortcut method to iterate reading samples. Iteration will stop once the timeout you supply expires.
+        Every time a sample is received the timeout is reset.
+
+        Raises
+        ------
+        DDSException
+            If any error code is returned by the DDS API it is converted into an exception.
+        """
+        assert self.participant is not None
+        waitset = WaitSet(self.participant)
+        condition = ReadCondition(self, ViewState.Any | InstanceState.Any | SampleState.NotRead)
+        waitset.attach(condition)
+        timeout = timeout or duration(weeks=99999)
+
+        while True:
+            while True:
+                a = self.read(condition=condition)
+                if not a:
+                    break
+                yield a[0]
+            if waitset.wait(timeout) == 0:
+                break
+
+    def take_iter(self, condition: _Condition = None, timeout: int = None) -> Generator[_T, None, None]:
+        """Shortcut method to iterate taking samples. Iteration will stop once the timeout you supply expires.
+        Every time a sample is received the timeout is reset.
+
+        Raises
+        ------
+        DDSException
+            If any error code is returned by the DDS API it is converted into an exception.
+        """
+        assert self.participant is not None
+        waitset = WaitSet(self.participant)
+        condition = condition or ReadCondition(self, ViewState.Any | InstanceState.Any | SampleState.NotRead)
+        waitset.attach(condition)
+        timeout = timeout or duration(weeks=99999)
+
+        while True:
+            while True:
+                a = self.take(condition=condition)
+                if not a:
+                    break
+                yield a[0]
+            if waitset.wait(timeout) == 0:
+                break
+
+    async def read_aiter(self, condition: _Condition = None, timeout: int = None) -> AsyncGenerator[_T, None]:
+        """Shortcut method to asycn iterate reading samples. Iteration will stop once the timeout you supply expires.
+        Every time a sample is received the timeout is reset.
+
+        Raises
+        ------
+        DDSException
+            If any error code is returned by the DDS API it is converted into an exception.
+        """
+        assert self.participant is not None
+        waitset = WaitSet(self.participant)
+        condition = condition or ReadCondition(self, ViewState.Any | InstanceState.Any | SampleState.NotRead)
+        waitset.attach(condition)
+        timeout = timeout or duration(weeks=99999)
+
+        loop = asyncio.get_running_loop()
+        with concurrent.futures.ThreadPoolExecutor() as pool:
+            while True:
+                while True:
+                    a = self.read(condition=condition)
+                    if not a:
+                        break
+                    yield a[0]
+                result = await loop.run_in_executor(pool, waitset.wait, timeout)
+                if result == 0:
+                    break
+
+    async def take_aiter(self, condition: _Condition = None, timeout: int = None) -> AsyncGenerator[_T, None]:
+        """Shortcut method to asycn iterate taking samples. Iteration will stop once the timeout you supply expires.
+        Every time a sample is received the timeout is reset.
+
+        Raises
+        ------
+        DDSException
+            If any error code is returned by the DDS API it is converted into an exception.
+        """
+        assert self.participant is not None
+        waitset = WaitSet(self.participant)
+        condition = condition or ReadCondition(self, ViewState.Any | InstanceState.Any | SampleState.NotRead)
+        waitset.attach(condition)
+        timeout = timeout or duration(weeks=99999)
+
+        loop = asyncio.get_running_loop()
+        with concurrent.futures.ThreadPoolExecutor() as pool:
+            while True:
+                while True:
+                    a = self.take(condition=condition)
+                    if not a:
+                        break
+                    yield a[0]
+                result = await loop.run_in_executor(pool, waitset.wait, timeout)
+                if result == 0:
+                    break
+
+    def wait_for_historical_data(self, timeout: int) -> bool:
+        ret = self._wait_for_historical_data(self._ref, timeout)
+
+        if ret == 0:
+            return True
+        elif ret == DDSException.DDS_RETCODE_TIMEOUT:
+            return False
+        raise DDSException(ret, f"Occured while waiting for historical data in {repr(self)}")
+
+    @c_call("dds_create_reader")
+    def _create_reader(self, subscriber: dds_c_t.entity, topic: dds_c_t.entity, qos: dds_c_t.qos_p,
+                       listener: dds_c_t.listener_p) -> dds_c_t.entity:
+        pass
+
+    @c_call("dds_reader_wait_for_historical_data")
+    def _wait_for_historical_data(self, reader: dds_c_t.entity, max_wait: dds_c_t.duration) -> dds_c_t.returnv:
+        pass
+
 
 _pseudo_handle = 0x7fff0000
 BuiltinTopicDcpsParticipant = BuiltinTopic(_pseudo_handle + 1, DcpsParticipant)

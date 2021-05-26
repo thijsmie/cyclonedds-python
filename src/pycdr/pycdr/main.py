@@ -28,6 +28,7 @@ class CDR:
         self.autoid_hash = autoid_hash
         self.keylist = keylist
         self.keyless = keylist is None
+        self.key_max_size = None
 
         self.machine = None
         self.key_machine = None

@@ -24,23 +24,23 @@ if not typing.TYPE_CHECKING:
             return self.__name__
     typing.NewType = NewType
 
-from typing import NewType, List, Dict, Any, Optional
+from typing import NewType, Sequence, Dict, Any, Optional, Type
 from enum import Enum
 from .type_helper import Annotated, get_origin, get_args, get_type_hints
 
 
-char = NewType("char", int)
-wchar = NewType("wchar", int)
-int8 = NewType("int8", int)
-int16 = NewType("int16", int)
-int32 = NewType("int32", int)
-int64 = NewType("int64", int)
-uint8 = NewType("uint8", int)
-uint16 = NewType("uint16", int)
-uint32 = NewType("uint32", int)
-uint64 = NewType("uint64", int)
-float32 = NewType("float32", float)
-float64 = NewType("float64", float)
+char = Annotated[int, "char"]
+wchar = Annotated[int, "wchar"]
+int8 = Annotated[int, "int8"]
+int16 = Annotated[int, "int16"]
+int32 = Annotated[int, "int32"]
+int64 = Annotated[int, "int64"]
+uint8 = Annotated[int, "uint8"]
+uint16 = Annotated[int, "uint16"]
+uint32 = Annotated[int, "uint32"]
+uint64 = Annotated[int, "uint64"]
+float32 = Annotated[float, "float32"]
+float64 = Annotated[float, "float64"]
 NoneType = type(None)
 
 primitive_types = {
@@ -62,95 +62,120 @@ primitive_types = {
 }
 
 
-class ArrayHolder:
-    def __init__(self, type, length):
-        self.type = type
-        self.length = length
+def _type_repr(obj):
+    if isinstance(obj, type):
+        if obj.__module__ == 'builtins':
+            return obj.__qualname__
+        return f'{obj.__module__}.{obj.__qualname__}'
+    if obj is ...:
+        return '...'
+    return repr(obj)
+
+
+class array:
+    @classmethod
+    def __class_getitem__(cls, tup):
+        if type(tup) != tuple:
+            tup = (tup,)
+
+        if len(tup) != 2 or type(tup[1]) != int:
+            raise TypeError("An array takes two arguments: an element type and a constant length.")
+        return Annotated[Sequence[tup[0]], cls(*tup)]
+
+    def __init__(self, subtype: Type, length: int):
+        self.subtype: Type = subtype
+        self.length: int = length
 
     def __repr__(self) -> str:
-        return f"array[{self.type}, {self.length}]"
+        return f"array[{_type_repr(self.subtype)}, {self.length}]"
+
+    __str__ = __repr__
 
 
-class ArrayGenerator:
-    def __getitem__(self, tup):
-        if type(tup) != tuple or len(tup) != 2 or type(tup[1]) != int:
-            return TypeError("An array takes two arguments: a type and a constant length.")
-        return Annotated[List[tup[0]], ArrayHolder(*tup)]
+class sequence:
+    @classmethod
+    def __class_getitem__(cls, tup):
+        if type(tup) != tuple:
+            tup = (tup,)
 
+        if len(tup) not in [1, 2] or (len(tup) == 2 and type(tup[1]) != int):
+            raise TypeError("A sequence takes a subtype and an optional maximum length.")
+        return Annotated[Sequence[tup[0]], cls(*tup)]
 
-class SequenceHolder:
-    def __init__(self, type, max_length):
-        self.type = type
-        self.max_length = max_length
+    def __init__(self, subtype: Type, max_length: Optional[int] = None) -> None:
+        self.subtype: Type = subtype
+        self.max_length: Optional[int] = max_length
 
     def __repr__(self) -> str:
         if self.max_length:
-            return f"sequence[{self.type}, {self.max_length}]"
+            return f"sequence[{_type_repr(self.subtype)}, {self.max_length}]"
         else:
-            return f"sequence[{self.type}"
+            return f"sequence[{_type_repr(self.subtype)}]"
 
 
-class SequenceGenerator:
-    def __getitem__(self, tup):
-        if type(tup) != tuple or len(tup) != 2 or type(tup[1]) != int:
-            if type(tup) == tuple:
-                return TypeError("A sequence takes one or two arguments: a type and an optional max length.")
-            return Annotated[List[tup], SequenceHolder(tup, None)]
-        if tup[1] <= 0 or tup[1] > 65535:
-            return TypeError("Sequence max length should be between 0 and 65536.")
-        return Annotated[List[tup[0]], SequenceHolder(*tup)]
+    __str__ = __repr__
 
 
-class BoundStringHolder:
-    def __init__(self, max_length):
-        self.max_length = max_length
+class bound_str:
+    @classmethod
+    def __class_getitem__(cls, tup):
+        if type(tup) != tuple:
+            tup = (tup,)
+
+        if len(tup) != 1 or type(tup[0]) != int:
+            raise TypeError("A bounded str takes one argument, a maximum length.")
+        return Annotated[str, cls(*tup)]
+
+    def __init__(self, max_length: int) -> None:
+        self.max_length: int = max_length
 
     def __repr__(self) -> str:
         return f"bound_str[{self.max_length}]"
 
-
-class BoundStringGenerator:
-    def __getitem__(self, tup):
-        if type(tup) != int:
-            return TypeError("A bounded string takes one arguments: a max length.")
-        if tup <= 0 or tup > 18446744073709551615:
-            return TypeError("Bound string max length should be between 0 and 18446744073709551616.")
-        return Annotated[str, BoundStringHolder(tup)]
+    __str__ = __repr__
 
 
 class ValidUnionHolder:
     pass
 
 
-class CaseHolder(ValidUnionHolder):
-    def __init__(self, discriminator_value, type):
+class case(ValidUnionHolder):
+    @classmethod
+    def __class_getitem__(cls, tup):
+        if type(tup) != tuple:
+            tup = (tup,)
+
+        if len(tup) != 2:
+            raise TypeError("A case takes two arguments: the discriminator value(s) and the type.")
+        return Annotated[Optional[tup[1]], cls(*tup)]
+
+    def __init__(self, discriminator_value, subtype: Type) -> None:
         self.discriminator_value = discriminator_value
-        self.type = type
+        self.subtype = subtype
 
     def __repr__(self) -> str:
-        return f"case[{self.discriminator_value}, {self.type}]"
+        return f"case[{self.discriminator_value}, {_type_repr(self.subtype)}]"
+
+    __str__ = __repr__
 
 
-class CaseGenerator:
-    def __getitem__(self, tup):
-        if type(tup) != tuple or len(tup) != 2:
-            return TypeError("A case takes two arguments: the discriminator value(s) and the type.")
-        return Annotated[Optional[tup[1]], CaseHolder(*tup)]
+class default(ValidUnionHolder):
+    @classmethod
+    def __class_getitem__(cls, tup):
+        if type(tup) != tuple:
+            tup = (tup,)
 
+        if len(tup) != 1:
+            raise TypeError("A default takes one arguments: the type.")
+        return Annotated[Optional[tup[0]], cls(*tup)]
 
-class DefaultHolder(ValidUnionHolder):
-    def __init__(self, type):
-        self.type = type
+    def __init__(self, subtype: Type) -> None:
+        self.type: Type = type
 
     def __repr__(self) -> str:
-        return f"default[{self.type}]"
+        return f"default[{_type_repr(self.type)}]"
 
-
-class DefaultGenerator:
-    def __getitem__(self, tup):
-        if type(tup) == tuple:
-            return TypeError("A default takes one arguments: the type.")
-        return Annotated[Optional[tup], DefaultHolder(tup)]
+    __str__ = __repr__
 
 
 class IdlUnion:
@@ -180,8 +205,8 @@ class IdlUnion:
 
     def __getattr__(self, name: str) -> Any:
         if name in self._field_set:
-            case = self._field_set[name]
-            if self.discriminator != case[0]:
+            _case = self._field_set[name]
+            if self.discriminator != _case[0]:
                 raise AttributeError("Tried to get inactive case on union")
             return self.value
         if self._default and self._default[0] == name:
@@ -233,11 +258,6 @@ def _union_default_finder(type, cases):
         val += inc
 
 
-array = ArrayGenerator()
-sequence = SequenceGenerator()
-case = CaseGenerator()
-default = DefaultGenerator()
-bound_str = BoundStringGenerator()
 map = Dict
 optional = Optional  # TODO
 
@@ -263,27 +283,27 @@ def make_union(name, discriminator, fields, key=False):
         if not isinstance(holder, ValidUnionHolder):
             raise TypeError("Fields of a union need to be case or default.")
 
-        if isinstance(holder, CaseHolder):
+        if isinstance(holder, case):
             if type(holder.discriminator_value) == list:
                 for d in holder.discriminator_value:
                     if d in cases:
                         raise TypeError(f"Discriminator values must uniquely define a case, "
                                         f"but the case {d} occurred multiple times.")
-                    cases[d] = (field, holder.type)
+                    cases[d] = (field, holder.subtype)
                     if field not in field_set:
-                        field_set[field] = (d, holder.type)
+                        field_set[field] = (d, holder.subtype)
             else:
                 d = holder.discriminator_value
                 if d in cases:
                     raise TypeError(f"Discriminator values must uniquely define a case, "
                                     f"but the case {d} occurred multiple times.")
-                cases[d] = (field, holder.type)
+                cases[d] = (field, holder.subtype)
                 if field not in field_set:
-                    field_set[field] = (d, holder.type)
+                    field_set[field] = (d, holder.subtype)
         else:  # isinstance(ValidUnionHolder) guarantees this is a DefaultHolder
             if default is not None:
                 raise TypeError("A discriminated union can only have one default.")
-            default = (field, holder.type)
+            default = (field, holder.subtype)
 
     class MyUnionMeta(type):
         __class__ = name

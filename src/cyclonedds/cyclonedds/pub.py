@@ -166,7 +166,7 @@ class DataWriter(Entity, Generic[_T]):
         ret = self._wait_for_acks(self._ref, timeout)
         if ret == 0:
             return True
-        elif ret == Exception.DDS_RETCODE_TIMEOUT:
+        elif ret == DDSException.DDS_RETCODE_TIMEOUT:
             return False
         raise DDSException(ret, f"Occurred while waiting for acks from {repr(self)}")
 

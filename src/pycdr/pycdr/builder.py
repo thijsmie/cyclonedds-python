@@ -11,12 +11,13 @@
 """
 
 from enum import Enum
+from typing import Dict, Set
 from inspect import isclass
 from collections import defaultdict
 
 from .support import qualified_name, module_prefix, MaxSizeFinder
 from .type_helper import Annotated, get_origin, get_args, get_type_hints
-from .types import ArrayHolder, BoundStringHolder, SequenceHolder, primitive_types, IdlUnion, NoneType
+from .types import array, sequence, bound_str, primitive_types, IdlUnion, NoneType
 from .machinery import NoneMachine, PrimitiveMachine, StringMachine, BytesMachine, ByteArrayMachine, UnionMachine, \
     ArrayMachine, SequenceMachine, InstanceMachine, MappingMachine, EnumMachine, StructMachine, InstanceKeyMachine, \
     UnionKeyMachine
@@ -35,9 +36,9 @@ class Builder:
         NoneType: NoneMachine
     }
 
-    defined_classes = {}
-    deferred_classes = defaultdict(set)
-    generic_deferred_classes = set()
+    defined_classes: Dict[str, object] = {}
+    deferred_classes: Dict[str, Set[object]] = defaultdict(set)
+    generic_deferred_classes: Set[object] = set()
 
     @classmethod
     def missing_report_for(cls, _type):
@@ -77,17 +78,17 @@ class Builder:
             if type(holder) == tuple:
                 # Edge case for python 3.6: bug in backport? TODO: investigate and report
                 holder = holder[0]
-            if isinstance(holder, ArrayHolder):
+            if isinstance(holder, array):
                 return ArrayMachine(
-                    cls._machine_for_type(module_prefix, holder.type, key),
+                    cls._machine_for_type(module_prefix, holder.subtype, key),
                     size=holder.length
                 )
-            elif isinstance(holder, SequenceHolder):
+            elif isinstance(holder, sequence):
                 return SequenceMachine(
-                    cls._machine_for_type(module_prefix, holder.type, key),
+                    cls._machine_for_type(module_prefix, holder.subtype, key),
                     maxlen=holder.max_length
                 )
-            elif isinstance(holder, BoundStringHolder):
+            elif isinstance(holder, bound_str):
                 return StringMachine(
                     bound=holder.max_length
                 )
