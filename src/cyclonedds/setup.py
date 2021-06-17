@@ -21,7 +21,7 @@ if "CYCLONEDDS_HOME" in os.environ:
     ddspy = Extension('ddspy',
         sources = ['clayer/src/pysertype.c', 'clayer/src/cdrkeyvm.c'],
         libraries=['ddsc'],
-        include_dirs=[os.path.join(home, "include"), 'clayer/src'],
+        include_dirs=[os.path.join(home, "include"), os.path.join('clayer', 'src')],
         library_dirs=[os.path.join(home, "lib"), os.path.join(home, "bin")]
     )
 else:
