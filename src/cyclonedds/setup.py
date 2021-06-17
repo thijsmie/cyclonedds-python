@@ -12,18 +12,20 @@
 """
 
 import os
+import logging
 from setuptools import setup, find_packages, Extension
 
 
 if "CYCLONEDDS_HOME" in os.environ:
     home = os.environ["CYCLONEDDS_HOME"]
-    ddspy = Extension('ddspy', 
-        sources = ['clayer/src/pysertype.c', 'clayer/src/cdrkeyvm.c'], 
-        libraries=['ddsc'], 
+    ddspy = Extension('ddspy',
+        sources = ['clayer/src/pysertype.c', 'clayer/src/cdrkeyvm.c'],
+        libraries=['ddsc'],
         include_dirs=[os.path.join(home, "include"), 'clayer/src'],
         library_dirs=[os.path.join(home, "lib"), os.path.join(home, "bin")]
     )
 else:
+    logging.warning("No CYCLONEDDS_HOME set, trying to build with CycloneDDS on loadable path.")
     ddspy = Extension('ddspy',
         sources = ['clayer/src/pysertype.c', 'clayer/src/cdrkeyvm.c'],
         libraries=['ddsc'],
