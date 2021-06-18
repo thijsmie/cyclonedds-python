@@ -34,7 +34,7 @@ else:
 
 setup(
     name='cyclonedds',
-    version='0.1.2',
+    version='0.1.3',
     description='Cyclone DDS Python binding',
     author='Thijs Miedema',
     author_email='thijs.miedema@adlinktech.com',
@@ -52,6 +52,7 @@ setup(
         "Programming Language :: Python :: 3.10",
         "Operating System :: OS Independent"
     ],
+    install_requires=["pycdr"],
     packages=find_packages(exclude=("tests", "examples")),
 	ext_modules = [ddspy],
     scripts=['tools/ddsls.py'],
