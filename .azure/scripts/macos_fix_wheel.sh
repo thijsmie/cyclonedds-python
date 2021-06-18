@@ -15,12 +15,8 @@ UNWHEEL="${files[0]}"
 files=($UNWHEEL/cyclonedds/_clayer*)
 DYLIB="${files[0]}"
 
-
 # Strip out the rpath
-
-echo $(otool -L $DYLIB)
 install_name_tool -change @rpath/libddsc.0.dylib $CYCLONEDDS_HOME/lib/libddsc.dylib $DYLIB
-echo $(otool -L $DYLIB)
 
 rm $WHEEL
 wheel pack -d $(dirname $WHEEL) $UNWHEEL
