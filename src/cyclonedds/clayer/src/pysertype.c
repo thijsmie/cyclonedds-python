@@ -1732,27 +1732,23 @@ PyMethodDef ddspy_funcs[] = {
 	{	NULL}
 };
 
-char ddspymod_docs[] = "This is hello world module.";
+char ddspymod_docs[] = "This is the CycloneDDS internal C module.";
 
-void free_ddspy(void) {
-    Py_XDECREF(sampleinfo_descriptor);
-}
-
-PyModuleDef ddspy_mod = {
+PyModuleDef _clayer_mod = {
 	PyModuleDef_HEAD_INIT,
-	"ddspy",
+	"cyclonedds._clayer",
 	ddspymod_docs,
 	-1,
 	ddspy_funcs,
 	NULL,
 	NULL,
 	NULL,
-	free_ddspy
+	NULL
 };
 
-PyMODINIT_FUNC PyInit_ddspy(void) {
+PyMODINIT_FUNC PyInit__clayer(void) {
     PyObject* import = PyImport_ImportModule("cyclonedds.internal");
     sampleinfo_descriptor = PyObject_GetAttrString(import, "SampleInfo");
     Py_DECREF(import);
-	return PyModule_Create(&ddspy_mod);
+	return PyModule_Create(&_clayer_mod);
 }

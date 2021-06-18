@@ -12,7 +12,7 @@ wheel unpack -d temp $WHEEL
 # Get the wheel directory
 files=(temp/*)
 UNWHEEL="${files[0]}"
-files=($UNWHEEL/ddspy.*)
+files=($UNWHEEL/cyclonedds/_clayer*)
 DYLIB="${files[0]}"
 
 

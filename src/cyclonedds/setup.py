@@ -18,7 +18,7 @@ from setuptools import setup, find_packages, Extension
 
 if "CYCLONEDDS_HOME" in os.environ:
     home = os.environ["CYCLONEDDS_HOME"]
-    ddspy = Extension('ddspy',
+    ddspy = Extension('cyclonedds._clayer',
         sources = ['clayer/src/pysertype.c', 'clayer/src/cdrkeyvm.c'],
         libraries=['ddsc'],
         include_dirs=[os.path.join(home, "include"), os.path.join('clayer', 'src')],
@@ -26,7 +26,7 @@ if "CYCLONEDDS_HOME" in os.environ:
     )
 else:
     logging.warning("No CYCLONEDDS_HOME set, trying to build with CycloneDDS on loadable path.")
-    ddspy = Extension('ddspy',
+    ddspy = Extension('cyclonedds._clayer',
         sources = ['clayer/src/pysertype.c', 'clayer/src/cdrkeyvm.c'],
         libraries=['ddsc'],
         include_dirs=['clayer/src']
