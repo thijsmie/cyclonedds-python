@@ -35,6 +35,16 @@ def _load_in_wheel() -> Optional[ct.CDLL]:
     except Exception:
         pass
 
+    # Mac behaves somewhat differently
+    try:
+        import cyclonedds._clayer
+        dir = os.path.join(os.path.abspath(os.path.dirname(cyclonedds._clayer.__file__)), ".dylibs")
+        for file in os.listdir(dir):
+            if "ddsc" in file:
+                return ct.CDLL(os.path.join(dir, file))
+    except Exception:
+        pass
+
     return None
 
 
