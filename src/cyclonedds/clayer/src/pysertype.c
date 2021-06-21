@@ -1748,7 +1748,32 @@ PyModuleDef _clayer_mod = {
 
 PyMODINIT_FUNC PyInit__clayer(void) {
     PyObject* import = PyImport_ImportModule("cyclonedds.internal");
+
+    if (PyErr_Occurred()) return NULL;
+    if (import == NULL) {
+        PyObject* msg = PyUnicode_FromString("Failed to import cyclonedds.internal to get SampleInfo cls.");
+        PyObject* name = PyUnicode_FromString("cyclonedds.internal");
+        PyObject* path = PyUnicode_FromString("cyclonedds.internal");
+        PyErr_SetImportError(msg, name, path);
+        Py_DECREF(msg);
+        Py_DECREF(name);
+        Py_DECREF(path);
+        return NULL;
+    }
+
     sampleinfo_descriptor = PyObject_GetAttrString(import, "SampleInfo");
+
+    if (PyErr_Occurred()) return NULL;
+    if (sampleinfo_descriptor == NULL) {
+        PyObject* msg = PyUnicode_FromString("Failed to import cyclonedds.internal to get SampleInfo cls.");
+        PyObject* name = PyUnicode_FromString("cyclonedds.internal");
+        PyObject* path = PyUnicode_FromString("cyclonedds.internal");
+        PyErr_SetImportError(msg, name, path);
+        Py_DECREF(msg);
+        Py_DECREF(name);
+        Py_DECREF(path);
+        return NULL;
+    }
     Py_DECREF(import);
 	return PyModule_Create(&_clayer_mod);
 }

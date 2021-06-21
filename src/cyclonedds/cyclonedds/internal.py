@@ -27,8 +27,8 @@ def _load_in_wheel() -> Optional[ct.CDLL]:
     (auditwheel hard-links to that particular ddsc and ignores any system ones)
     """
     try:
-        import ddspy
-        dir = os.path.join(os.path.abspath(os.path.dirname(ddspy.__file__)), "cyclonedds.libs")
+        import cyclonedds._clayer
+        dir = os.path.join(os.path.abspath(os.path.dirname(cyclonedds._clayer.__file__)), "..", "cyclonedds.libs")
         for file in os.listdir(dir):
             if "ddsc" in file:
                 return ct.CDLL(os.path.join(dir, file))
