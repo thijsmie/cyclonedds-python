@@ -23,7 +23,7 @@ def common_mocks(mocker: MockerFixture, platform: str, ext: str):
     mocker.patch("os.path.exists", new=lambda p: True)
     mocker.patch("os.listdir", new=lambda p: [f"libddsc_listdir_canary{ext}"])
     mocker.patch("os.path.dirname", new=lambda f: "dirname_canary")
-    mocker.patch("os.environ", new={"CYCLONEDDS_HOME": "env_canary"})
+    mocker.patch("os.environ", new={"CYCLONEDDS_HOME": "env_canary", "PATH": ""})
     return loadlist
 
 
