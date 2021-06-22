@@ -34,7 +34,7 @@ else:
 
 setup(
     name='cyclonedds',
-    version='0.1.4rc2',
+    version='0.1.4rc3',
     description='Cyclone DDS Python binding',
     author='Thijs Miedema',
     author_email='thijs.miedema@adlinktech.com',
