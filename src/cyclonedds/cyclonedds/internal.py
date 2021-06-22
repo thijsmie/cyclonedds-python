@@ -42,7 +42,7 @@ def _loader_wheel_gen(rel_path, ext):
         origin = os.path.join(os.path.dirname(__file__), *rel_path)
         if os.path.exists(origin):
             for file in os.listdir(origin):
-                if "ddsc" in file and file.endswith(ext):
+                if "ddsc" in file and ext in file and file.index(ext) > file.index("ddsc"):
                     return _load(os.path.join(origin, file))
         return None
     return _loader_wheel
