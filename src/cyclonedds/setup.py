@@ -44,9 +44,7 @@ setup(
         "Operating System :: OS Independent"
     ],
     install_requires=["pycdr"],
-    packages=find_packages('.', exclude=("tests", "examples", "tools")),
-    cmake_args=cmake_args,
-    scripts=['tools/ddsls.py'],
+    packages=find_packages('.', exclude=("tests", "examples")),
     entry_points={
         "console_scripts": [
             "ddsls=cyclonedds.tools.ddsls:command",
