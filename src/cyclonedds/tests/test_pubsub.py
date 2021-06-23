@@ -73,7 +73,6 @@ def run_pubsub_ddsls(pubsub_args, ddsls_args, runtime=5):
 
 def test_pubsub_empty():
     pubsub = run_pubsub(["-T", "test", "--runtime", "1"], text=None)
-    print(pubsub)
     assert pubsub["stdout"] == ""
     assert pubsub["status"] == 0
 
@@ -506,6 +505,6 @@ def test_select_eqos_without_qos_definitions():
     assert "The following argument is required: -q/--qos" in pubsub["stderr"]
 
 
-def test_file_open_error():
-    data = run_ddsls(["--json", "-a", "--filename", "C:/this/path/denfinitely/doesnot/exist/ever"])
-    assert "Exception: Could not open file C:/this/path/denfinitely/doesnot/exist/ever" in data["stderr"]
+def test_file_open_error(tmp_path):
+    data = run_ddsls(["--json", "-a", "--filename", f"{tmp_path}/this/path/denfinitely/doesnot/exist/ever"])
+    assert f"Exception: Could not open file {tmp_path}/this/path/denfinitely/doesnot/exist/ever" in data["stderr"]
