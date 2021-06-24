@@ -1,6 +1,6 @@
 [![License](https://img.shields.io/badge/License-EPL%202.0-blue)](https://choosealicense.com/licenses/epl-2.0/)
 [![License](https://img.shields.io/badge/License-EDL%201.0-blue)](https://choosealicense.com/licenses/edl-1.0/)
-[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/thijsmie/cyclonedds-python/InteractiveTutorial?filepath=binder%2Findex.ipynb)
+[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/thijsmie/cyclonedds-python/InteractiveTutorial?filepath=.binder%2Findex.ipynb)
 
 # Python binding for Eclipse Cyclone DDS
 
