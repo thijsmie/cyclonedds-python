@@ -33,6 +33,7 @@ jobs:
         build_type: Debug
   steps:
   - template: /.azure/templates/build-cyclone.yml
+  - template: /.azure/templates/run-linter.yml
   - template: /.azure/templates/build-test.yml
     parameters:
       python_version: 3.6
