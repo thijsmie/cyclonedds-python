@@ -472,15 +472,11 @@ def test_write_disposed_data_to_file(tmp_path):
         "dw.guid": str(dw.guid),
         "dr.guid": str(dr.guid)
     }
-    time.sleep(2)
-
-    waitset = WaitSet(dp)
-    cond = ReadCondition(dr, ViewState.Any | InstanceState.NotAliveDisposed | SampleState.Any)
-    waitset.attach(cond)
-
-    del dp
-    gc.collect()
     time.sleep(0.5)
+
+    del dp, tp, dw, dr
+    gc.collect()
+    time.sleep(1)
 
     stop_ddsls_watchmode(ddsls)
 
