@@ -70,6 +70,11 @@ class ArrayHolder:
     def __repr__(self) -> str:
         return f"array[{self.type}, {self.length}]"
 
+    def __eq__(self, o: object) -> bool:
+        return isinstance(o, ArrayHolder) and o.type == self.type and o.length == self.length
+
+    def __hash__(self) -> int:
+        return (241813571056069 * self.length) ^ hash(self.type)
 
 class ArrayGenerator:
     def __getitem__(self, tup):
@@ -89,6 +94,12 @@ class SequenceHolder:
         else:
             return f"sequence[{self.type}"
 
+    def __eq__(self, o: object) -> bool:
+        return isinstance(o, SequenceHolder) and o.type == self.type and o.max_length == self.max_length
+
+    def __hash__(self) -> int:
+        return (406820761152607 * self.max_length) ^ hash(self.type)
+
 
 class SequenceGenerator:
     def __getitem__(self, tup):
@@ -107,6 +118,12 @@ class BoundStringHolder:
 
     def __repr__(self) -> str:
         return f"bound_str[{self.max_length}]"
+
+    def __eq__(self, o: object) -> bool:
+        return isinstance(o, BoundStringHolder) and o.max_length == self.max_length
+
+    def __hash__(self) -> int:
+        return 277146416319491 * self.max_length
 
 
 class BoundStringGenerator:
@@ -130,6 +147,14 @@ class CaseHolder(ValidUnionHolder):
     def __repr__(self) -> str:
         return f"case[{self.discriminator_value}, {self.type}]"
 
+    def __eq__(self, o: object) -> bool:
+        return isinstance(o, CaseHolder) and o.type == self.type and \
+               o.discriminator_value == self.discriminator_value
+
+    def __hash__(self) -> int:
+        return (545464105755071 * self.discriminator_value) ^ hash(self.type)
+
+
 
 class CaseGenerator:
     def __getitem__(self, tup):
@@ -144,6 +169,12 @@ class DefaultHolder(ValidUnionHolder):
 
     def __repr__(self) -> str:
         return f"default[{self.type}]"
+
+    def __eq__(self, o: object) -> bool:
+        return isinstance(o, DefaultHolder) and o.type == self.type
+
+    def __hash__(self) -> int:
+        return 438058395842377 ^ hash(self.type)
 
 
 class DefaultGenerator:

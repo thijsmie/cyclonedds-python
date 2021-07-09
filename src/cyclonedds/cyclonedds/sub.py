@@ -206,7 +206,7 @@ class DataReader(Entity):
             If any error code is returned by the DDS API it is converted into an exception.
         """
         waitset = WaitSet(self.participant)
-        condition = ReadCondition(self, ViewState.Any | InstanceState.Any | SampleState.NotRead)
+        condition = condition or ReadCondition(self, ViewState.Any | InstanceState.Any | SampleState.NotRead)
         waitset.attach(condition)
         timeout = timeout or duration(weeks=99999)
 
