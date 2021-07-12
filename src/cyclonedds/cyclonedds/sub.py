@@ -14,9 +14,11 @@ import asyncio
 import concurrent.futures
 from typing import AsyncGenerator, List, Optional, Union, Generator, TYPE_CHECKING
 
-from .core import Entity, DDSException, WaitSet, ReadCondition, SampleState, InstanceState, ViewState
+from .core import Entity, Listener, DDSException, WaitSet, ReadCondition, SampleState, InstanceState, ViewState
+from .domain import DomainParticipant
+from .topic import Topic
 from .internal import c_call, dds_c_t
-from .qos import _CQos
+from .qos import _CQos, Qos, LimitedScopeQos, SubscriberQos, DataReaderQos
 from .util import duration
 
 from cyclonedds._clayer import ddspy_read, ddspy_take, ddspy_read_handle, ddspy_take_handle, ddspy_lookup_instance
@@ -30,19 +32,35 @@ class Subscriber(Entity):
     def __init__(
             self,
             domain_participant: 'cyclonedds.domain.DomainParticipant',
-            qos: Optional['cyclonedds.core.Qos'] = None,
-            listener: Optional['cyclonedds.core.Listener'] = None):
+            qos: Optional[Qos] = None,
+            listener: Optional[Listener] = None):
+        if not isinstance(domain_participant, DomainParticipant):
+            raise TypeError(f"{domain_participant} is not a cyclonedds.domain.DomainParticipant.")
+
+        if qos is not None:
+            if isinstance(qos, LimitedScopeQos) and not isinstance(qos, SubscriberQos):
+                raise TypeError(f"{qos} is not appropriate for a Subscriber")
+            elif not isinstance(qos, Qos):
+                raise TypeError(f"{qos} is not a valid qos object")
+
+        if listener is not None:
+            if not isinstance(listener, Listener):
+                raise TypeError(f"{listener} is not a valid listener object.")
+
         cqos = _CQos.qos_to_cqos(qos) if qos else None
-        super().__init__(
-            self._create_subscriber(
-                domain_participant._ref,
-                cqos,
-                listener._ref if listener else None
-            ),
-            listener=listener
-        )
-        if cqos:
-            _CQos.cqos_destroy(cqos)
+        try:
+            super().__init__(
+                self._create_subscriber(
+                    domain_participant._ref,
+                    cqos,
+                    listener._ref if listener else None
+                ),
+                listener=listener
+            )
+        finally:
+            if cqos:
+                _CQos.cqos_destroy(cqos)
+
         self._keepalive_entities = [self.participant]
 
     def notify_readers(self):
@@ -67,9 +85,9 @@ class DataReader(Entity):
     def __init__(
             self,
             subscriber_or_participant: Union['cyclonedds.sub.Subscriber', 'cyclonedds.domain.DomainParticipant'],
-            topic: 'cyclonedds.topic.Topic',
-            qos: Optional['cyclonedds.core.Qos'] = None,
-            listener: Optional['cyclonedds.core.Listener'] = None):
+            topic: Topic,
+            qos: Optional[Qos] = None,
+            listener: Optional[Listener] = None):
         """Initialize the DataReader
 
         Parameters
@@ -86,20 +104,40 @@ class DataReader(Entity):
         listener: cyclonedds.core.Listener = None
             Optionally supply a Listener.
         """
+        if not (isinstance(subscriber_or_participant, DomainParticipant) or
+                isinstance(subscriber_or_participant, Subscriber)):
+            raise TypeError(f"{subscriber_or_participant} is not a cyclonedds.domain.DomainParticipant or cyclonedds.sub.Subscriber.")
+
+        if not isinstance(topic, Topic):
+            raise TypeError(f"{topic} is not a cyclonedds.topic.Topic.")
+
+        if qos is not None:
+            if isinstance(qos, LimitedScopeQos) and not isinstance(qos, DataReaderQos):
+                raise TypeError(f"{qos} is not appropriate for a DataReader")
+            elif not isinstance(qos, Qos):
+                raise TypeError(f"{qos} is not a valid qos object")
+
+        if listener is not None:
+            if not isinstance(listener, Listener):
+                raise TypeError(f"{listener} is not a valid listener object.")
+
         cqos = _CQos.qos_to_cqos(qos) if qos else None
-        super().__init__(
-            self._create_reader(
-                subscriber_or_participant._ref,
-                topic._ref,
-                cqos,
-                listener._ref if listener else None
-            ),
-            listener=listener
-        )
+        try:
+            super().__init__(
+                self._create_reader(
+                    subscriber_or_participant._ref,
+                    topic._ref,
+                    cqos,
+                    listener._ref if listener else None
+                ),
+                listener=listener
+            )
+        finally:
+            if cqos:
+                _CQos.cqos_destroy(cqos)
         self._topic = topic
+        self._topic_ref = topic._ref
         self._next_condition = None
-        if cqos:
-            _CQos.cqos_destroy(cqos)
         self._keepalive_entities = [self.subscriber, topic]
 
     @property

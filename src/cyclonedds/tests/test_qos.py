@@ -1,6 +1,6 @@
 import pytest
 import itertools
-from cyclonedds.qos import Policy, Qos, _CQos
+from cyclonedds.qos import Policy, Qos, _CQos, TopicQos
 
 
 some_qosses = [
@@ -61,6 +61,14 @@ def test_qos_ops(qos):
     for policy in qos:
         assert policy in qos
     repr(qos)
+    qos.domain_participant()
+    qos.subscriber()
+    qos.publisher()
+    qos.topic()
+    qos.datawriter()
+    qos.datareader()
+    assert qos - qos == Qos()
+    assert qos + qos == qos
 
 
 @pytest.mark.parametrize("qos1,qos2", qos_pairs)

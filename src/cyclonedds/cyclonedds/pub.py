@@ -10,11 +10,13 @@
  * SPDX-License-Identifier: EPL-2.0 OR BSD-3-Clause
 """
 
-from typing import Optional, TYPE_CHECKING
+from typing import Optional, Union, TYPE_CHECKING
 
 from .internal import c_call, dds_c_t
-from .core import Entity, DDSException
-from .qos import _CQos
+from .core import Entity, DDSException, Listener
+from .domain import DomainParticipant
+from .topic import Topic
+from .qos import _CQos, Qos, LimitedScopeQos, PublisherQos, DataWriterQos
 
 from cyclonedds._clayer import ddspy_write, ddspy_write_ts, ddspy_dispose, ddspy_writedispose, ddspy_writedispose_ts, \
     ddspy_dispose_handle, ddspy_dispose_handle_ts, ddspy_register_instance, ddspy_unregister_instance,   \
@@ -29,20 +31,36 @@ if TYPE_CHECKING:
 class Publisher(Entity):
     def __init__(
             self,
-            domain_participant: 'cyclonedds.domain.DomainParticipant',
-            qos: Optional['cyclonedds.core.Qos'] = None,
-            listener: Optional['cyclonedds.core.Listener'] = None):
+            domain_participant: DomainParticipant,
+            qos: Optional[Qos] = None,
+            listener: Optional[Listener] = None):
+        if not isinstance(domain_participant, DomainParticipant):
+            raise TypeError(f"{domain_participant} is not a cyclonedds.domain.DomainParticipant or cyclonedds.sub.Subscriber.")
+
+        if qos is not None:
+            if isinstance(qos, LimitedScopeQos) and not isinstance(qos, PublisherQos):
+                raise TypeError(f"{qos} is not appropriate for a Publisher")
+            elif not isinstance(qos, Qos):
+                raise TypeError(f"{qos} is not a valid qos object")
+
+        if listener is not None:
+            if not isinstance(listener, Listener):
+                raise TypeError(f"{listener} is not a valid listener object.")
+
         cqos = _CQos.qos_to_cqos(qos) if qos else None
-        super().__init__(
-            self._create_publisher(
-                domain_participant._ref,
-                cqos,
-                listener._ref if listener else None
-            ),
-            listener=listener
-        )
-        if cqos:
-            _CQos.cqos_destroy(cqos)
+        try:
+            super().__init__(
+                self._create_publisher(
+                    domain_participant._ref,
+                    cqos,
+                    listener._ref if listener else None
+                ),
+                listener=listener
+            )
+        finally:
+            if cqos:
+                _CQos.cqos_destroy(cqos)
+
         self._keepalive_entities = [self.participant]
 
     def suspend(self):
@@ -84,22 +102,40 @@ class Publisher(Entity):
 
 
 class DataWriter(Entity):
-    def __init__(self, publisher: 'cyclonedds.pub.Publisher', topic: 'cyclonedds.topic.Topic', qos=None, listener=None):
+    def __init__(self,
+                 publisher_or_participant: Union[DomainParticipant, Publisher],
+                 topic: Topic,
+                 qos: Optional[Qos] = None,
+                 listener: Optional[Listener] = None):
+        if not (isinstance(publisher_or_participant, DomainParticipant) or
+                isinstance(publisher_or_participant, Publisher)):
+            raise TypeError(f"{publisher_or_participant} is not a cyclonedds.domain.DomainParticipant or cyclonedds.pub.Publisher.")
+
+        if not isinstance(topic, Topic):
+            raise TypeError(f"{topic} is not a cyclonedds.topic.Topic.")
+
+        if qos is not None:
+            if isinstance(qos, LimitedScopeQos) and not isinstance(qos, DataWriterQos):
+                raise TypeError(f"{qos} is not appropriate for a DataWriter")
+            elif not isinstance(qos, Qos):
+                raise TypeError(f"{qos} is not a valid qos object")
+
         cqos = _CQos.qos_to_cqos(qos) if qos else None
-        super().__init__(
-            self._create_writer(
-                publisher._ref,
-                topic._ref,
-                cqos,
-                listener._ref if listener else None
-            ),
-            listener=listener
-        )
+        try:
+            super().__init__(
+                self._create_writer(
+                    publisher_or_participant._ref,
+                    topic._ref,
+                    cqos,
+                    listener._ref if listener else None
+                ),
+                listener=listener
+            )
+        finally:
+            if cqos:
+                _CQos.cqos_destroy(cqos)
 
         self._topic_ref = topic._ref
-        if cqos:
-            _CQos.cqos_destroy(cqos)
-
         self._keepalive_entities = [self.publisher, self.topic]
 
     @property

@@ -1,7 +1,7 @@
 from dataclasses import dataclass, make_dataclass, asdict
 from inspect import isclass
 from base64 import b64encode, b64decode
-from typing import Sequence, Union, Optional, ClassVar
+from typing import Sequence, Union, Set, Optional, ClassVar
 import ctypes as ct
 
 from .internal import static_c_call, dds_c_t, DDS
@@ -684,7 +684,7 @@ class Qos:
         return True
 
     def __repr__(self):
-        return "Qos({})".format(", ".join(repr(p) for p in self.policies))
+        return f"{self.__class__.__name__}({', '.join(repr(p) for p in self.policies)})"
 
     __str__ = __repr__
 
@@ -737,24 +737,161 @@ class Qos:
                 v["data"] = b64decode(v["data"].encode())
 
             name = f"Policy.{k}"
-            if name in cls._policy_mapper:
+            if name in Qos._policy_mapper:
                 if v:
-                    policies.append(cls._policy_mapper[name](**v))
+                    policies.append(Qos._policy_mapper[name](**v))
                 else:
-                    policies.append(cls._policy_mapper[name])
+                    policies.append(Qos._policy_mapper[name])
                 continue
             if "kind" in v:
                 name += f".{v['kind']}"
                 del v["kind"]
-                if name in cls._policy_mapper:
+                if name in Qos._policy_mapper:
                     if v:
-                        policies.append(cls._policy_mapper[name](**v))
+                        policies.append(Qos._policy_mapper[name](**v))
                     else:
                         policies.append(cls._policy_mapper[name])
                     continue
             raise ValueError("Not a valid Qos dictionary.")
 
         return cls(*policies)
+
+    def __add__(self, other) -> 'Qos':
+        return Qos(*other.policies, base=self)
+
+    def __sub__(self, other) -> 'Qos':
+        for pol in other:
+            if not pol in self:
+                raise ValueError(f"Cannot remove {pol} because that is not contained within this Qos object")
+        return Qos(*[pol for pol in self.policies if pol not in other])
+
+    def domain_participant(self) -> 'DomainParticipantQos':
+        return DomainParticipantQos(
+            *[policy for policy in self if policy.__scope__ in DomainParticipantQos.supported_scopes]
+        )
+
+    def topic(self) -> 'TopicQos':
+        return TopicQos(
+            *[policy for policy in self if policy.__scope__ in TopicQos.supported_scopes]
+        )
+
+    def publisher(self) -> 'PublisherQos':
+        return PublisherQos(
+            *[policy for policy in self if policy.__scope__ in PublisherQos.supported_scopes]
+        )
+
+    def subscriber(self) -> 'SubscriberQos':
+        return SubscriberQos(
+            *[policy for policy in self if policy.__scope__ in SubscriberQos.supported_scopes]
+        )
+
+    def datareader(self) -> 'DataReaderQos':
+        return DataReaderQos(
+            *[policy for policy in self if policy.__scope__ in DataReaderQos.supported_scopes]
+        )
+
+    def datawriter(self) -> 'DataWriterQos':
+        return DataWriterQos(
+            *[policy for policy in self if policy.__scope__ in DataWriterQos.supported_scopes]
+        )
+
+
+class LimitedScopeQos(Qos):
+    for_entity: str
+    supported_scopes: Set[str]
+
+    def _assert_consistency(self):
+        super()._assert_consistency()
+
+        for policy in self.policies:
+            if policy.__scope__ not in self.supported_scopes:
+                raise ValueError(f"{self.for_entity} Qos does not support {policy}.")
+
+
+class DomainParticipantQos(LimitedScopeQos):
+    for_entity: str = "DomainParticipant"
+    supported_scopes: Set[str] = {"Userdata", "IgnoreLocal"}
+
+
+class TopicQos(LimitedScopeQos):
+    for_entity: str = "Topic"
+    supported_scopes: Set[str] = {
+        "Deadline",
+        "DestinationOrder",
+        "Durability",
+        "DurabilityService",
+        "History",
+        "IgnoreLocal",
+        "LatencyBudget",
+        "Lifespan",
+        "Liveliness",
+        "Ownership",
+        "Reliability",
+        "ResourceLimits",
+        "Topicdata",
+        "TransportPriority"
+    }
+
+
+class PublisherQos(LimitedScopeQos):
+    for_entity: str = "Publisher"
+    supported_scopes: Set[str] = {
+        "Groupdata",
+        "IgnoreLocal",
+        "Partition",
+        "PresentationAccessScope"
+    }
+
+
+class SubscriberQos(LimitedScopeQos):
+    for_entity: str = "Subscriber"
+    supported_scopes: Set[str] = {
+        "Groupdata",
+        "IgnoreLocal",
+        "Partition",
+        "PresentationAccessScope"
+    }
+
+
+class DataWriterQos(LimitedScopeQos):
+    for_entity: str = "DataWriter"
+    supported_scopes: Set[str] = {
+        "Deadline",
+        "DestinationOrder",
+        "Durability",
+        "DurabilityService",
+        "History",
+        "IgnoreLocal",
+        "LatencyBudget",
+        "Lifespan",
+        "Liveliness",
+        "Ownership",
+        "OwnershipStrength",
+        "Reliability",
+        "ResourceLimits",
+        "TransportPriority",
+        "Userdata",
+        "WriterDataLifecycle"
+    }
+
+
+class DataReaderQos(LimitedScopeQos):
+    for_entity: str = "DataReader"
+    supported_scopes: Set[str] = {
+        "Deadline",
+        "DestinationOrder",
+        "Durability",
+        "History",
+        "IgnoreLocal",
+        "LatencyBudget",
+        "Liveliness",
+        "Ownership",
+        "ReaderDataLifecycle",
+        "Reliability",
+        "ResourceLimits",
+        "TimeBasedFilter",
+        "Userdata"
+    }
 
 
 class _CQos(DDS):
