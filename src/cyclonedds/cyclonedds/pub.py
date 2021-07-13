@@ -135,14 +135,18 @@ class DataWriter(Entity):
             if cqos:
                 _CQos.cqos_destroy(cqos)
 
-        self._topic_ref = topic._ref
+        self._topic = topic
+        self.data_type = topic.data_type
         self._keepalive_entities = [self.publisher, self.topic]
 
     @property
     def topic(self) -> 'cyclonedds.topic.Topic':
-        return self.get_entity(self._topic_ref)
+        return self._topic
 
     def write(self, sample, timestamp=None):
+        if not isinstance(sample, self.data_type):
+            raise TypeError(f"{sample} is not of type {self.data_type}")
+
         if timestamp is not None:
             ret = ddspy_write_ts(self._ref, sample.serialize(), timestamp)
         else:
