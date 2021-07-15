@@ -1,4 +1,4 @@
-from dataclasses import dataclass, make_dataclass, asdict
+from dataclasses import dataclass, make_dataclass, asdict, field
 from inspect import isclass
 from base64 import b64encode, b64decode
 from typing import Sequence, Union, Set, Optional, ClassVar
@@ -516,6 +516,40 @@ class Policy:
         def __post_init__(self):
             if type(self.data) != bytes:
                 raise ValueError("Groupdata needs to be bytes.")
+
+    @dataclass(frozen=True)
+    class Property(BasePolicy):
+        """The Property Qos Policy
+
+        Examples
+        --------
+        >>> Policy.Property(key="host", value="central")
+        """
+        key: str
+        value: str
+        __scope__: str = field(init=False)
+
+        def __post_init__(self):
+            if type(self.value) != str:
+                raise ValueError("Property value should be string.")
+            self.__scope__ = f"Property<{self.key}>"
+
+    @dataclass(frozen=True)
+    class BinaryProperty(BasePolicy):
+        """The BinaryProperty Qos Policy
+
+        Examples
+        --------
+        >>> Policy.BinaryProperty(key="host", value=b"central")
+        """
+        key: str
+        value: bytes
+        __scope__: str = field(init=False)
+
+        def __post_init__(self):
+            if type(self.value) != bytes:
+                raise ValueError("BinaryProperty value should be bytes.")
+            self.__scope__ = f"BinaryProperty<{self.key}>"
 
 
 class Qos:
