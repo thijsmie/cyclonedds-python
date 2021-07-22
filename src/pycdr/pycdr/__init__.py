@@ -10,17 +10,17 @@
  * SPDX-License-Identifier: EPL-2.0 OR BSD-3-Clause
 """
 
-from dataclasses import dataclass
+from dataclasses import dataclass as __dataclass
 
-from .main import CDR, proto_deserialize, proto_serialize
+from .main import CDR as __CDR, proto_deserialize as __deserialize, proto_serialize as __serialize
 
 
 def cdr(*args, **kwargs):
     def in_cdr(cls):
-        cls = dataclass(cls)
-        CDR(cls, **kwargs)
-        cls.serialize = proto_serialize
-        cls.deserialize = classmethod(proto_deserialize)
+        cls = __dataclass(cls)
+        __CDR(cls, **kwargs)
+        cls.serialize = __serialize
+        cls.deserialize = classmethod(__deserialize)
         return cls
 
     if args:
