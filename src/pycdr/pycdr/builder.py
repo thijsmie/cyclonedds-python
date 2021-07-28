@@ -55,9 +55,10 @@ class Builder:
     @classmethod
     def _machine_for_cdrclass(cls, module_prefix, _type, key):
         if type(_type) != str:
-            qn = qualified_name(_type)
+            qn = _type.cdr.typename
         else:
-            if '.' not in _type:
+            _type = _type.replace(".", "::")
+            if '::' not in _type:
                 qn = module_prefix + _type
             else:
                 qn = _type
@@ -126,7 +127,7 @@ class Builder:
             if '.' not in key:
                 raise BuildDefer(module_prefix + key)
             else:
-                raise BuildDefer(key)
+                raise BuildDefer(key.replace(".", "::"))
 
         if _type.cdr.keylist is None:
             _type.cdr.keylist = fields.keys()  # here .keys() gives dict keys
@@ -165,8 +166,8 @@ class Builder:
 
     @classmethod
     def build_machine(cls, _type):
-        mp = module_prefix(_type)
-        qn = qualified_name(_type)
+        qn = _type.cdr.typename
+        mp = _type.cdr.typename[0:-len(qn)]
 
         if qn not in cls.defined_classes.keys():
             cls._process_deferral(qn, _type)

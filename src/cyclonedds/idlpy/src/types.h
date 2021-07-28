@@ -9,13 +9,12 @@
  *
  * SPDX-License-Identifier: EPL-2.0 OR BSD-3-Clause
  */
-#ifndef IDLPY_NAMING_H
-#define IDLPY_NAMING_H
+#ifndef IDLPY_TYPES_H
+#define IDLPY_TYPES_H
 
-#include "context.h"
+#include "idl/processor.h"
+#include "ncontext.h"
 
-char* define_local(idlpy_ctx ctx, const void *node);
-char* typename(idlpy_ctx ctx, const void *node);
+idl_retcode_t generate_types(const idl_pstate_t *pstate, idlpy_ctx ctx);
 
-
-#endif //IDLPY_NAMING_H
+#endif

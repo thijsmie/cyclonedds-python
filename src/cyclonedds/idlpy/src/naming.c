@@ -26,22 +26,18 @@
 #include "idl/processor.h"
 
 
-
-void size_descriptor(idlpy_ctx ctx, char **type, const void *node)
+static void size_descriptor(char **type, const void *node)
 {
     const char* fmt;
 
     if (idl_is_array(node)) {
-        idlpy_ensure_basetype_import(ctx, "array");
-        fmt = "array[%s, %" PRIu32 "]";
+        fmt = "pt.array[%s, %" PRIu32 "]";
     }
     else if (idl_is_sequence(node)) {
-        idlpy_ensure_basetype_import(ctx, "sequence");
-        fmt = "sequence[%s, %" PRIu32 "]";
+        fmt = "pt.sequence[%s, %" PRIu32 "]";
     }
     else if (idl_is_string(node)) {
-        idlpy_ensure_basetype_import(ctx, *type);
-        fmt = "%s[%" PRIu32 "]";
+        fmt = "pt.%s[%" PRIu32 "]";
     }
     else
         return;
@@ -62,54 +58,43 @@ void size_descriptor(idlpy_ctx ctx, char **type, const void *node)
 }
 
 
-char *typename_of_type(idlpy_ctx ctx, idl_type_t type)
+static char *typename_of_type(idlpy_ctx ctx, idl_type_t type)
 {
     switch (type)
     {
     case IDL_BOOL:
-        return idl_strdup("bool");
+        return idl_strdup("pt.bool");
     case IDL_CHAR:
-        idlpy_ensure_basetype_import(ctx, "char");
-        return idl_strdup("char");
+        return idl_strdup("pt.char");
     case IDL_INT8:
-        idlpy_ensure_basetype_import(ctx, "int8");
-        return idl_strdup("int8");
+        return idl_strdup("pt.int8");
     case IDL_OCTET:
     case IDL_UINT8:
-        idlpy_ensure_basetype_import(ctx, "uint8");
-        return idl_strdup("uint8");
+        return idl_strdup("pt.uint8");
     case IDL_SHORT:
     case IDL_INT16:
-        idlpy_ensure_basetype_import(ctx, "int16");
-        return idl_strdup("int16");
+        return idl_strdup("pt.int16");
     case IDL_USHORT:
     case IDL_UINT16:
-        idlpy_ensure_basetype_import(ctx, "uin16");
-        return idl_strdup("uint16");
+        return idl_strdup("pt.uint16");
     case IDL_LONG:
     case IDL_INT32:
-        idlpy_ensure_basetype_import(ctx, "int32");
-        return idl_strdup("int32");
+        return idl_strdup("pt.int32");
     case IDL_ULONG:
     case IDL_UINT32:
-        idlpy_ensure_basetype_import(ctx, "uint32");
-        return idl_strdup("uint32");
+        return idl_strdup("pt.uint32");
     case IDL_LLONG:
     case IDL_INT64:
-        idlpy_ensure_basetype_import(ctx, "int64");
-        return idl_strdup("int64");
+        return idl_strdup("pt.int64");
     case IDL_ULLONG:
     case IDL_UINT64:
-        idlpy_ensure_basetype_import(ctx, "uint64");
-        return idl_strdup("uint64");
+        return idl_strdup("pt.uint64");
     case IDL_FLOAT:
-        idlpy_ensure_basetype_import(ctx, "float32");
-        return idl_strdup("float32");
+        return idl_strdup("pt.float32");
     case IDL_DOUBLE:
-        idlpy_ensure_basetype_import(ctx, "float64");
-        return idl_strdup("float64");
+        return idl_strdup("pt.float64");
     case IDL_LDOUBLE:
-        idlpy_report_error(ctx, "The type 'long double'/'float128' is not supported in Python.");
+        idlpy_ctx_report_error(ctx, "The type 'long double'/'float128' is not supported in Python.");
         return idl_strdup("ERROR");
     case IDL_STRING:
         return idl_strdup("str");
@@ -126,25 +111,67 @@ char* typename(idlpy_ctx ctx, const void *node)
 {
     if (idl_is_sequence(node) || idl_is_array(node)) {
         char* inner = typename(ctx, idl_type_spec(node));
-        size_descriptor(ctx, &inner, node);
+        size_descriptor(&inner, node);
         return inner;
     }
     else if (idl_is_string(node) && idl_is_bounded(node)) {
-        char* inner = idl_strdup("bound_str");
-        size_descriptor(ctx, &inner, node);
+        char* inner = idl_strdup("bounded_str");
+        size_descriptor(&inner, node);
         return inner;
     }
     else {
         idl_type_t type = idl_type(node);
         char* typename = typename_of_type(ctx, type);
-        if (typename == NULL) return idlpy_imported_name(ctx, node);
+        if (typename == NULL) return absolute_name(node);
         return typename;
     }
 }
 
-char* define_local(idlpy_ctx ctx, const void *node)
+
+char *absolute_name(const void *node)
 {
-    char* name = idl_strdup(idl_identifier(node));
-    idlpy_define_local(ctx, name);
-    return name;
+    char *str;
+    size_t cnt, len = 0;
+    const char *sep, *ident;
+    const idl_node_t *root;
+    const char* separator = ".";
+
+    for (root = node, sep = ""; root; root = root->parent)
+    {
+        if ((idl_mask(root) & IDL_TYPEDEF) == IDL_TYPEDEF)
+            continue;
+        if ((idl_mask(root) & IDL_ENUM) == IDL_ENUM && root != node)
+            continue;
+        ident = idl_identifier(root);
+        assert(ident);
+        len += strlen(sep) + strlen(ident);
+        sep = separator;
+    }
+
+    if (!(str = malloc(len + 1)))
+        return NULL;
+
+    str[len] = '\0';
+    for (root = node, sep = separator; root; root = root->parent)
+    {
+        if ((idl_mask(root) & IDL_TYPEDEF) == IDL_TYPEDEF)
+            continue;
+        if ((idl_mask(root) & IDL_ENUM) == IDL_ENUM && root != node)
+            continue;
+
+        ident = idl_identifier(root);
+        assert(ident);
+        cnt = strlen(ident);
+        assert(cnt <= len);
+        len -= cnt;
+        memmove(str + len, ident, cnt);
+        if (len == 0)
+            break;
+        cnt = strlen(sep);
+        assert(cnt <= len);
+        len -= cnt;
+        memmove(str + len, sep, cnt);
+    }
+    assert(len == 0);
+    return str;
 }

@@ -11,11 +11,19 @@ if(CMAKE_C_COMPILER_ID STREQUAL "Clang" OR
                       -Winfinite-recursion -Wassign-enum -Wcomma -Wshadow
                       -Wstrict-prototypes -Wconditional-uninitialized)
 elseif(CMAKE_C_COMPILER_ID STREQUAL "GNU")
-  add_compile_options(-Wall -Wextra -Wconversion -Wmissing-prototypes)
+  add_compile_options(-Wall -Wextra -Wconversion -Wmissing-prototypes -Wpedantic --pedantic-errors)
 elseif(CMAKE_C_COMPILER_ID STREQUAL "MSVC")
   add_compile_options(/W3)
 endif()
 
+add_compile_options(-g)
+
+# Build idl python backend
+if (TARGET CycloneDDS::idl)
+  add_subdirectory(idlpy)
+endif()
+
+# Build python c layer
 add_library(_clayer MODULE clayer/src/cdrkeyvm.c clayer/src/pysertype.c)
 target_link_libraries(_clayer CycloneDDS::ddsc)
 python_extension_module(_clayer)
@@ -23,3 +31,4 @@ install(
   TARGETS _clayer
   LIBRARY DESTINATION cyclonedds
   RUNTIME DESTINATION cyclonedds)
+

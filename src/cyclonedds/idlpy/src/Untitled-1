@@ -1,0 +1,34 @@
+
+
+
+enum idlpy_ctx_type_t {
+    IDLPY_CTX_TYPE_FILE,
+    IDLPY_CTX_TYPE_MODULE,
+    IDLPY_CTX_TYPE_STRUCT,
+    IDLPY_CTX_TYPE_UNION
+};
+
+struct idlpy_ctx {
+    idlpy_ctx_type_t type;
+
+    idlpy_ctx_t parent;
+
+    /// Contents
+    idlpy_sll annotations;
+    idlpy_sll modules;
+    idlpy_sll structs_unions;
+
+    /// For which module is this context?
+    const void *module_node;
+
+    /// Name
+    char *name;
+
+    /// Buffered output
+    char *buffer;
+    size_t buffer_size;
+    size_t buffer_capacity;
+
+    /// Path
+    char *path;
+} *idlpy_ctx_t;

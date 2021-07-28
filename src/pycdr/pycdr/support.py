@@ -140,7 +140,7 @@ def module_prefix(cls):
     module = cls.__module__
     if module is None or module == str.__class__.__module__:
         return ""
-    return module + "."
+    return module.replace(".", "::") + "::"
 
 
 def qualified_name(instance, sep="."):

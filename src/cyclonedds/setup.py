@@ -37,7 +37,6 @@ setup(
         "Operating System :: OS Independent"
     ],
     install_requires=["pycdr"],
-    packages=find_packages('.', exclude=("tests", "examples")),
-    scripts=['tools/ddsls.py'],
+    packages=find_packages('.', exclude=("tests", "examples", "idlpy")),
     python_requires='>=3.6'
 )
