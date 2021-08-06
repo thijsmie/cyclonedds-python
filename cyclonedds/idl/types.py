@@ -25,8 +25,10 @@ if not typing.TYPE_CHECKING:
     typing.NewType = NewType
 
 from typing import ClassVar, NewType, Sequence, Dict, Any, Optional, Type
+from functools import reduce
 from enum import Enum
-from .type_helper import Annotated, get_origin, get_args, get_type_hints
+
+from ._type_helper import Annotated, get_origin, get_args, get_type_hints
 
 
 char = NewType("char", int)
@@ -181,18 +183,18 @@ class case(ValidUnionHolder, metaclass=GetItemSupportMeta):
         return Annotated[Optional[tup[1]], cls(*tup)]
 
     def __init__(self, discriminator_value, subtype: Type) -> None:
-        self.discriminator_value = discriminator_value
+        self.labels = discriminator_value if type(discriminator_value) == list else [discriminator_value]
         self.subtype = subtype
 
     def __repr__(self) -> str:
-        return f"case[{self.discriminator_value}, {_type_repr(self.subtype)}]"
+        return f"case[{self.labels}, {_type_repr(self.subtype)}]"
 
     def __eq__(self, o: object) -> bool:
         return isinstance(o, case) and o.subtype == self.subtype and \
-               o.discriminator_value == self.discriminator_value
+               o.labels == self.labels
 
     def __hash__(self) -> int:
-        return (545464105755071 * self.discriminator_value) ^ hash(self.subtype)
+        return (545464105755071 * reduce((lambda x, y: hash(x ^ (y * 11))), self.labels)) ^ hash(self.subtype)
 
     __str__ = __repr__
 
@@ -280,11 +282,19 @@ def _union_default_finder(type, cases):
         # We assume the enum is well formatted and starts at 0. We will use an integer to encode.
         return -1
 
+    if type == bool:
+        if True not in cases:
+            return True
+        elif False not in cases:
+            return False
+        raise TypeError("No space in discriminated union for default value.")
+
     val, inc, end = {
         int8: (-1, -1, -128),
         int16: (-1, -1, -32768),
         int32: (-1, -1, -2147483648),
         int64: (-1, -1, -9223372036854775808),
+        int: (-1, -1, -9223372036854775808),
         uint8: (0, 1, 255),
         uint16: (0, 1, 65535),
         uint32: (0, 1, 4294967295),

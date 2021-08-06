@@ -670,19 +670,36 @@ static bool valid_pt_or_set_error(void *py_obj)
 static ddspy_sertype_t *ddspy_sertype_new(PyObject *pytype)
 {
     /// Check all return values
-    PyObject *idl = PyObject_GetAttrString(pytype, "idl");
+    PyObject *idl = PyObject_GetAttrString(pytype, "__idl__");
     if (!valid_topic_py_or_set_error(idl)) return NULL;
 
-    PyObject* pyname = PyObject_GetAttrString(idl, "typename");
+    PyObject *populate = PyObject_GetAttrString(idl, "populate");
+    if (!valid_topic_py_or_set_error(populate)) {
+        Py_DECREF(idl);
+        return NULL;
+    }
+
+    PyObject* args = PyTuple_New(0);
+    PyObject* popreturn = PyObject_CallObject(populate, args);
+    Py_DECREF(populate);
+    Py_DECREF(args);
+
+    if (popreturn == NULL) {
+        Py_DECREF(idl);
+        return NULL;
+    }
+    Py_DECREF(popreturn);
+
+    PyObject* pyname = PyObject_GetAttrString(pytype, "__idl_typename__");
     if (!valid_topic_py_or_set_error(pyname)) {
-        Py_DECREF(idl);    
+        Py_DECREF(idl);
         return NULL;
     }
 
     PyObject* pykeyless = PyObject_GetAttrString(idl, "keyless");
     if (!valid_topic_py_or_set_error(pykeyless))  {
         Py_DECREF(idl); 
-        Py_DECREF(pyname);   
+        Py_DECREF(pyname);
         return NULL;
     }
     
@@ -770,7 +787,7 @@ ddspy_topic_create(PyObject *self, PyObject *args)
     sts = dds_create_topic_sertype(participant, name, (struct ddsi_sertype **) &rsertype, qos, listener, NULL);
 
     if (PyErr_Occurred()) return NULL;
-    
+
     return PyLong_FromLong((long)sts);
 }
 
@@ -958,11 +975,11 @@ static PyObject* get_sampleinfo_pyobject(dds_sample_info_t *sampleinfo)
         sampleinfo->sample_state,
         sampleinfo->view_state,
         sampleinfo->instance_state,
-        sampleinfo->valid_data ? Py_True : Py_False,
+        (sampleinfo->valid_data > 0) ? Py_True : Py_False,
         sampleinfo->source_timestamp,
         sampleinfo->instance_handle,
         sampleinfo->publication_handle,
-        sampleinfo->disposed_generation_count, 
+        sampleinfo->disposed_generation_count,
         sampleinfo->no_writers_generation_count,
         sampleinfo->sample_rank,
         sampleinfo->generation_rank,

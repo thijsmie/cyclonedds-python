@@ -31,13 +31,13 @@ static void size_descriptor(char **type, const void *node)
     const char* fmt;
 
     if (idl_is_array(node)) {
-        fmt = "pt.array[%s, %" PRIu32 "]";
+        fmt = "types.array[%s, %" PRIu32 "]";
     }
     else if (idl_is_sequence(node)) {
-        fmt = "pt.sequence[%s, %" PRIu32 "]";
+        fmt = "types.sequence[%s, %" PRIu32 "]";
     }
     else if (idl_is_string(node)) {
-        fmt = "pt.%s[%" PRIu32 "]";
+        fmt = "types.%s[%" PRIu32 "]";
     }
     else
         return;
@@ -64,36 +64,36 @@ static char *typename_of_type(idlpy_ctx ctx, idl_type_t type)
     switch (type)
     {
     case IDL_BOOL:
-        return idl_strdup("pt.bool");
+        return idl_strdup("types.bool");
     case IDL_CHAR:
-        return idl_strdup("pt.char");
+        return idl_strdup("types.char");
     case IDL_INT8:
-        return idl_strdup("pt.int8");
+        return idl_strdup("types.int8");
     case IDL_OCTET:
     case IDL_UINT8:
-        return idl_strdup("pt.uint8");
+        return idl_strdup("types.uint8");
     case IDL_SHORT:
     case IDL_INT16:
-        return idl_strdup("pt.int16");
+        return idl_strdup("types.int16");
     case IDL_USHORT:
     case IDL_UINT16:
-        return idl_strdup("pt.uint16");
+        return idl_strdup("types.uint16");
     case IDL_LONG:
     case IDL_INT32:
-        return idl_strdup("pt.int32");
+        return idl_strdup("types.int32");
     case IDL_ULONG:
     case IDL_UINT32:
-        return idl_strdup("pt.uint32");
+        return idl_strdup("types.uint32");
     case IDL_LLONG:
     case IDL_INT64:
-        return idl_strdup("pt.int64");
+        return idl_strdup("types.int64");
     case IDL_ULLONG:
     case IDL_UINT64:
-        return idl_strdup("pt.uint64");
+        return idl_strdup("types.uint64");
     case IDL_FLOAT:
-        return idl_strdup("pt.float32");
+        return idl_strdup("types.float32");
     case IDL_DOUBLE:
-        return idl_strdup("pt.float64");
+        return idl_strdup("types.float64");
     case IDL_LDOUBLE:
         idlpy_ctx_report_error(ctx, "The type 'long double'/'float128' is not supported in Python.");
         return idl_strdup("ERROR");
@@ -116,7 +116,7 @@ char* typename(idlpy_ctx ctx, const void *node)
         return inner;
     }
     else if (idl_is_string(node) && idl_is_bounded(node)) {
-        char* inner = idl_strdup("bounded_str");
+        char* inner = idl_strdup("bound_str");
         size_descriptor(&inner, node);
         return inner;
     }

@@ -134,15 +134,3 @@ class MaxSizeFinder:
         self.align(alignment)
         self.size += bytes
 
-
-def module_prefix(cls):
-    cls = cls.__class__ if not isclass(cls) else cls
-    module = cls.__module__
-    if module is None or module == str.__class__.__module__:
-        return ""
-    return module.replace(".", "::") + "::"
-
-
-def qualified_name(instance, sep="."):
-    cls = instance.__class__ if not isclass(instance) else instance
-    return (module_prefix(cls) + cls.__name__).replace('.', sep)

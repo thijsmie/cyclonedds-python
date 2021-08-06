@@ -6,7 +6,7 @@ The ``cyclonedds.idl`` package implements defining IDL unions and structs and th
 Usage
 -----
 
-If you are manually writing IDL objects your most important tool is :func:`@idl<cyclonedds.idl.idl>`. This decorator is a combination of the :func:`@dataclass<python:dataclasses.dataclass>` with the extra added in machinery for CDR serialization and deserialization. The second most important tool is the :func:`@keylist<cyclonedds.idl.keylist>` decorator, which allows you to define the key structure for you object.
+If you are manually writing IDL objects your most important tool is :class:`Struct<cyclonedds.idl.Struct>`.
 
 The following basic example will be very familiar if you have used dataclasses before. We will go over it here again briefly, for more detail go to the standard library documentation of :mod:`dataclasses<python:dataclasses>`.
 
@@ -16,8 +16,7 @@ The following basic example will be very familiar if you have used dataclasses b
    from cyclonedds.idl import idl
 
 
-   @idl
-   class Point2D:
+   class Point2D(Struct):
       x: int
       y: int
 
