@@ -27,7 +27,6 @@ if not typing.TYPE_CHECKING:
 from typing import ClassVar, NewType, Sequence, Dict, Any, Optional, Type
 from functools import reduce
 from enum import Enum
-
 from ._type_helper import Annotated, get_origin, get_args, get_type_hints
 
 
