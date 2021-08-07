@@ -70,8 +70,15 @@ setup(
             "pytest>=6.2",
             "pytest-cov",
             "pytest-mock",
-            "flake8", 
+            "pytest-virtualenv",
+            "flake8",
+            "flake8-bugbear",
+            "flake8-docstrings",
             "twine"
+        ],
+        "docs": [
+            "Sphinx>=4.0.0",
+            "sphinx-rtd-theme>=0.5.2"
         ]
     },
     zip_safe=False

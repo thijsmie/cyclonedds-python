@@ -1,0 +1,18 @@
+#
+# Copyright(c) 2021 ADLINK Technology Limited and others
+#
+# This program and the accompanying materials are made available under the
+# terms of the Eclipse Public License v. 2.0 which is available at
+# http://www.eclipse.org/legal/epl-2.0, or the Eclipse Distribution License
+# v. 1.0 which is available at
+# http://www.eclipse.org/org/documents/edl-v10.php.
+#
+# SPDX-License-Identifier: EPL-2.0 OR BSD-3-Clause
+#
+
+idlc_generate(TARGET pyccompat_lib FILES py_c_compat.idl)
+
+cmake_policy(SET CMP0060 NEW)
+add_executable(republisher republisher.c)
+target_link_libraries(republisher pyccompat_lib CycloneDDS::ddsc)
+install(TARGETS republisher DESTINATION bin)

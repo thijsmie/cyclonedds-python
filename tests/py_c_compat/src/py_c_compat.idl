@@ -1,0 +1,9 @@
+module py_c_compat {
+    struct replybytes {
+        sequence<octet> data;
+    };
+
+    struct tp_long {
+        @key long data;
+    };
+};

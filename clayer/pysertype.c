@@ -690,7 +690,7 @@ static ddspy_sertype_t *ddspy_sertype_new(PyObject *pytype)
     }
     Py_DECREF(popreturn);
 
-    PyObject* pyname = PyObject_GetAttrString(pytype, "__idl_typename__");
+    PyObject* pyname = PyObject_GetAttrString(idl, "idl_transformed_typename");
     if (!valid_topic_py_or_set_error(pyname)) {
         Py_DECREF(idl);
         return NULL;

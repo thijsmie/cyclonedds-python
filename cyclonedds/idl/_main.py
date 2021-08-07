@@ -56,6 +56,7 @@ class IDL:
         self.machine = None
         self.keyless = None
         self.key_max_size = None
+        self.idl_transformed_typename = self.datatype.__idl_typename__.replace(".", "::")
 
     def populate(self):
         if self.machine is None:
