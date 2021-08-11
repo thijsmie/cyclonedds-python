@@ -111,13 +111,13 @@ class BytesMachine(Machine):
     def serialize(self, buffer, value, for_key=False):
         if self.bound and len(value) > self.bound:
             raise Exception("Bytes longer than bound.")
-        buffer.align(2)
-        buffer.write('H', 2, len(value))
+        buffer.align(4)
+        buffer.write('I', 4, len(value))
         buffer.write_bytes(value)
 
     def deserialize(self, buffer):
-        buffer.align(2)
-        numbytes = buffer.read('H', 2)
+        buffer.align(4)
+        numbytes = buffer.read('I', 4)
         return buffer.read_bytes(numbytes)
 
     def max_key_size(self, finder: MaxSizeFinder):
@@ -206,15 +206,15 @@ class SequenceMachine(Machine):
         if self.maxlen is not None:
             assert len(value) <= self.maxlen
 
-        buffer.align(2)
-        buffer.write('H', 2, len(value))
+        buffer.align(4)
+        buffer.write('I', 4, len(value))
 
         for v in value:
             self.submachine.serialize(buffer, v, for_key)
 
     def deserialize(self, buffer):
-        buffer.align(2)
-        num = buffer.read('H', 2)
+        buffer.align(4)
+        num = buffer.read('I', 4)
         return [self.submachine.deserialize(buffer) for i in range(num)]
 
     def max_key_size(self, finder: MaxSizeFinder):
@@ -233,7 +233,7 @@ class SequenceMachine(Machine):
     def cdr_key_machine_op(self, skip):
         if isinstance(self.submachine, PrimitiveMachine):
             stream = [CdrKeyVmOp(
-                CdrKeyVMOpType.Stream2ByteSize,
+                CdrKeyVMOpType.Stream4ByteSize,
                 skip,
                 self.submachine.alignment,
                 align=self.submachine.alignment
@@ -243,7 +243,7 @@ class SequenceMachine(Machine):
             return stream
 
         subops = self.submachine.cdr_key_machine_op(skip)
-        return [CdrKeyVmOp(CdrKeyVMOpType.Repeat2ByteSize, skip, value=len(subops)+2)] + \
+        return [CdrKeyVmOp(CdrKeyVMOpType.Repeat4ByteSize, skip, value=len(subops)+2)] + \
             subops + [CdrKeyVmOp(CdrKeyVMOpType.EndRepeat, skip, len(subops))]
 
 

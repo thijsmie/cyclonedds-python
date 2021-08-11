@@ -26,36 +26,23 @@
 #include "idl/processor.h"
 
 
-static void size_descriptor(char **type, const void *node)
+char* wrap_size_descriptor(char **type, const void *node)
 {
-    const char* fmt;
+    char* out;
 
     if (idl_is_array(node)) {
-        fmt = "types.array[%s, %" PRIu32 "]";
+        idl_asprintf(&out, "types.array[%s, %" PRIu32 "]", *type, idl_bound(node));
+    }
+    else if (idl_is_sequence(node) && idl_is_bounded(node)) {
+        idl_asprintf(&out, "types.sequence[%s, %" PRIu32 "]", *type, idl_bound(node));
     }
     else if (idl_is_sequence(node)) {
-        fmt = "types.sequence[%s, %" PRIu32 "]";
-    }
-    else if (idl_is_string(node)) {
-        fmt = "types.%s[%" PRIu32 "]";
+        idl_asprintf(&out, "types.sequence[%s]", *type);
     }
     else
-        return;
+        return NULL;
 
-    char **nbuf = NULL;
-
-    const idl_literal_t *literal;
-    literal = ((const idl_declarator_t *)node)->const_expr;
-
-    for (; literal; literal = idl_next(literal))
-    {
-        if (idl_asprintf(nbuf, fmt, *type, literal->value.uint32) != 0) 
-            return;
-        free(*type);
-        *type = *nbuf;
-        *nbuf = NULL;
-    }
-    return;
+    return out;
 }
 
 
@@ -111,14 +98,15 @@ static char *typename_of_type(idlpy_ctx ctx, idl_type_t type)
 char* typename(idlpy_ctx ctx, const void *node)
 {
     if (idl_is_sequence(node) || idl_is_array(node)) {
-        char* inner = typename(ctx, idl_type_spec(node));
-        size_descriptor(&inner, node);
-        return inner;
+        char *inner = typename(ctx, idl_type_spec(node));
+        char *full = wrap_size_descriptor(&inner, node);
+        free(inner);
+        return full;
     }
     else if (idl_is_string(node) && idl_is_bounded(node)) {
-        char* inner = idl_strdup("bound_str");
-        size_descriptor(&inner, node);
-        return inner;
+        char *string;
+        idl_asprintf(&string, "types.bound_str[%"PRIu32"]", idl_bound(node));
+        return string;
     }
     else {
         idl_type_t type = idl_type(node);

@@ -116,15 +116,15 @@ class IDL:
 
         self.machine.serialize(self.buffer, object, for_key=True)
 
-        b = self.buffer.asbytes()
-        return b.ljust(16, b'\0')
+        return self.buffer.asbytes()
+        return b
 
     def keyhash(self, object) -> bytes:
         if self.machine is None:
             self.populate()
 
         if self.key_max_size <= 16:
-            return self.key(object)
+            return self.key(object).ljust(16, b'\0')
 
         m = md5()
         m.update(self.key(object))

@@ -247,7 +247,7 @@ static void write_entity_headers(idlpy_ctx octx)
         "if TYPE_CHECKING:\n"
         "    import %s\n\n\n";
 
-    idl_fprintf(octx->entity->fp, fmt, IDL_VERSION, octx->module->fullname, octx->entity->name);
+    idl_fprintf(octx->entity->fp, fmt, IDL_VERSION, octx->module->fullname, octx->entity->name, octx->root_module->fullname);
 }
 
 void idlpy_ctx_consume(idlpy_ctx octx, char *data)

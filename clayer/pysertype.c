@@ -175,7 +175,9 @@ static void ddspy_serdata_calc_hash(ddspy_serdata_t* this)
         ddsrt_md5_append(&md5st, this->key, (unsigned int)this->key_size);
         ddsrt_md5_finish(&md5st, (unsigned char*) &(this->hash));
     } else {
-        memcpy((char*) &(this->hash), (char*) this->key, 16);
+        assert(this->key_size < 16);
+        memset(this->hash.value, 0, 16);
+        memcpy(this->hash.value, (char*) this->key, this->key_size);
     }
     this->c_data.hash = ddsrt_mh3(this->key, this->key_size, 0) ^ this->c_data.type->serdata_basehash;
 }

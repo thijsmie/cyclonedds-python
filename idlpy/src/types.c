@@ -25,7 +25,6 @@
 #include "naming.h"
 #include "types.h"
 
-
 static idl_retcode_t
 emit_module(
     const idl_pstate_t *pstate,
@@ -34,7 +33,7 @@ emit_module(
     const void *node,
     void *user_data)
 {
-    idlpy_ctx ctx = (idlpy_ctx) user_data;
+    idlpy_ctx ctx = (idlpy_ctx)user_data;
     idl_retcode_t ret = IDL_RETCODE_NO_MEMORY;
 
     if (!revisit)
@@ -52,7 +51,6 @@ emit_module(
     return ret;
 }
 
-
 /* members with multiple declarators result in multiple members */
 static idl_retcode_t
 emit_field(
@@ -62,7 +60,7 @@ emit_field(
     const void *node,
     void *user_data)
 {
-    idlpy_ctx ctx = (idlpy_ctx) user_data;
+    idlpy_ctx ctx = (idlpy_ctx)user_data;
 
     const char *name = idl_identifier(node);
     char *type = typename(ctx, idl_type_spec(node));
@@ -77,24 +75,26 @@ emit_field(
     return IDL_RETCODE_OK;
 }
 
-
 static void struct_decoration(idlpy_ctx ctx, const void *node)
 {
-    idl_struct_t *_struct = (idl_struct_t*) node;
+    idl_struct_t *_struct = (idl_struct_t *)node;
 
     idlpy_ctx_printf(ctx, "@dataclass\n");
 
-    if (_struct->keylist) {
+    if (_struct->keylist)
+    {
         idlpy_ctx_printf(ctx, "@annotate.keylist([");
 
-        idl_key_t* key = _struct->keylist->keys;
+        idl_key_t *key = _struct->keylist->keys;
 
-        if(key) {
+        if (key)
+        {
             idlpy_ctx_printf(ctx, "\"%s\"", key->field_name->identifier);
             key++;
         }
 
-        while(key) {
+        while (key)
+        {
             idlpy_ctx_printf(ctx, ", \"%s\"", key->field_name->identifier);
             key++;
         }
@@ -102,32 +102,35 @@ static void struct_decoration(idlpy_ctx ctx, const void *node)
         idlpy_ctx_printf(ctx, "])\n");
     }
 
-    switch(_struct->extensibility) {
-        case IDL_EXTENSIBILITY_FINAL:
+    switch (_struct->extensibility)
+    {
+    case IDL_EXTENSIBILITY_FINAL:
         idlpy_ctx_printf(ctx, "@annotate.final\n");
-            break;
-        case IDL_EXTENSIBILITY_APPENDABLE:
+        break;
+    case IDL_EXTENSIBILITY_APPENDABLE:
         idlpy_ctx_printf(ctx, "@annotate.appendable\n");
-            break;
-        case IDL_EXTENSIBILITY_MUTABLE:
+        break;
+    case IDL_EXTENSIBILITY_MUTABLE:
         idlpy_ctx_printf(ctx, "@annotate.mutable\n");
-            break;
-        default:
-            break;
+        break;
+    default:
+        break;
     }
 
-    switch(_struct->autoid) {
-        case IDL_AUTOID_HASH:
-            idlpy_ctx_printf(ctx, "@annotate.autoid(\"hash\")\n");
-            break;
-        case IDL_AUTOID_SEQUENTIAL:
-            idlpy_ctx_printf(ctx, "@annotate.autoid(\"sequential\")\n");
-            break;
-        default:
-            break;
+    switch (_struct->autoid)
+    {
+    case IDL_AUTOID_HASH:
+        idlpy_ctx_printf(ctx, "@annotate.autoid(\"hash\")\n");
+        break;
+    case IDL_AUTOID_SEQUENTIAL:
+        idlpy_ctx_printf(ctx, "@annotate.autoid(\"sequential\")\n");
+        break;
+    default:
+        break;
     }
 
-    if (_struct->nested.value) {
+    if (_struct->nested.value)
+    {
         idlpy_ctx_printf(ctx, "@annotate.nested\n");
     }
 }
@@ -140,14 +143,14 @@ emit_struct(
     const void *node,
     void *user_data)
 {
-    idlpy_ctx ctx = (idlpy_ctx) user_data;
+    idlpy_ctx ctx = (idlpy_ctx)user_data;
     idl_retcode_t ret = IDL_RETCODE_NO_MEMORY;
 
     if (!revisit)
     {
-        struct_decoration(ctx, node);
         idlpy_ctx_enter_entity(ctx, idl_identifier(node));
-        idlpy_ctx_printf(ctx, "class %s(idl.IdlStruct, typename=\"%s\"):", absolute_name(node));
+        struct_decoration(ctx, node);
+        idlpy_ctx_printf(ctx, "class %s(idl.IdlStruct, typename=\"%s\"):", idl_identifier(node), absolute_name(node));
         ret = IDL_VISIT_REVISIT;
     }
     else
@@ -156,32 +159,33 @@ emit_struct(
         ret = IDL_RETCODE_OK;
     }
 
-    (void) pstate;
-    (void) path;
+    (void)pstate;
+    (void)path;
 
     return ret;
 }
 
-
 static void union_decoration(idlpy_ctx ctx, const void *node)
 {
-    idl_union_t *_union = (idl_union_t*) node;
+    idl_union_t *_union = (idl_union_t *)node;
 
-    switch(_union->extensibility) {
-        case IDL_EXTENSIBILITY_FINAL:
+    switch (_union->extensibility)
+    {
+    case IDL_EXTENSIBILITY_FINAL:
         idlpy_ctx_printf(ctx, "@annotate.final\n");
-            break;
-        case IDL_EXTENSIBILITY_APPENDABLE:
+        break;
+    case IDL_EXTENSIBILITY_APPENDABLE:
         idlpy_ctx_printf(ctx, "@annotate.appendable\n");
-            break;
-        case IDL_EXTENSIBILITY_MUTABLE:
+        break;
+    case IDL_EXTENSIBILITY_MUTABLE:
         idlpy_ctx_printf(ctx, "@annotate.mutable\n");
-            break;
-        default:
-            break;
+        break;
+    default:
+        break;
     }
 
-    if (_union->nested.value) {
+    if (_union->nested.value)
+    {
         idlpy_ctx_printf(ctx, "@annotate.nested\n");
     }
 }
@@ -194,13 +198,14 @@ emit_union(
     const void *node,
     void *user_data)
 {
-    idlpy_ctx ctx = (idlpy_ctx) user_data;
+    idlpy_ctx ctx = (idlpy_ctx)user_data;
     idl_retcode_t ret = IDL_RETCODE_NO_MEMORY;
 
     if (!revisit)
     {
-        char *discriminator = typename(ctx, ((idl_union_t*)node)->switch_type_spec->type_spec);
-        if (discriminator == NULL) return ret;
+        char *discriminator = typename(ctx, ((idl_union_t *)node)->switch_type_spec->type_spec);
+        if (discriminator == NULL)
+            return ret;
 
         idlpy_ctx_enter_entity(ctx, idl_identifier(node));
         union_decoration(ctx, node);
@@ -221,6 +226,55 @@ emit_union(
 }
 
 static idl_retcode_t
+expand_typedef(
+    idlpy_ctx ctx,
+    const idl_declarator_t *declarator)
+{
+    char *type = NULL;
+    const char *name = idl_identifier(declarator);
+    const idl_type_spec_t *type_spec;
+
+    if (idl_is_array(declarator))
+        type_spec = declarator;
+    else
+        type_spec = idl_type_spec(declarator);
+
+    idlpy_ctx_enter_entity(ctx, name);
+    type = typename(ctx, type_spec);
+    idlpy_ctx_printf(ctx, "%s = %s;\n\n", name, type);
+    idlpy_ctx_exit_entity(ctx);
+
+    return IDL_RETCODE_OK;
+}
+
+static idl_retcode_t
+emit_typedef(
+    const idl_pstate_t *pstate,
+    const bool revisit,
+    const idl_path_t *path,
+    const void *node,
+    void *user_data)
+{
+    idlpy_ctx ctx = (idlpy_ctx)user_data;
+    const idl_typedef_t *_typedef = (const idl_typedef_t *)node;
+    const idl_declarator_t *declarator;
+
+    (void)pstate;
+    (void)revisit;
+    (void)path;
+
+    idl_retcode_t ret = IDL_RETCODE_OK;
+    IDL_FOREACH(declarator, _typedef->declarators)
+    {
+        if ((ret = expand_typedef(ctx, declarator)) != IDL_RETCODE_OK)
+            break;
+    }
+
+    return ret;
+}
+
+/*
+static idl_retcode_t
 emit_typedef(
     const idl_pstate_t *pstate,
     bool revisit,
@@ -228,13 +282,20 @@ emit_typedef(
     const void *node,
     void *user_data)
 {
-    idlpy_ctx ctx = (idlpy_ctx) user_data;
+    if (!idl_is_typedef(node) || !revisit)
+        return IDL_VISIT_REVISIT;
 
-    char *type = typename(ctx, idl_type_spec(node));
-    if (type == NULL) return IDL_RETCODE_NO_MEMORY;
+    idlpy_ctx ctx = (idlpy_ctx)user_data;
+    const char *name = ((const idl_typedef_t *)node)->declarators->name->identifier;
 
-    idlpy_ctx_enter_entity(ctx, idl_identifier(node));
-    idlpy_ctx_printf(ctx, "%s = %s", idl_identifier(node), type);
+    const idl_type_spec_t *type_spec = idl_type_spec(node);
+
+    char *type = typename(ctx, type_spec);
+    if (type == NULL)
+        return IDL_RETCODE_NO_MEMORY;
+
+    idlpy_ctx_enter_entity(ctx, name);
+    idlpy_ctx_printf(ctx, "%s = %s", name, type);
     idlpy_ctx_exit_entity(ctx);
 
     free(type);
@@ -245,6 +306,7 @@ emit_typedef(
 
     return IDL_VISIT_DONT_RECURSE;
 }
+*/
 
 static idl_retcode_t
 emit_enum(
@@ -254,7 +316,7 @@ emit_enum(
     const void *node,
     void *user_data)
 {
-    idlpy_ctx ctx = (idlpy_ctx) user_data;
+    idlpy_ctx ctx = (idlpy_ctx)user_data;
     idl_retcode_t ret = IDL_RETCODE_NO_MEMORY;
     uint32_t skip = 0, value = 0;
 
@@ -264,9 +326,9 @@ emit_enum(
     idl_enumerator_t *enumerator = ((const idl_enum_t *)node)->enumerators;
     for (; enumerator; enumerator = idl_next(enumerator))
     {
-        const char* fmt;
+        const char *fmt;
 
-        char* name = typename(ctx, enumerator);
+        char *name = typename(ctx, enumerator);
         value = enumerator->value;
 
         /* IDL 3.5 did not support fixed enumerator values */
@@ -370,12 +432,13 @@ emit_const(
     const void *node,
     void *user_data)
 {
-    idlpy_ctx ctx = (idlpy_ctx) user_data;
+    idlpy_ctx ctx = (idlpy_ctx)user_data;
 
     char *type = typename(ctx, node);
-    if (type == NULL) return IDL_RETCODE_NO_MEMORY;
+    if (type == NULL)
+        return IDL_RETCODE_NO_MEMORY;
 
-    const idl_literal_t *literal = ((const idl_const_t *) node)->const_expr;
+    const idl_literal_t *literal = ((const idl_const_t *)node)->const_expr;
 
     idlpy_ctx_enter_entity(ctx, idl_identifier(node));
     idlpy_ctx_printf(ctx, "%s = ", type);
@@ -389,7 +452,6 @@ emit_const(
 
     return IDL_RETCODE_OK;
 }
-
 
 idl_retcode_t generate_types(const idl_pstate_t *pstate, idlpy_ctx ctx)
 {

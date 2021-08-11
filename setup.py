@@ -70,7 +70,6 @@ setup(
             "pytest>=6.2",
             "pytest-cov",
             "pytest-mock",
-            "pytest-virtualenv",
             "flake8",
             "flake8-bugbear",
             "flake8-docstrings",

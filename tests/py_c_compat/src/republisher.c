@@ -14,18 +14,23 @@
 #include "dds/ddsi/ddsi_cdrstream.h"
 #include "dds/ddsi/ddsi_serdata_default.h"
 #include "py_c_compat.h"
+#include "fuzzy_type_support.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
 #include <string.h>
 
-static const struct
-{
-    const char *name;
-    const dds_topic_descriptor_t *descriptor
-} descriptors[] = {
-    {"tp_long", &py_c_compat_tp_long_desc}
-};
+
+#if DDSRT_ENDIAN == DDSRT_LITTLE_ENDIAN
+#define NATIVE_ENCODING CDR_LE
+#define NATIVE_ENCODING_PL PL_CDR_LE
+#elif DDSRT_ENDIAN == DDSRT_BIG_ENDIAN
+#define NATIVE_ENCODING CDR_BE
+#define NATIVE_ENCODING_PL PL_CDR_BE
+#else
+#error "DDSRT_ENDIAN neither LITTLE nor BIG"
+#endif
+
 
 // republisher topic
 int main(int argc, char **argv)
@@ -33,20 +38,22 @@ int main(int argc, char **argv)
     dds_entity_t participant;
     dds_entity_t topic;
     dds_entity_t reader;
-    struct ddsi_serdata *samples[1];
-    dds_sample_info_t infos[1];
     dds_return_t rc;
-    dds_qos_t *qos;
-
+    dds_entity_t repltopic;
+    dds_entity_t writer;
     py_c_compat_replybytes msg;
-
+    dds_sample_info_t infos[1];
+    struct ddsi_serdata *samples[1] = {NULL};
     const dds_topic_descriptor_t *descriptor = NULL;
 
-    assert(argc >= 2);
+    if(argc < 2) {
+        printf("Supply republishing type.");
+        return 1;
+    };
 
-    for (int i = 0; i < sizeof(descriptors) / sizeof(descriptors[0]); ++i) {
-        if (strcmp(descriptors[i].name, argv[1]) == 0) {
-            descriptor = descriptors[i].descriptor;
+    for (int i = 0; i < fuzzy_descriptors_size; ++i) {
+        if (strcmp(fuzzy_descriptors[i].name, argv[1]) == 0) {
+            descriptor = fuzzy_descriptors[i].descriptor;
         }
     }
     if (!descriptor) return 1;
@@ -60,24 +67,40 @@ int main(int argc, char **argv)
     reader = dds_create_reader(participant, topic, NULL, NULL);
     if (reader < 0) return 1;
 
-    samples[0] = NULL;
+    repltopic = dds_create_topic(participant, &py_c_compat_replybytes_desc, "replybytes", NULL, NULL);
+    if (repltopic < 0) return 1;
+
+    writer = dds_create_writer(participant, repltopic, NULL, NULL);
+    if (writer < 0) return 1;
+
+    printf("ready\n");
+
     while (true) {
-        rc = dds_readcdr(reader, samples, 1, infos, DDS_NOT_READ_SAMPLE_STATE | DDS_ANY_VIEW_STATE | DDS_ALIVE_INSTANCE_STATE);
+        rc = dds_readcdr(reader, samples, 1, infos, DDS_NOT_READ_SAMPLE_STATE | DDS_ANY_VIEW_STATE | DDS_ANY_INSTANCE_STATE);
         if (rc < 0) return 1;
 
         if (rc > 0)
         {
             struct ddsi_serdata_default* rserdata = (struct ddsi_serdata_default*) samples[0];
             dds_istream_t sampstream;
-            dds_ostream_t keystream;
-            dds_ostream_init(&keystream, 10 * 1024);
-            dds_istream_from_serdata_default(&sampstream, rserdata);
-            dds_stream_extract_key_from_data(&sampstream, &keystream, (const struct ddsi_sertype_default *) rserdata->c.type);
+            dds_ostreamBE_t keystream;
+            dds_ostreamBE_init(&keystream, 0);
 
-            msg.data._buffer = (char*) malloc(keystream.m_index);
-            memcpy(msg.data._buffer, keystream.m_buffer, keystream.m_index);
-            msg.data._maximum = keystream.m_index;
-            msg.data._length = keystream.m_index;
+            dds_istream_from_serdata_default(&sampstream, rserdata);
+            dds_stream_extract_keyBE_from_data(&sampstream, &keystream, (const struct ddsi_sertype_default *) rserdata->c.type);
+
+            msg.reply_to = dds_string_dup(argv[1]);
+
+            const size_t outs = keystream.x.m_index;
+            msg.data._buffer = (uint8_t*) malloc(outs);
+            memcpy(msg.data._buffer, keystream.x.m_buffer, outs);
+            msg.data._maximum = outs;
+            msg.data._length = outs;
+            msg.data._release = true;
+
+            if (dds_write(writer, &msg) != DDS_RETCODE_OK)
+                return 1;
+            break;
         }
         else
         {
@@ -85,18 +108,7 @@ int main(int argc, char **argv)
         }
     }
 
-    dds_entity_t repltopic;
-    dds_entity_t writer;
-
-    repltopic = dds_create_topic(participant, &py_c_compat_replybytes_desc, "KeyBytes", NULL, NULL);
-    if (repltopic < 0) return -1;
-
-    writer = dds_create_writer(participant, repltopic, NULL, NULL);
-    if (writer < 0) return -1;
-
-    dds_write(writer, &msg);
-
-    dds_sleepfor(DDS_MSECS(100));
+    dds_sleepfor(DDS_SECS(1));
     dds_delete(participant);
 
     return EXIT_SUCCESS;
