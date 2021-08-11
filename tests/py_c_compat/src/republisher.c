@@ -45,9 +45,11 @@ int main(int argc, char **argv)
     dds_sample_info_t infos[1];
     struct ddsi_serdata *samples[1] = {NULL};
     const dds_topic_descriptor_t *descriptor = NULL;
+    unsigned long num_samps = 0;
+    unsigned long seq = 0;
 
-    if(argc < 2) {
-        printf("Supply republishing type.");
+    if(argc < 3) {
+        printf("Supply republishing type and sample amount.");
         return 1;
     };
 
@@ -57,6 +59,9 @@ int main(int argc, char **argv)
         }
     }
     if (!descriptor) return 1;
+
+    num_samps = strtoul(argv[2], NULL, 10);
+    if (num_samps == 0 || num_samps > 200000000) return 1;
 
     participant = dds_create_participant(0, NULL, NULL);
     if (participant < 0) return 1;
@@ -75,7 +80,7 @@ int main(int argc, char **argv)
 
     printf("ready\n");
 
-    while (true) {
+    while (seq < num_samps) {
         rc = dds_readcdr(reader, samples, 1, infos, DDS_NOT_READ_SAMPLE_STATE | DDS_ANY_VIEW_STATE | DDS_ANY_INSTANCE_STATE);
         if (rc < 0) return 1;
 
@@ -90,6 +95,7 @@ int main(int argc, char **argv)
             dds_stream_extract_keyBE_from_data(&sampstream, &keystream, (const struct ddsi_sertype_default *) rserdata->c.type);
 
             msg.reply_to = dds_string_dup(argv[1]);
+            msg.seq = seq++;
 
             const size_t outs = keystream.x.m_index;
             msg.data._buffer = (uint8_t*) malloc(outs);
@@ -100,7 +106,11 @@ int main(int argc, char **argv)
 
             if (dds_write(writer, &msg) != DDS_RETCODE_OK)
                 return 1;
-            break;
+
+            dds_ostreamBE_fini(&keystream);
+            ddsi_serdata_unref(samples[0]);
+            free(msg.data._buffer);
+            free(msg.reply_to);
         }
         else
         {
@@ -108,7 +118,7 @@ int main(int argc, char **argv)
         }
     }
 
-    dds_sleepfor(DDS_SECS(1));
+    dds_sleepfor(DDS_MSECS(200));
     dds_delete(participant);
 
     return EXIT_SUCCESS;

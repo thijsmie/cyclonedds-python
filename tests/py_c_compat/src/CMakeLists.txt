@@ -41,4 +41,4 @@ add_dependencies(republisher pyccompat_fuzzy)
 target_link_libraries(republisher pyccompat_lib CycloneDDS::ddsc)
 
 install(TARGETS republisher DESTINATION bin)
-install(DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/fuzzymod" DESTINATION site-packages)
+install(DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/fuzzymod" DESTINATION lib/site-packages/)

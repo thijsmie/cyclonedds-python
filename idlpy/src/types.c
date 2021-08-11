@@ -25,6 +25,79 @@
 #include "naming.h"
 #include "types.h"
 
+
+
+char *
+format_literal(
+    idlpy_ctx ctx,
+    const idl_literal_t *literal)
+{
+    char *ret;
+    idl_type_t type;
+
+    switch ((type = idl_type(literal)))
+    {
+    case IDL_CHAR:
+        idl_asprintf(&ret, "'%c'", literal->value.chr);
+        break;
+    case IDL_BOOL:
+        idl_asprintf(&ret, "%s", literal->value.bln ? "True" : "False");
+        break;
+    case IDL_INT8:
+        idl_asprintf(&ret, "%" PRId8, literal->value.int8);
+        break;
+    case IDL_OCTET:
+    case IDL_UINT8:
+        idl_asprintf(&ret, "%" PRIu8, literal->value.uint8);
+        break;
+    case IDL_SHORT:
+    case IDL_INT16:
+        idl_asprintf(&ret, "%" PRId16, literal->value.int16);
+        break;
+    case IDL_USHORT:
+    case IDL_UINT16:
+        idl_asprintf(&ret, "%" PRIu16, literal->value.uint16);
+        break;
+    case IDL_LONG:
+    case IDL_INT32:
+        idl_asprintf(&ret, "%" PRId32, literal->value.int32);
+        break;
+    case IDL_ULONG:
+    case IDL_UINT32:
+        idl_asprintf(&ret, "%" PRIu32, literal->value.uint32);
+        break;
+    case IDL_LLONG:
+    case IDL_INT64:
+        idl_asprintf(&ret, "%" PRId64, literal->value.int64);
+        break;
+    case IDL_ULLONG:
+    case IDL_UINT64:
+        idl_asprintf(&ret, "%" PRIu64, literal->value.uint64);
+        break;
+    case IDL_FLOAT:
+        idl_asprintf(&ret, "%.6f", literal->value.flt);
+        break;
+    case IDL_DOUBLE:
+        idl_asprintf(&ret, "%f", literal->value.dbl);
+        break;
+    case IDL_LDOUBLE:
+        idl_asprintf(&ret, "%Lf", literal->value.ldbl);
+        break;
+    case IDL_STRING:
+        idl_asprintf(&ret, "\"%s\"", literal->value.str);
+        break;
+    default:
+    {
+        char *name;
+        assert(type == IDL_ENUM);
+        name = typename(ctx, literal);
+        idl_asprintf(&ret, "%s", name);
+        free(name);
+    }
+    }
+    return ret;
+}
+
 static idl_retcode_t
 emit_module(
     const idl_pstate_t *pstate,
@@ -61,11 +134,44 @@ emit_field(
     void *user_data)
 {
     idlpy_ctx ctx = (idlpy_ctx)user_data;
+    const void *parent = idl_parent(node);
 
     const char *name = idl_identifier(node);
     char *type = typename(ctx, idl_type_spec(node));
 
+    if (idl_is_default_case(parent)) {
+        char *ctype;
+        idl_asprintf(&ctype, "types.default[%s]", type);
+        free(type);
+        type = ctype;
+    }
+    else if (idl_is_case(parent)) {
+        const idl_case_t *mycase = (const idl_case_t*) parent;
+        char *ctype, *labels = idl_strdup("");
+        idl_literal_t* literal = (idl_literal_t*) mycase->labels->const_expr;
+        const char *comma = "";
+
+        for (; literal; literal = idl_next(literal)) {
+            char *formatted = format_literal(ctx, literal);
+            char *nlabels;
+            idl_asprintf(&nlabels, "%s%s%s", labels, comma, formatted);
+            free(labels);
+            free(formatted);
+            labels = nlabels;
+            comma = ", ";
+        }
+
+        idl_asprintf(&ctype, "types.case[[%s], %s]", labels, type);
+        free(type);
+        free(labels);
+        type = ctype;
+    }
+
     idlpy_ctx_printf(ctx, "\n    %s: %s", name, type);
+
+    if (!pstate->keylists && idl_is_member(parent) && ((const idl_member_t*)parent)->key == IDL_TRUE) {
+        idlpy_ctx_printf(ctx, "\n    annotate.key(%s)", name);
+    }
 
     free(type);
     (void)pstate;
@@ -150,7 +256,9 @@ emit_struct(
     {
         idlpy_ctx_enter_entity(ctx, idl_identifier(node));
         struct_decoration(ctx, node);
-        idlpy_ctx_printf(ctx, "class %s(idl.IdlStruct, typename=\"%s\"):", idl_identifier(node), absolute_name(node));
+        char *fullname = absolute_name(node);
+        idlpy_ctx_printf(ctx, "class %s(idl.IdlStruct, typename=%s):", idl_identifier(node), fullname);
+        free(fullname);
         ret = IDL_VISIT_REVISIT;
     }
     else
@@ -209,7 +317,15 @@ emit_union(
 
         idlpy_ctx_enter_entity(ctx, idl_identifier(node));
         union_decoration(ctx, node);
-        idlpy_ctx_printf(ctx, "class %s(idl.IdlUnion, discriminator=%s):", idl_identifier(node), discriminator);
+        char* fullname = absolute_name(node);
+        idlpy_ctx_printf(ctx,
+            "class %s(idl.IdlUnion, discriminator=%s, discriminator_is_key=%s, typename=%s):",
+            idl_identifier(node),
+            discriminator,
+            ((idl_union_t *)node)->switch_type_spec->key == IDL_TRUE ? "True": "False",
+            fullname
+        );
+        free(fullname);
         ret = IDL_VISIT_REVISIT;
         free(discriminator);
     }

@@ -9,10 +9,7 @@ from cyclonedds.idl.annotations import key
 class replybytes(IdlStruct, typename="py_c_compat.replybytes"):
     reply_to: str
     key(reply_to)
+    seq: uint32
+    key(seq)
     data: bytes
 
-
-@dataclass
-class tp_long(IdlStruct, typename="py_c_compat.tp_long"):
-    data: uint32
-    key(data)

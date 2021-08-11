@@ -12,6 +12,7 @@
 cmake_minimum_required(VERSION 3.18)
 project(py_c_compat LANGUAGES C)
 find_package(CycloneDDS REQUIRED)
+find_package(PythonExtensions REQUIRED)
 
 add_compile_options(-g -O0 -Wall)
 

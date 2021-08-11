@@ -210,7 +210,6 @@ static idl_retcode_t write_module_headers(FILE *fh)
         "\"\"\"\n"
         "\n"
         "from cyclonedds.idl.module_helper import get_idl_entities\n"
-        "from typing import TYPE_CHECKING\n"
         "\n"
         "__idl_module__ = True\n"
         "__all__ = get_idl_entities(__name__)\n";
@@ -243,9 +242,8 @@ static void write_entity_headers(idlpy_ctx octx)
         "import cyclonedds.idl as idl\n"
         "import cyclonedds.idl.annotations as annotate\n"
         "import cyclonedds.idl.types as types\n\n"
-        "from . import TYPE_CHECKING\n\n"
-        "if TYPE_CHECKING:\n"
-        "    import %s\n\n\n";
+        "import %s\n"
+        "from . import __idl_module__\n\n";
 
     idl_fprintf(octx->entity->fp, fmt, IDL_VERSION, octx->module->fullname, octx->entity->name, octx->root_module->fullname);
 }

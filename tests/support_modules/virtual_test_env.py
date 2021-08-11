@@ -10,8 +10,9 @@ import cyclonedds
 
 
 class VirtualEnvWithPyCCompat:
-    def __init__(self):
-        self.dir = TemporaryDirectory()
+    def __init__(self, dir=None):
+        self.vdir = TemporaryDirectory() if not dir else None
+        self.dir = self.vdir.name if not dir else dir
         self.venv = EnvBuilder(
             system_site_packages=True,
             clear=False,
@@ -21,7 +22,7 @@ class VirtualEnvWithPyCCompat:
             prompt="",
             upgrade_deps=False
         )
-        self.venv.create(self.dir.name)
+        self.venv.create(self.dir)
 
         dir = os.path.abspath(os.path.join(os.path.dirname(cyclonedds.__file__), ".libs"))
         libs = [f for f in os.listdir(dir) if "idl" in f]
@@ -43,8 +44,8 @@ class VirtualEnvWithPyCCompat:
         if os.path.exists(os.path.join(pycompatpath, "cyclonedds_tests_c_compat.egg-info")):
             shutil.rmtree(os.path.join(pycompatpath, "cyclonedds_tests_c_compat.egg-info"))
 
-        fuzzpath = os.path.join(self.dir.name, "test.idl")
-        idl, self.typenames = random_idl_types(module="fuzzymod", number=50)
+        fuzzpath = os.path.join(self.dir, "test.idl")
+        idl, self.typenames = random_idl_types(seed=1, module="fuzzymod", number=100)
         with open(fuzzpath, "w") as f:
             f.write(idl)
 
@@ -65,14 +66,14 @@ class VirtualEnvWithPyCCompat:
 
     def executable(self):
         if sys.platform == "win32":
-            return os.path.join(self.dir.name, "Scripts", "python.exe")
-        return os.path.join(self.dir.name, "bin", "python")
+            return os.path.join(self.dir, "Scripts", "python.exe")
+        return os.path.join(self.dir, "bin", "python")
 
     def environment(self):
         base = os.environ.copy()
         base.update({
             "PATH": os.pathsep.join([os.path.dirname(self.executable())] + base.get("PATH", "").split(os.pathsep)),
-            "VIRTUAL_ENV": self.dir.name
+            "VIRTUAL_ENV": self.dir
         })
 
         if "PYTHONPATH" in base:
@@ -101,5 +102,6 @@ class VirtualEnvWithPyCCompat:
         return subprocess.Popen(args, **kwargs)
 
     def __del__(self):
-        self.dir.cleanup()
+        if self.vdir:
+            self.vdir.cleanup()
 

@@ -29,7 +29,7 @@
 static cdr_key_vm_op* make_vm_ops_from_py_op_list(PyObject* list)
 {
     Py_ssize_t len = PyList_Size(list);
-    if (len <= 0 || PyErr_Occurred())
+    if (len < 0 || PyErr_Occurred())
         return NULL;
 
     cdr_key_vm_op* ops = (cdr_key_vm_op*) malloc(sizeof(struct cdr_key_vm_op_s) * ((size_t)len + 1));
@@ -674,23 +674,6 @@ static ddspy_sertype_t *ddspy_sertype_new(PyObject *pytype)
     /// Check all return values
     PyObject *idl = PyObject_GetAttrString(pytype, "__idl__");
     if (!valid_topic_py_or_set_error(idl)) return NULL;
-
-    PyObject *populate = PyObject_GetAttrString(idl, "populate");
-    if (!valid_topic_py_or_set_error(populate)) {
-        Py_DECREF(idl);
-        return NULL;
-    }
-
-    PyObject* args = PyTuple_New(0);
-    PyObject* popreturn = PyObject_CallObject(populate, args);
-    Py_DECREF(populate);
-    Py_DECREF(args);
-
-    if (popreturn == NULL) {
-        Py_DECREF(idl);
-        return NULL;
-    }
-    Py_DECREF(popreturn);
 
     PyObject* pyname = PyObject_GetAttrString(idl, "idl_transformed_typename");
     if (!valid_topic_py_or_set_error(pyname)) {

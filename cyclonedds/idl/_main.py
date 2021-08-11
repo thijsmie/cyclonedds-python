@@ -14,10 +14,11 @@ from typing import Optional, cast, Any, Type, Union, ClassVar, Mapping, Dict, Ty
 from collections import defaultdict
 from dataclasses import dataclass
 from hashlib import md5
+from enum import Enum
 
-from .types import CaseHolder, DefaultHolder, _union_default_finder
 from ._support import Buffer, Endianness
 from ._type_helper import get_origin, get_args, get_type_hints, Annotated
+from . import types
 
 
 @dataclass
@@ -114,10 +115,12 @@ class IDL:
         self.buffer.set_align_offset(0)
         self.buffer.set_endianness(Endianness.Big)
 
+        if self.keyless:
+            return bytes()
+
         self.machine.serialize(self.buffer, object, for_key=True)
 
         return self.buffer.asbytes()
-        return b
 
     def keyhash(self, object) -> bytes:
         if self.machine is None:
@@ -133,6 +136,8 @@ class IDL:
     def cdr_key_machine(self, skip=False):
         if self.machine is None:
             self.populate()
+        if self.keyless:
+            return []
 
         return self.machine.cdr_key_machine_op(skip)
 
@@ -170,11 +175,48 @@ class IdlMeta(type):
 
     def __repr__(cls):
         # Note, this is the _class_ repr
-        return f"<IdlStruct:{cls.__name__} idl_typename='{cls.__idl_typename__}'>"
+        return f"<IdlStruct:{cls.__name__} idl_typename='{cls.__idl_typename__}'" + \
+               f"fields='{' '.join(str(k)+':'+str(v) for k,v in cls.__annotations__.items())}>"
+
+
+def _union_default_finder(type, cases):
+    if isinstance(type, Enum):
+        # We assume the enum is well formatted and starts at 0. We will use an integer to encode.
+        return -1
+
+    if type == bool:
+        if True not in cases:
+            return True
+        elif False not in cases:
+            return False
+        raise TypeError("No space in discriminated union for default value.")
+
+    val, inc, end = {
+        types.int8: (-1, -1, -128),
+        types.int16: (-1, -1, -32768),
+        types.int32: (-1, -1, -2147483648),
+        types.int64: (-1, -1, -9223372036854775808),
+        int: (-1, -1, -9223372036854775808),
+        types.uint8: (0, 1, 255),
+        types.uint16: (0, 1, 65535),
+        types.uint32: (0, 1, 4294967295),
+        types.uint64: (0, 1, 18446744073709551615),
+    }.get(type, (None, None, None))
+
+    if val is None:
+        raise TypeError("Invalid discriminator type")
+
+    while True:
+        if val not in cases:
+            return val
+        if val == end:
+            raise TypeError("No space in discriminated union for default value.")
+        val += inc
 
 
 class IdlUnionMeta(IdlMeta):
     __idl_discriminator__: Any
+    __idl_discriminator_is_key__: bool
     __idl_cases__: Dict[Any, Any]
     __idl_default__: Optional[Tuple[Any, Any]]
 
@@ -183,14 +225,21 @@ class IdlUnionMeta(IdlMeta):
         if not len(__bases):
             return super().__prepare__(__name, __bases, **kwds)
 
+        discriminator_is_key = False
+
         if "discriminator" not in kwds:
             raise TypeError("Union class needs a 'discriminator=type'")
+
+        if "discriminator_is_key" in kwds:
+            discriminator_is_key = kwds["discriminator_is_key"]
+            del kwds["discriminator_is_key"]
 
         discriminator = kwds["discriminator"]
         del kwds["discriminator"]
 
         namespace = super().__prepare__(__name, __bases, **kwds)
         namespace["__idl_discriminator__"] = discriminator
+        namespace["__idl_discriminator_is_key__"] = discriminator_is_key
         return namespace
 
     def __new__(metacls, name, bases, namespace, **kwds):
@@ -214,17 +263,17 @@ class IdlUnionMeta(IdlMeta):
                 # Edge case for python 3.6: bug in backport? TODO: investigate and report
                 holder = holder[0]
 
-            if isinstance(holder, CaseHolder):
+            if isinstance(holder, types.case):
                 for label in holder.labels:
                     if label in cases:
                         raise TypeError(f"Discriminator values must uniquely define a case, "
                                         f"but the case {label} occurred multiple times.")
-                    cases[label] = (name, holder.type)
+                    cases[label] = (name, holder.subtype)
                     names.add(name)
-            elif isinstance(holder, DefaultHolder):
+            elif isinstance(holder, types.default):
                 if default:
                     raise TypeError("A discriminated union can only have one default.")
-                default = (name, holder.type)
+                default = (name, holder.subtype)
                 names.add(name)
             else:
                 raise TypeError("Fields of a union need to be case or default.")
@@ -240,7 +289,8 @@ class IdlUnionMeta(IdlMeta):
         # Note, this is the _class_ repr
         if not cls.__bases__:
             return f"<{cls.__name__}>"
-        return f"<IdlUnion:{cls.__name__} idl_typename='{cls.__idl_typename__}'"# discriminator='{cls.__idl_discriminator__}'>"
+        return f"<IdlUnion:{cls.__name__} idl_typename='{cls.__idl_typename__}' discriminator='{cls.__idl_discriminator__}' " + \
+               f"fields='{' '.join(str(k)+':'+str(v) for k,v in cls.__annotations__.items())}>"
 
 
 

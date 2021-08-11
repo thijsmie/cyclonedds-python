@@ -11,6 +11,7 @@
 """
 
 from enum import Enum
+from importlib import import_module
 from inspect import isclass
 from typing import Type, Optional, Union
 from collections import defaultdict
@@ -19,13 +20,14 @@ from ._main import IdlStruct, IdlUnion
 from ._support import MaxSizeFinder
 from ._type_helper import Annotated, get_origin, get_args, get_type_hints
 from ._machinery import NoneMachine, PrimitiveMachine, StringMachine, BytesMachine, ByteArrayMachine, UnionMachine, \
-    ArrayMachine, SequenceMachine, InstanceMachine, MappingMachine, EnumMachine, StructMachine, OptionalMachine
+    ArrayMachine, SequenceMachine, InstanceMachine, MappingMachine, EnumMachine, StructMachine, OptionalMachine, CharMachine
 
-from .types import ArrayHolder, BoundStringHolder, SequenceHolder, primitive_types, NoneType
+from .types import array, bound_str, sequence, primitive_types, NoneType, char
 
 
 class Builder:
     easy_types = {
+        char: CharMachine,
         str: StringMachine,
         bytes: BytesMachine,
         bytearray: ByteArrayMachine,
@@ -41,17 +43,17 @@ class Builder:
             if type(holder) == tuple:
                 # Edge case for python 3.6: bug in backport? TODO: investigate and report
                 holder = holder[0]
-            if isinstance(holder, ArrayHolder):
+            if isinstance(holder, array):
                 return ArrayMachine(
-                    cls._machine_for_type(holder.type),
+                    cls._machine_for_type(holder.subtype),
                     size=holder.length
                 )
-            elif isinstance(holder, SequenceHolder):
+            elif isinstance(holder, sequence):
                 return SequenceMachine(
-                    cls._machine_for_type(holder.type),
+                    cls._machine_for_type(holder.subtype),
                     maxlen=holder.max_length
                 )
-            elif isinstance(holder, BoundStringHolder):
+            elif isinstance(holder, bound_str):
                 return StringMachine(
                     bound=holder.max_length
                 )
@@ -81,6 +83,15 @@ class Builder:
                 cls._machine_for_type(get_args(_type)[0]),
                 cls._machine_for_type(get_args(_type)[1])
             )
+        elif type(_type) == str:
+            try:
+                rname, rmodule = _type[::-1].split(".", 1)
+                name, module = rname[::-1], rmodule[::-1]
+                pymodule = import_module(module)
+                return cls._machine_for_type(getattr(pymodule, name))
+            except:
+                pass
+
         raise TypeError(f"{repr(_type)} {get_origin(_type)} {get_args(_type)} is not valid in IDL classes because it cannot be encoded.")
 
     @classmethod
@@ -93,10 +104,9 @@ class Builder:
             for name, annotations in struct.__idl_field_annotations__.items():
                 if "key" in annotations:
                     keylist.append(name)
-            else:
-                # no @key annotations and no keylist -> all fields are key
-                for name in struct.__annotations__.keys():
-                    keylist.append(name)
+
+            if not keylist:
+                keylist = None
 
         members = {
             name: cls._machine_for_type(field_type)
@@ -122,11 +132,15 @@ class Builder:
             keyless = False
         elif issubclass(_type, IdlStruct):
             machine = cls._machine_struct(_type)
-            keyless = not bool(machine.keylist)
+            keyless = machine.keylist is None
         else:
             raise Exception(f"Cannot build for {_type}, not struct or union.")
 
-        finder = MaxSizeFinder()
-        machine.max_key_size(finder)
+        if not keyless:
+            finder = MaxSizeFinder()
+            machine.max_key_size(finder)
+            size = finder.size
+        else:
+            size = 0
 
-        return machine, keyless, finder.size
+        return machine, keyless, size

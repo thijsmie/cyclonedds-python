@@ -31,7 +31,7 @@ char* wrap_size_descriptor(char **type, const void *node)
     char* out;
 
     if (idl_is_array(node)) {
-        idl_asprintf(&out, "types.array[%s, %" PRIu32 "]", *type, idl_bound(node));
+        idl_asprintf(&out, "types.array[%s, %" PRIu32 "]", *type, idl_array_size(node));
     }
     else if (idl_is_sequence(node) && idl_is_bounded(node)) {
         idl_asprintf(&out, "types.sequence[%s, %" PRIu32 "]", *type, idl_bound(node));
@@ -51,7 +51,7 @@ static char *typename_of_type(idlpy_ctx ctx, idl_type_t type)
     switch (type)
     {
     case IDL_BOOL:
-        return idl_strdup("types.bool");
+        return idl_strdup("bool");
     case IDL_CHAR:
         return idl_strdup("types.char");
     case IDL_INT8:
@@ -97,6 +97,9 @@ static char *typename_of_type(idlpy_ctx ctx, idl_type_t type)
 
 char* typename(idlpy_ctx ctx, const void *node)
 {
+    if (idl_is_typedef(node)) {
+        return absolute_name(node);
+    }
     if (idl_is_sequence(node) || idl_is_array(node)) {
         char *inner = typename(ctx, idl_type_spec(node));
         char *full = wrap_size_descriptor(&inner, node);
@@ -137,10 +140,12 @@ char *absolute_name(const void *node)
         sep = separator;
     }
 
-    if (!(str = malloc(len + 1)))
+    if (!(str = malloc(len + 3)))
         return NULL;
 
-    str[len] = '\0';
+    str[0] = '"';
+    str[len+1] = '"';
+    str[len+2] = '\0';
     for (root = node, sep = separator; root; root = root->parent)
     {
         if ((idl_mask(root) & IDL_TYPEDEF) == IDL_TYPEDEF)
@@ -153,13 +158,13 @@ char *absolute_name(const void *node)
         cnt = strlen(ident);
         assert(cnt <= len);
         len -= cnt;
-        memmove(str + len, ident, cnt);
+        memmove(str + len + 1, ident, cnt);
         if (len == 0)
             break;
         cnt = strlen(sep);
         assert(cnt <= len);
         len -= cnt;
-        memmove(str + len, sep, cnt);
+        memmove(str + len + 1, sep, cnt);
     }
     assert(len == 0);
     return str;

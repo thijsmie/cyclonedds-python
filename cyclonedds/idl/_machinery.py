@@ -72,6 +72,23 @@ class PrimitiveMachine(Machine):
         return stream
 
 
+class CharMachine(Machine):
+    def __init__(self):
+        self.alignment = 1
+
+    def serialize(self, buffer, value, for_key=False):
+        buffer.write('b', 1, ord(value))
+
+    def deserialize(self, buffer):
+        return chr(buffer.read('b', 1))
+
+    def max_key_size(self, finder: MaxSizeFinder):
+        finder.increase(1, 1)
+
+    def cdr_key_machine_op(self, skip):
+        return [CdrKeyVmOp(CdrKeyVMOpType.StreamStatic, skip, 1, align=1)]
+
+
 class StringMachine(Machine):
     def __init__(self, bound=None):
         self.alignment = 4
@@ -305,7 +322,7 @@ class UnionMachine(Machine):
 
         buffer = Buffer(bytes=self.discriminator.alignment)
 
-        value_skip = skip or self.type._is_key
+        value_skip = skip or self.type.__idl_discriminator_is_key__
 
         for label, submachine in self.labels_submachines.items():
             buffer.seek(0)
@@ -386,7 +403,7 @@ class StructMachine(Machine):
         #  breaks this guarantee.
 
         for member, machine in self.members_machines.items():
-            if for_key and member not in self.keylist:
+            if for_key and self.keylist and member not in self.keylist:
                 continue
 
             try:
@@ -407,7 +424,7 @@ class StructMachine(Machine):
     def cdr_key_machine_op(self, skip):
         return sum(
             (
-                m.cdr_key_machine_op(skip or name not in self.keylist)
+                m.cdr_key_machine_op(skip or (self.keylist and name not in self.keylist))
                 for name, m in self.members_machines.items()
             ),
             []
@@ -438,6 +455,8 @@ class InstanceMachine(Machine):
             return 1_000_000_000
 
     def cdr_key_machine_op(self, skip):
+        if self.type.__idl__.machine == None:
+            self.type.__idl__.populate()
         return self.type.__idl__.machine.cdr_key_machine_op(skip)
 
 

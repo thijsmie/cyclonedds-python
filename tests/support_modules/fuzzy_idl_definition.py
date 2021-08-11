@@ -19,18 +19,18 @@ def _make_field_type_nonest(random):
     ])
 
 
-def _make_field_type(random, collector, max_depth=3):
+def _make_field_type(random, collector, max_depth=3, key=False):
     if max_depth <= 0:
         return _make_field_type_nonest(random)
 
     v = random.random()
 
-    if  max_depth > 0 and v < 0.08:
+    if not key and max_depth > 0 and v < 0.08:
         name = _make_name(random)
         collector.append(_make_struct(random, collector, name, max_depth-1))
         return name
 
-    if max_depth > 0 and v < 0.12:
+    if not key and max_depth > 0 and v < 0.12:
         name = _make_name(random)
         collector.append(_make_union(random, collector, name, max_depth-1))
         return name
@@ -40,7 +40,7 @@ def _make_field_type(random, collector, max_depth=3):
         collector.append(f"typedef {_make_field_type(random, collector, max_depth-1)} {name}[{random.randint(3, 20)}];\n")
         return name
 
-    if max_depth > 0 and v < 0.22:
+    if not key and max_depth > 0 and v < 0.22:
         name = _make_name(random)
         collector.append(f"typedef sequence<{_make_field_type(random, collector, max_depth-1)}> {name};\n")
         return name
@@ -64,8 +64,8 @@ def _make_struct(random, collector, typename, max_depth=3):
     out = f"struct {typename} {{\n"
 
     for i in range(random.randint(2, 12)):
-        key = "" if random.random() > 0.4 else "@key "
-        out += f"\t{key}{_make_field_type(random, collector, max_depth-1)} {typename}{ascii_lowercase[i]};\n"
+        key = "", False if random.random() > 0.3 else "@key ", True
+        out += f"\t{key[0]}{_make_field_type(random, collector, max_depth-1, key=key[1])} {ascii_lowercase[i]};\n"
 
     out += "\n};\n"
     return out
@@ -73,25 +73,27 @@ def _make_struct(random, collector, typename, max_depth=3):
 
 def _make_union(random, collector, typename, max_depth=3):
     discriminator = random.choice([
-        "octet", "long", "unsigned long", "long long",
-        "unsigned long long", "short", "unsigned short"
+        "long", "unsigned long",
+        "short", "unsigned short"
     ])
 
-    out = f"union {typename} switch ({discriminator}) {{\n"
+    key = "" if random.random() > 0.3 else "@key "
+
+    out = f"union {typename} switch ({key}{discriminator}) {{\n"
 
     for i in range(random.randint(2, 12)):
-        out += f"\tcase {i+1}:\n\t\t{_make_field_type(random, collector, 0)} {typename}{ascii_lowercase[i]};\n"
+        out += f"\tcase {i+1}:\n\t\t{_make_field_type(random, collector, 0)} {ascii_lowercase[i]};\n"
 
     if random.random() > 0.5:
-        out += f"\tdefault:\n\t\t{_make_field_type(random, collector, 0)} {typename}_default;\n"
+        out += f"\tdefault:\n\t\t{_make_field_type(random, collector, 0)} z;\n"
 
     out += "\n};\n"
     return out
 
 
 def random_idl_types(seed=None, module=None, number=None):
-    seed = seed if seed else randint(0, 1_000_000_000)
-    random = Random(seed) if seed else Random()
+    seed = seed if seed is not None else randint(0, 1_000_000_000)
+    random = Random(seed)
     module = module if module else "py_c_compat"
     number = number if number else 1
 
