@@ -45,8 +45,9 @@ int main(int argc, char **argv)
     dds_sample_info_t infos[1];
     struct ddsi_serdata *samples[1] = {NULL};
     const dds_topic_descriptor_t *descriptor = NULL;
+    dds_qos_t* qos;
     unsigned long num_samps = 0;
-    unsigned long seq = 0;
+    unsigned long seqq = 0;
 
     if(argc < 3) {
         printf("Supply republishing type and sample amount.");
@@ -60,6 +61,12 @@ int main(int argc, char **argv)
     }
     if (!descriptor) return 1;
 
+    qos = dds_qos_create();
+    dds_qset_reliability(qos, DDS_RELIABILITY_RELIABLE, DDS_SECS(10));
+    dds_qset_durability(qos, DDS_DURABILITY_TRANSIENT_LOCAL);
+    dds_qset_history(qos, DDS_HISTORY_KEEP_ALL, -1);
+    dds_qset_destination_order(qos, DDS_DESTINATIONORDER_BY_SOURCE_TIMESTAMP);
+
     num_samps = strtoul(argv[2], NULL, 10);
     if (num_samps == 0 || num_samps > 200000000) return 1;
 
@@ -69,19 +76,19 @@ int main(int argc, char **argv)
     topic = dds_create_topic(participant, descriptor, argv[1], NULL, NULL);
     if (topic < 0) return 1;
 
-    reader = dds_create_reader(participant, topic, NULL, NULL);
+    reader = dds_create_reader(participant, topic, qos, NULL);
     if (reader < 0) return 1;
 
     repltopic = dds_create_topic(participant, &py_c_compat_replybytes_desc, "replybytes", NULL, NULL);
     if (repltopic < 0) return 1;
 
-    writer = dds_create_writer(participant, repltopic, NULL, NULL);
+    writer = dds_create_writer(participant, repltopic, qos, NULL);
     if (writer < 0) return 1;
 
     printf("ready\n");
 
-    while (seq < num_samps) {
-        rc = dds_readcdr(reader, samples, 1, infos, DDS_NOT_READ_SAMPLE_STATE | DDS_ANY_VIEW_STATE | DDS_ANY_INSTANCE_STATE);
+    while (seqq < num_samps) {
+        rc = dds_readcdr(reader, samples, 1, infos, DDS_NOT_READ_SAMPLE_STATE | DDS_ANY_VIEW_STATE | DDS_ALIVE_INSTANCE_STATE);
         if (rc < 0) return 1;
 
         if (rc > 0)
@@ -89,13 +96,16 @@ int main(int argc, char **argv)
             struct ddsi_serdata_default* rserdata = (struct ddsi_serdata_default*) samples[0];
             dds_istream_t sampstream;
             dds_ostreamBE_t keystream;
+            ddsi_keyhash_t keyhash;
             dds_ostreamBE_init(&keystream, 0);
 
             dds_istream_from_serdata_default(&sampstream, rserdata);
             dds_stream_extract_keyBE_from_data(&sampstream, &keystream, (const struct ddsi_sertype_default *) rserdata->c.type);
+            ddsi_serdata_get_keyhash(rserdata, &keyhash, false);
 
             msg.reply_to = dds_string_dup(argv[1]);
-            msg.seq = seq++;
+            msg.seq = seqq++;
+            memcpy(msg.keyhash, keyhash.value, 16);
 
             const size_t outs = keystream.x.m_index;
             msg.data._buffer = (uint8_t*) malloc(outs);

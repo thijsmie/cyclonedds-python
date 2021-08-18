@@ -15,6 +15,7 @@
 #include "context.h"
 
 char* typename(idlpy_ctx ctx, const void *node);
+char* typename_unwrap_typedef(idlpy_ctx ctx, const void *node);
 char* absolute_name(const void *node);
 
 

@@ -137,7 +137,14 @@ emit_field(
     const void *parent = idl_parent(node);
 
     const char *name = idl_identifier(node);
-    char *type = typename(ctx, idl_type_spec(node));
+    const void* type_spec;
+
+    if (idl_is_array(node) || idl_is_typedef(node))
+        type_spec = node;
+    else
+        type_spec = idl_type_spec(node);
+
+    char *type = typename(ctx, type_spec);
 
     if (idl_is_default_case(parent)) {
         char *ctype;
@@ -350,12 +357,13 @@ expand_typedef(
     const char *name = idl_identifier(declarator);
     const idl_type_spec_t *type_spec;
 
+    idlpy_ctx_enter_entity(ctx, name);
+
     if (idl_is_array(declarator))
         type_spec = declarator;
     else
         type_spec = idl_type_spec(declarator);
 
-    idlpy_ctx_enter_entity(ctx, name);
     type = typename(ctx, type_spec);
     idlpy_ctx_printf(ctx, "%s = %s;\n\n", name, type);
     idlpy_ctx_exit_entity(ctx);

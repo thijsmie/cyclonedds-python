@@ -58,9 +58,8 @@ class Buffer:
         self._bytes = bytearray(bytes) if bytes else bytearray(512)
         self._pos = 0
         self._size = len(self._bytes)
-        self._endian = '='
         self._align_offset = align_offset
-        self.endianness = Endianness.native()
+        self.set_endianness(Endianness.native())
 
     def set_endianness(self, endianness):
         self.endianness = endianness

@@ -112,9 +112,9 @@ class StringMachine(Machine):
 
     def max_key_size(self, finder: MaxSizeFinder):
         if self.bound:
-            finder.increase(self.bound + 5, 2)  # string size + length serialized (4) + null byte (1)
+            finder.increase(self.bound + 5, 4)  # string size + length serialized (4) + null byte (1)
         else:
-            finder.increase(2**64 - 1 + 5, 2)
+            finder.increase(2**64 - 1 + 5, 4)
 
     def cdr_key_machine_op(self, skip):
         return [CdrKeyVmOp(CdrKeyVMOpType.Stream4ByteSize, skip, 1, align=1)]
@@ -272,11 +272,12 @@ class UnionMachine(Machine):
         self.alignment = max(self.alignment, discriminator_machine.alignment)
         self.discriminator = discriminator_machine
         self.default = default_case
+        self.discriminator_is_key = type.__idl_annotations__.get("discriminator_is_key", False)
 
     def serialize(self, buffer, union, for_key=False):
         discr, value = union.get()
 
-        if for_key and union.__idl_annotations__.get("discriminator_is_key", False):
+        if for_key and self.discriminator_is_key:
             try:
                 if discr is None:
                     self.discriminator.serialize(buffer, union.__idl_default_discriminator__)
@@ -309,6 +310,13 @@ class UnionMachine(Machine):
 
     def max_key_size(self, finder: MaxSizeFinder):
         self.discriminator.max_key_size(finder)
+        if not self.discriminator_is_key:
+            ms = 0
+            for _, machine in self.labels_submachines.items():
+                subfinder = MaxSizeFinder()
+                machine.max_key_size(subfinder)
+                ms = max(ms, subfinder.size)
+            finder.increase(ms, self.alignment)
 
     def cdr_key_machine_op(self, skip):  # TODO: check again
         headers = []
@@ -418,8 +426,10 @@ class StructMachine(Machine):
         return self.type(**valuedict)
 
     def max_key_size(self, finder):
-        for m in self.members_machines.values():
-            m.max_key_size(finder)
+        for member, machine in self.members_machines.items():
+            if self.keylist and member not in self.keylist:
+                continue
+            machine.max_key_size(finder)
 
     def cdr_key_machine_op(self, skip):
         return sum(

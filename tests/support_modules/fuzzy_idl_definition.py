@@ -5,25 +5,32 @@ from string import ascii_uppercase,  ascii_lowercase
 
 def _make_name(random: Random):
     consonants = "wrtpsdfgklzcvbnm"
+    biconsonants = ["tr", "st", "sr", "pr", "pl", "sl", "kr", "kl", "kn", "dr", "wh"]
     vowels = "euioa"
+    sgrams = ["".join(p) for p in product(biconsonants, vowels)] + [""] * (len(biconsonants) * len(vowels))
     bigrams = ["".join(p) for p in product(consonants, vowels)]
     trigrams = ["".join(p) for p in product(consonants, vowels, consonants)]
-    return "".join(random.choices(bigrams, k=random.randint(1, 3)) + [random.choice(trigrams)]).capitalize()
+    return "".join([random.choice(sgrams)] + random.choices(bigrams, k=random.randint(1, 4)) + [random.choice(trigrams)]).capitalize()
 
 
 def _make_field_type_nonest(random):
     return random.choice([
         "octet", "char", "short", "unsigned short", "long",
         "unsigned long", "long long", "unsigned long long", "boolean",
-        "float", "double", "string"
+        "float", "double"
     ])
 
 
 def _make_field_type(random, collector, max_depth=3, key=False):
     if max_depth <= 0:
+        if not key and random.random() < 0.05:
+            return "string"
         return _make_field_type_nonest(random)
 
     v = random.random()
+
+    if key and max_depth == 2 and v < 0.04:
+        return f"string<{random.randint(1, 5)}>"
 
     if not key and max_depth > 0 and v < 0.08:
         name = _make_name(random)
@@ -37,7 +44,7 @@ def _make_field_type(random, collector, max_depth=3, key=False):
 
     if max_depth > 0 and v < 0.18:
         name = _make_name(random)
-        collector.append(f"typedef {_make_field_type(random, collector, max_depth-1)} {name}[{random.randint(3, 20)}];\n")
+        collector.append(f"typedef {_make_field_type(random, collector, max_depth-1, key)} {name}[{random.randint(3, 20)}];\n")
         return name
 
     if not key and max_depth > 0 and v < 0.22:
@@ -52,20 +59,25 @@ def _make_field_type(random, collector, max_depth=3, key=False):
         return name
     """
 
-    if max_depth > 0 and v < 0.28:
+    if not key and max_depth > 0 and v < 0.28:
         name = _make_name(random)
         collector.append(f"typedef string<{random.randint(2, 20)}> {name};\n")
         return name
+
+    if not key and random.random() < 0.05:
+        return "string"
 
     return _make_field_type_nonest(random)
 
 
 def _make_struct(random, collector, typename, max_depth=3):
     out = f"struct {typename} {{\n"
+    number_of_fields = random.randint(2, 12)
 
-    for i in range(random.randint(2, 12)):
-        key = "", False if random.random() > 0.3 else "@key ", True
-        out += f"\t{key[0]}{_make_field_type(random, collector, max_depth-1, key=key[1])} {ascii_lowercase[i]};\n"
+    for i in range(number_of_fields):
+        do_key = (random.random() < 0.2) or (i == number_of_fields - 1)
+        at_key = "@key " if do_key else ""
+        out += f"\t{at_key}{_make_field_type(random, collector, max_depth-1, key=do_key)} {ascii_lowercase[i]};\n"
 
     out += "\n};\n"
     return out
@@ -97,7 +109,13 @@ def random_idl_types(seed=None, module=None, number=None):
     module = module if module else "py_c_compat"
     number = number if number else 1
 
-    names = [_make_name(random) for i in range(number)]
+    names = []
+
+    collector = []
+    for i in range(number):
+        name = _make_name(random)
+        collector.append(_make_struct(random, collector, name))
+        names.append(name)
 
     pre = f"""/*
  * Random datatype generation by fuzzy_idl_definition.py
@@ -107,9 +125,5 @@ def random_idl_types(seed=None, module=None, number=None):
 
 module {module} {{\n\n"""
     post = "\n};\n"
-
-    collector = []
-    for i in range(number):
-        collector.append(_make_struct(random, collector, names[i]))
 
     return pre + "\n".join(collector) + post, names

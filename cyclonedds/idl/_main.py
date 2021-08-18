@@ -68,9 +68,10 @@ class IDL:
         if self.machine is None:
             self.populate()
 
-        ibuffer = buffer or self.buffer.seek(0)
-        if endianness is not None:
-            ibuffer.set_endianness(endianness)
+        ibuffer = buffer or self.buffer
+        ibuffer.seek(0)
+        ibuffer.set_align_offset(0)
+        ibuffer.set_endianness(endianness or Endianness.native())
 
         if ibuffer.endianness == Endianness.Big:
             ibuffer.write('b', 1, 0)
@@ -82,10 +83,11 @@ class IDL:
             ibuffer.write('b', 1, 1)
             ibuffer.write('b', 1, 0)
             ibuffer.write('b', 1, 0)
+
         ibuffer.set_align_offset(4)
 
         self.machine.serialize(ibuffer, object)
-        a = ibuffer.asbytes()
+        a = ibuffer.asbytes() #.ljust((self.buffer._pos - 1) // 8 * 8 + 8, b'\0')
         return a
 
     def deserialize(self, data) -> object:

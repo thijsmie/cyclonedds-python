@@ -39,10 +39,6 @@ class VirtualEnvWithPyCCompat:
 
         pycompatpath = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "py_c_compat"))
 
-        if os.path.exists(os.path.join(pycompatpath, "_skbuild")):
-            shutil.rmtree(os.path.join(pycompatpath, "_skbuild"))
-        if os.path.exists(os.path.join(pycompatpath, "cyclonedds_tests_c_compat.egg-info")):
-            shutil.rmtree(os.path.join(pycompatpath, "cyclonedds_tests_c_compat.egg-info"))
 
         fuzzpath = os.path.join(self.dir, "test.idl")
         idl, self.typenames = random_idl_types(seed=1, module="fuzzymod", number=100)
@@ -51,7 +47,7 @@ class VirtualEnvWithPyCCompat:
 
         process = self.run(
             [
-                self.executable(), "-m", "pip", "install", "-q", "--use-feature=in-tree-build",
+                self.executable(), "-m", "pip", "install", "-q",
                 pycompatpath
             ],
             env={

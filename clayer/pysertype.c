@@ -173,7 +173,7 @@ static void ddspy_serdata_calc_hash(ddspy_serdata_t* this)
         ddsrt_md5_state_t md5st;
         ddsrt_md5_init(&md5st);
         ddsrt_md5_append(&md5st, this->key, (unsigned int)this->key_size);
-        ddsrt_md5_finish(&md5st, (unsigned char*) &(this->hash));
+        ddsrt_md5_finish(&md5st, this->hash.value);
     } else {
         assert(this->key_size < 16);
         memset(this->hash.value, 0, 16);
@@ -189,7 +189,7 @@ static void ddspy_serdata_populate_key(ddspy_serdata_t* this)
         this->key = ddsrt_malloc(16);
         this->key_size = 16;
         memset(this->key, 0, 16);
-        memset((char*) &(this->hash), 0, 16);
+        memset(this->hash.value, 0, 16);
         this->key_populated = true;
         return;
     }
@@ -211,13 +211,14 @@ static bool serdata_eqkey(const struct ddsi_serdata* a, const struct ddsi_serdat
     if (csertype(apy)->keyless ^ csertype(bpy)->keyless) {
         return false;
     }
-    if (csertype(apy)->keyless & csertype(bpy)->keyless) {
+    if (csertype(apy)->keyless && csertype(bpy)->keyless) {
         return true;
     }
 
     assert(cserdata(a)->key != NULL);
     assert(cserdata(b)->key != NULL);
-    return 0 == memcmp(&cserdata(a)->hash, &cserdata(b)->hash, 16);
+    if (cserdata(a)->key_size != cserdata(b)->key_size) return false;
+    return 0 == memcmp(cserdata(a)->key, cserdata(b)->key, cserdata(a)->key_size);
 }
 
 static uint32_t serdata_size(const struct ddsi_serdata* dcmn)
@@ -354,12 +355,12 @@ static ddsi_serdata_t *serdata_from_sample(
     case SDK_EMPTY:
         assert(0);
     }
-    
+
     assert(d->key != NULL);
     assert(d->data != NULL);
     assert(d->data_size != 0);
     assert(d->key_size >= 16);
-    
+
     return (ddsi_serdata_t*) d;
 }
 
@@ -507,12 +508,12 @@ static void serdata_get_keyhash(const ddsi_serdata_t* d, struct ddsi_keyhash* bu
     {
         ddsrt_md5_state_t md5st;
         ddsrt_md5_init(&md5st);
-        ddsrt_md5_append(&md5st, (unsigned char*) &(cserdata(d)->hash), 16);
+        ddsrt_md5_append(&md5st, cserdata(d)->hash.value, 16);
         ddsrt_md5_finish(&md5st, buf->value);
     }
     else
     {
-        memcpy(buf->value, (unsigned char*)  &(cserdata(d)->hash), 16);
+        memcpy(buf->value, cserdata(d)->hash.value, 16);
     }
 }
 
@@ -1173,6 +1174,7 @@ ddspy_take_handle(PyObject *self, PyObject *args)
     return list;
 }
 
+
 static PyObject *
 ddspy_register_instance(PyObject *self, PyObject *args)
 {
@@ -1188,6 +1190,7 @@ ddspy_register_instance(PyObject *self, PyObject *args)
 
     container.usample = sample_data.buf;
     assert(sample_data.len >= 0);
+    handle = 0;
     container.usample_size = (size_t)sample_data.len;
 
     sts = dds_register_instance(writer, &handle, &container);
@@ -1197,7 +1200,7 @@ ddspy_register_instance(PyObject *self, PyObject *args)
     if (sts < 0) {
         return PyLong_FromLong((long) sts);
     }
-    return PyLong_FromUnsignedLongLong((unsigned long long) handle);
+    return PyLong_FromUnsignedLong((unsigned long) handle);
 }
 
 

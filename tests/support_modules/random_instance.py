@@ -43,7 +43,7 @@ def _random_for_primitive_type(random: Random, _type):
 
 
     if isinstance(ctype, bound_str):
-        return "".join(random.choices(ascii_lowercase, k=random.randint(0, ctype.max_length)))
+        return "".join(random.choices(ascii_lowercase, k=random.randint(0, ctype.max_length - 1)))
     if isinstance(ctype, array):
         return [_random_value_for(random, ctype.subtype) for i in range(ctype.length)]
     if isinstance(ctype, sequence):
@@ -82,6 +82,6 @@ def _random_value_for(random: Random, _type):
 
 
 def generate_random_instance(cls, seed=None):
-    seed = seed if seed else randint(0, 1_000_000_000)
+    seed = seed if seed is not None else randint(0, 1_000_000_000)
     random = Random(seed)
     return _random_value_for(random, cls)
