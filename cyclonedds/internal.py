@@ -82,6 +82,25 @@ def _loader_on_path_gen(name):
     return _loader_on_path
 
 
+def _loader_windows_cmake_registry(registry):
+    """
+        The CycloneDDS WiX installer uses the standard cmake registry to record
+        the install location.
+    """
+    def _loader_from_registry():
+        try:
+            import winreg
+            REG_PATH = "Software\\Kitware\\CMake\\Packages\\CycloneDDS"
+            with winreg.OpenKey(getattr(winreg, registry), REG_PATH, 0, winreg.KEY_READ) as registry_key:
+                _, path, _ = winreg.EnumValue(registry_key, 0)
+                return _load(os.path.join(path, "bin", "ddsc.dll"))
+        except (OSError, ImportError, CycloneDDSLoaderException):
+            pass
+
+        return None
+    return _loader_from_registry
+
+
 _loaders_per_system = {
     "Linux": [
         _loader_wheel_gen(["..", "cyclonedds.libs"], ".so"),
@@ -91,6 +110,8 @@ _loaders_per_system = {
     "Windows": [
         _loader_wheel_gen(["..", "cyclonedds.libs"], ".dll"),
         _loader_cyclonedds_home_gen("bin\\ddsc.dll"),
+        _loader_windows_cmake_registry("HKEY_CURRENT_USER"),
+        _loader_windows_cmake_registry("HKEY_LOCAL_MACHINE"),
         _loader_on_path_gen("ddsc.dll")
     ],
     "Darwin": [
@@ -227,6 +248,12 @@ class SampleInfo:
     sample_rank: int
     generation_rank: int
     absolute_generation_rank: int
+
+
+@dataclass
+class InvalidSample:
+    key: bytes
+    sample_info: SampleInfo
 
 
 class dds_c_t:  # noqa N801
