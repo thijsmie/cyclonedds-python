@@ -4,4 +4,4 @@ max-line-length = 127
 ignore = D105,D205,D208,D400
 per-file-ignores = 
     __init__.py: F401
-exclude = .azure,.pytest_cache,__pycache__,build,clayer,dist,docs,idlpy,tests
+exclude = .azure,.pytest_cache,__pycache__,build,clayer,dist,docs,idlpy,tests,examples
