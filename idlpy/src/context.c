@@ -95,7 +95,7 @@ void idlpy_ctx_free(idlpy_ctx octx)
     free(octx);
 }
 
-static idlpy_module_ctx idlpy_module_ctx_new()
+static idlpy_module_ctx idlpy_module_ctx_new(void)
 {
     idlpy_module_ctx ctx = (idlpy_module_ctx) malloc(sizeof(struct idlpy_module_ctx_s));
 
@@ -120,7 +120,7 @@ static void idlpy_module_ctx_free(idlpy_module_ctx ctx)
     free(ctx);
 }
 
-static idlpy_entity_ctx idlpy_entity_ctx_new()
+static idlpy_entity_ctx idlpy_entity_ctx_new(void)
 {
     idlpy_entity_ctx ctx = (idlpy_entity_ctx) malloc(sizeof(struct idlpy_entity_ctx_s));
 

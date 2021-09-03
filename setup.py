@@ -52,7 +52,7 @@ setup(
         "Programming Language :: Python :: 3.10",
         "Operating System :: OS Independent"
     ],
-    packages=find_packages(".", include=("cyclonedds*"), exclude=("tests")),
+    packages=find_packages(".", exclude=("tests", "docs", "examples", "idlpy")),
     entry_points={
         "console_scripts": [
             "ddsls=cyclonedds.tools.ddsls:command",
@@ -80,5 +80,8 @@ setup(
             "sphinx-rtd-theme>=0.5.2"
         ]
     },
-    zip_safe=False
+    zip_safe=False,
+    cmake_args=[
+        "-DCMAKE_BUILD_TYPE=Debug"
+    ]
 )

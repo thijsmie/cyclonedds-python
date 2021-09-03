@@ -22,12 +22,6 @@ jobs:
     vmImage: $(image)
   strategy:
     matrix:
-      'Ubuntu 20.04 LTS':
-        image: ubuntu-20.04
-      'macOS 10.15':
-        image: macOS-10.15
-      'Windows Server 2019':
-        image: windows-2019
       'Windows Server 2019 Debug':
         image: windows-2019
         build_type: Debug
@@ -41,27 +35,6 @@ jobs:
     vmImage: $(image)
   strategy:
     matrix:
-      'Ubuntu 20.04 LTS with Python 3.6':
-        image: ubuntu-20.04
-        python-version: 3.6
-      'Ubuntu 20.04 LTS with Python 3.7':
-        image: ubuntu-20.04
-        python-version: 3.7
-      'Ubuntu 20.04 LTS with Python 3.8':
-        image: ubuntu-20.04
-        python-version: 3.8
-      'Ubuntu 20.04 LTS with Python 3.9':
-        image: ubuntu-20.04
-        python-version: 3.9
-      'macOS 10.15 with Python 3.9':
-        image: macOS-10.15
-        python-version: 3.9
-      'Windows Server 2019 with Python 3.6':
-        image: windows-2019
-        python-version: 3.6
-      'Windows Server 2019 with Python 3.9':
-        image: windows-2019
-        python-version: 3.9
       'Windows Server 2019, Cyclone Debug, with Python 3.9':
         image: windows-2019
         python-version: 3.9
@@ -76,25 +49,3 @@ jobs:
     name: set_cyclonedds_home
     displayName: Set CYCLONEDDS_HOME
   - template: /.azure/templates/build-test.yml
-- job: CoverageReport
-  dependsOn: AutomatedTests
-  pool:
-    vmImage: ubuntu-20.04
-  steps:
-  - bash: |
-      mkdir coverage
-  - task: DownloadPipelineArtifact@2
-    inputs:
-      path: coverage
-    displayName: Download Coverage
-  - task: UsePythonVersion@0
-  - bash: |
-      ls coverage
-      pip install --user coverage
-      python -m coverage combine ./coverage/*/.coverage
-      python -m coverage xml
-  - task: PublishCodeCoverageResults@1
-    displayName: Publish Cobertura Coverage Report
-    inputs:
-      codeCoverageTool: Cobertura
-      summaryFileLocation: coverage.xml

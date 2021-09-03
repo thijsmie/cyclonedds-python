@@ -473,14 +473,28 @@ static bool serdata_typeless_to_sample(
 
 static void serdata_free(struct ddsi_serdata* dcmn)
 {
+    fprintf(stderr, "INTO FREE\n");
+    fprintf(stderr, "SELF %p\n", dcmn);
+    fprintf(stderr, "KEY %p\n", cserdata(dcmn)->key);
+    fprintf(stderr, "DATA %p\n", cserdata(dcmn)->data);
+    fprintf(stderr, "DATASIZE %zu\n", cserdata(dcmn)->data_size);
+    fprintf(stderr, "KEYSIZE %zu\n", cserdata(dcmn)->key_size);
+
     assert(cserdata(dcmn)->key != NULL);
+    fprintf(stderr, "A1\n");
     assert(cserdata(dcmn)->data != NULL);
+    fprintf(stderr, "A2\n");
     assert(cserdata(dcmn)->data_size != 0);
+    fprintf(stderr, "A3\n");
     assert(cserdata(dcmn)->key_size >= 16);
+    fprintf(stderr, "A4\n");
 
     free(serdata(dcmn)->data);
+    fprintf(stderr, "A5\n");
     free(serdata(dcmn)->key);
+    fprintf(stderr, "A6\n");
     free(dcmn);
+    fprintf(stderr, "OUTOF FREE\n");
 }
 
 static size_t serdata_print(const struct ddsi_sertype* tpcmn, const struct ddsi_serdata* dcmn, char* buf, size_t bufsize)
@@ -789,7 +803,7 @@ ddspy_write(PyObject *self, PyObject *args)
     if (!PyArg_ParseTuple(args, "iy*", &writer, &sample_data))
         return NULL;
 
-    assert(PyBuffer_IsContiguous(sample_data, 'C'));
+    assert(PyBuffer_IsContiguous(&sample_data, 'C'));
 
     container.usample = sample_data.buf;
     assert(sample_data.len >= 0);

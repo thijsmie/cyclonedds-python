@@ -9,7 +9,6 @@ from cyclonedds.idl import IdlStruct
 from dataclasses import dataclass
 from time import sleep
 
-
 @dataclass
 class Message(IdlStruct):
     message: str
@@ -54,7 +53,6 @@ def mjester():
     communication_basic_read(Common())
     sleep(1)
     communication_basic_take(Common())
-    sleep(1)
 
 print("Running")
 mjester()
