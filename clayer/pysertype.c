@@ -1038,35 +1038,46 @@ ddspy_read(PyObject *self, PyObject *args)
 }
 
 
+#define MYTRACE fprintf(stderr, "%s:%d:%s()\n", __FILE__, __LINE__, __func__)
+
 static PyObject *
 ddspy_take(PyObject *self, PyObject *args)
 {
+    MYTRACE;
     uint32_t Nu32;
     long long N;
     dds_entity_t reader;
     dds_return_t sts;
     (void)self;
 
+    MYTRACE;
     if (!PyArg_ParseTuple(args, "iL", &reader, &N))
         return NULL;
+    MYTRACE;
     if (!(Nu32 = check_number_of_samples(N)))
         return NULL;
+    MYTRACE;
 
     dds_sample_info_t* info = malloc(sizeof(dds_sample_info_t) * Nu32);
     ddspy_sample_container_t* container = malloc(sizeof(ddspy_sample_container_t) * Nu32);
     ddspy_sample_container_t** rcontainer = malloc(sizeof(ddspy_sample_container_t*) * Nu32);
 
+    MYTRACE;
     for(uint32_t i = 0; i < Nu32; ++i) {
         rcontainer[i] = &container[i];
         container[i].usample = NULL;
     }
+    MYTRACE;
 
     sts = dds_take(reader, (void**) rcontainer, info, Nu32, Nu32);
+    MYTRACE;
     if (sts < 0) {
         return PyLong_FromLong((long) sts);
     }
+    MYTRACE;
 
     PyObject* list = PyList_New(sts);
+    MYTRACE;
 
     for(int i = 0; i < (sts > N ? N : sts); ++i) {
         PyObject* sampleinfo = get_sampleinfo_pyobject(&info[i]);
@@ -1075,9 +1086,11 @@ ddspy_take(PyObject *self, PyObject *args)
         Py_DECREF(sampleinfo);
         free(container[i].usample);
     }
+    MYTRACE;
     free(info);
     free(container);
     free(rcontainer);
+    MYTRACE;
 
     return list;
 }

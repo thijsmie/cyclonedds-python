@@ -1,8 +1,9 @@
 import pytest
+import sys
 
 from cyclonedds.core import Entity, DDSStatus
 
-from  testtopics import Message
+from testtopics import Message
 
 
 def test_communication_basic_read(common_setup):
@@ -15,9 +16,13 @@ def test_communication_basic_read(common_setup):
 
 
 def test_communication_basic_take(common_setup):
+    print("Hi!", file=sys.stderr)
     msg = Message(message="Hi!")
+    print("This is fun!", file=sys.stderr)
     common_setup.dw.write(msg)
+    print("No, really!!", file=sys.stderr)
     result = common_setup.dr.take()
+    print("Incredible...", file=sys.stderr)
 
     assert len(result) == 1
     assert result[0] == msg
