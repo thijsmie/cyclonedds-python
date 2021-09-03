@@ -153,7 +153,9 @@ class Entity(DDS):
             return
 
         del self._entities[self._ref]
+        print(f"DEL OF {self._ref} which is a {self.__class__.__name__}.")
         self._delete(self._ref)
+        print(f"ENDDEL OF {self._ref} which is a {self.__class__.__name__}.")
 
     def get_subscriber(self) -> Optional['cyclonedds.sub.Subscriber']:
         """Retrieve the subscriber associated with this entity.
