@@ -186,7 +186,7 @@ static void ddspy_serdata_calc_hash(ddspy_serdata_t* this)
 static void ddspy_serdata_populate_key(ddspy_serdata_t* this)
 {
     if (sertype(this)->keyless) {
-        this->key = ddsrt_malloc(16);
+        this->key = malloc(16);
         this->key_size = 16;
         memset(this->key, 0, 16);
         memset(this->hash.value, 0, 16);
