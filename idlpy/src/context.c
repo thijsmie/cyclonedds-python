@@ -19,7 +19,6 @@
 #include "context.h"
 #include "util.h"
 
-
 #include "idl/string.h"
 #include "idl/tree.h"
 #include "idl/stream.h"
@@ -27,12 +26,6 @@
 #include "idl/version.h"
 #include "idl/visit.h"
 
-#ifdef WIN32
-#include <direct.h>
-#define mkdir(dir, mode) _mkdir(dir)
-#else
-#include <sys/stat.h>
-#endif
 
 /// * IDL context * ///
 typedef struct idlpy_module_ctx_s *idlpy_module_ctx;
@@ -66,7 +59,7 @@ idlpy_ctx idlpy_ctx_new(const char *path)
     idlpy_ctx ctx = (idlpy_ctx)malloc(sizeof(struct idlpy_ctx_s));
     if (ctx == NULL) return NULL;
 
-    ctx->basepath = idl_strdup(path);
+    ctx->basepath = idlpy_strdup(path);
     ctx->module = NULL;
     ctx->root_module = NULL;
     ctx->entity = NULL;
@@ -149,7 +142,7 @@ idl_retcode_t idlpy_ctx_enter_module(idlpy_ctx octx, const char *name)
         return IDL_RETCODE_NO_MEMORY;
     }
 
-    ctx->name = idl_strdup(name);
+    ctx->name = idlpy_strdup(name);
 
     if (ctx->name == NULL) {
         ret = IDL_RETCODE_NO_MEMORY;
@@ -160,7 +153,10 @@ idl_retcode_t idlpy_ctx_enter_module(idlpy_ctx octx, const char *name)
     octx->module = ctx;
 
     if (ctx->parent == NULL) {
-        ctx->fullname = idl_strdup(ctx->name);
+        size_t s_base_path = strlen(octx->basepath);
+        size_t s_name = strlen(ctx->name);
+
+        ctx->fullname = idlpy_strdup(ctx->name);
         octx->root_module = ctx;
 
         if (ctx->fullname == NULL) {
@@ -168,22 +164,33 @@ idl_retcode_t idlpy_ctx_enter_module(idlpy_ctx octx, const char *name)
             return IDL_RETCODE_NO_MEMORY;
         }
 
-        if (idl_asprintf(&ctx->path, "%s%s", octx->basepath, ctx->name) <= 0) {
+        ctx->path = (char*) malloc(s_base_path + s_name + 1);
+        if (!ctx->path) {
             idlpy_ctx_report_error(octx, "Could not format path to module.");
             ret = IDL_RETCODE_NO_MEMORY;
             goto err;
         }
+        idl_snprintf(ctx->path, s_base_path + s_name + 1, "%s%s", octx->basepath, ctx->name);
     } else {
-        if (idl_asprintf(&ctx->fullname, "%s.%s", ctx->parent->fullname, ctx->name) <= 0) {
+        size_t s_parent_fullname = strlen(ctx->parent->fullname);
+        size_t s_parent_path = strlen(ctx->parent->path);
+        size_t s_name = strlen(ctx->name);
+
+        ctx->fullname = (char*) malloc(s_parent_fullname + s_name + 2);
+        ctx->path = (char*) malloc(s_parent_path + s_name + 2);
+
+        if (!ctx->fullname) {
             idlpy_ctx_report_error(octx, "Could not format fullname of module.");
             ret = IDL_RETCODE_NO_MEMORY;
             goto err;
         }
-        if (idl_asprintf(&ctx->path, "%s/%s", ctx->parent->path, ctx->name) <= 0) {
+        if (!ctx->path) {
             idlpy_ctx_report_error(octx, "Could not format path of module.");
             ret = IDL_RETCODE_NO_MEMORY;
             goto err;
         }
+        idl_snprintf(ctx->fullname, s_parent_fullname + s_name + 2, "%s.%s", ctx->parent->fullname, ctx->name);
+        idl_snprintf(ctx->path, s_parent_path + s_name + 2, "%s/%s", ctx->parent->path, ctx->name);
     }
 
     mkdir(ctx->path, 0775);
@@ -210,7 +217,7 @@ static idl_retcode_t write_module_headers(FILE *fh)
         "__all__ = get_idl_entities(__name__)\n";
 
 
-    idl_fprintf(fh, fmt, IDL_VERSION);
+    idlpy_fprintf(fh, fmt, IDL_VERSION);
 
     return IDL_RETCODE_OK;
 }
@@ -240,7 +247,7 @@ static void write_entity_headers(idlpy_ctx octx)
         "import %s\n"
         "from . import __idl_module__\n\n";
 
-    idl_fprintf(octx->entity->fp, fmt, IDL_VERSION, octx->module->fullname, octx->entity->name, octx->root_module->fullname);
+    idlpy_fprintf(octx->entity->fp, fmt, IDL_VERSION, octx->module->fullname, octx->entity->name, octx->root_module->fullname);
 }
 
 void idlpy_ctx_consume(idlpy_ctx octx, char *data)
@@ -258,6 +265,7 @@ void idlpy_ctx_write(idlpy_ctx octx, const char *data)
     idlpy_ctx_printf(octx, data);
 }
 
+
 void idlpy_ctx_printf(idlpy_ctx octx, const char *fmt, ...)
 {
     assert(octx);
@@ -268,7 +276,7 @@ void idlpy_ctx_printf(idlpy_ctx octx, const char *fmt, ...)
     va_start(ap, fmt);
     va_copy(cp, ap);
 
-    idl_vfprintf(octx->entity->fp, fmt, ap);
+    idlpy_vfprintf(octx->entity->fp, fmt, ap);
 
     va_end(ap);
     va_end(cp);
@@ -281,24 +289,25 @@ idl_retcode_t idlpy_ctx_exit_module(idlpy_ctx octx)
     assert(octx->module->path);
 
     FILE *file;
-    char* path;
+    char* init_path;
     idlpy_module_ctx ctx = octx->module;
     idl_retcode_t ret = IDL_RETCODE_OK;
+    size_t s_path = strlen(ctx->path);
 
-    if (idl_asprintf(&path, "%s/__init__.py", ctx->path) <= 0) {
+    init_path = (char*) malloc(s_path + strlen("/__init__.py") + 1);
+
+    if (!init_path) {
         idlpy_ctx_report_error(octx, "Could not construct path for module init writing");
         ret = IDL_RETCODE_NO_MEMORY;
         goto path_err;
     }
+    idl_snprintf(init_path, s_path + strlen("/__init__.py") + 1, "%s/__init__.py", ctx->path);
 
-    file = open_file(path, "w");
+    file = idlpy_open_file(init_path, "w");
 
     if (file == NULL) {
-        char* error;
-        idl_asprintf(&error, "Failed to open file %s for writing.", path);
-        idlpy_ctx_report_error(octx, error);
+        idlpy_ctx_report_error(octx, "Failed to open file for writing.");
         ret = IDL_RETCODE_NO_ACCESS;
-        free(error);
         goto file_err;
     }
 
@@ -307,7 +316,7 @@ idl_retcode_t idlpy_ctx_exit_module(idlpy_ctx octx)
 
 file_err:
 
-    free(path);
+    free(init_path);
 
 path_err:
 
@@ -324,11 +333,15 @@ idl_retcode_t idlpy_ctx_enter_entity(idlpy_ctx octx, const char* name)
     assert(octx->entity == NULL);
     assert(octx->module);
 
-    char *path;
-    if (idl_asprintf(&path, "%s/%s.py", octx->module->path, name) <= 0) {
+    size_t s_module_path = strlen(octx->module->path);
+    size_t s_name = strlen(name);
+
+    char *path = (char*) malloc(s_module_path + s_name + 5);
+    if (!path) {
         idlpy_ctx_report_error(octx, "Could not construct path for entity writing.");
         return IDL_RETCODE_NO_MEMORY;
     }
+    idl_snprintf(path, s_module_path + s_name + 5, "%s/%s.py", octx->module->path, name);
 
     octx->entity = idlpy_entity_ctx_new();
     if (octx->entity == NULL) {
@@ -337,7 +350,7 @@ idl_retcode_t idlpy_ctx_enter_entity(idlpy_ctx octx, const char* name)
         return IDL_RETCODE_NO_MEMORY;
     }
 
-    octx->entity->name = idl_strdup(name);
+    octx->entity->name = idlpy_strdup(name);
     if (octx->entity->name == NULL) {
         free(path);
         idlpy_entity_ctx_free(octx->entity);
@@ -345,15 +358,11 @@ idl_retcode_t idlpy_ctx_enter_entity(idlpy_ctx octx, const char* name)
         return IDL_RETCODE_NO_MEMORY;
     }
 
-    octx->entity->fp = open_file(path, "w");
+    octx->entity->fp = idlpy_open_file(path, "w");
 
     if (octx->entity->fp == NULL) {
-        char *error;
         idlpy_entity_ctx_free(octx->entity);
-        idl_asprintf(&error, "Failed to open file %s for writing.", path);
-        idlpy_ctx_report_error(octx, error);
-        free(error);
-        free(path);
+        idlpy_ctx_report_error(octx, "Failed to open file for writing.");
         return IDL_RETCODE_NO_MEMORY;
     }
 

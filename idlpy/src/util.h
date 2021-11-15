@@ -9,6 +9,9 @@
 #endif
 #include <stdio.h>
 
-FILE* open_file(const char *pathname, const char *mode);
+FILE* idlpy_open_file(const char *pathname, const char *mode);
+char* idlpy_strdup(const char* str);
+int idlpy_vfprintf(FILE *fp, const char *fmt, va_list ap);
+int idlpy_fprintf(FILE *fp, const char *fmt, ...);
 
 #endif // IDLPY_UTIL_H

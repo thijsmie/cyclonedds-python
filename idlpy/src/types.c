@@ -24,6 +24,7 @@
 #include "context.h"
 #include "naming.h"
 #include "types.h"
+#include "util.h"
 
 
 
@@ -32,67 +33,108 @@ format_literal(
     idlpy_ctx ctx,
     const idl_literal_t *literal)
 {
-    char *ret;
+    char *buf = { '\0' };
+    char *ret = NULL;
+    size_t cnt;
     idl_type_t type;
 
     switch ((type = idl_type(literal)))
     {
     case IDL_CHAR:
-        idl_asprintf(&ret, "'%c'", literal->value.chr);
+        cnt = 1 + idl_snprintf(buf, 1, "'%c'", literal->value.chr);
+        ret = (char*) malloc(cnt);
+        if (!ret) break;
+        idl_snprintf(ret, cnt, "'%c'", literal->value.chr);
         break;
     case IDL_BOOL:
-        idl_asprintf(&ret, "%s", literal->value.bln ? "True" : "False");
+        cnt = 1 + idl_snprintf(buf, 1, "%s", literal->value.bln ? "True" : "False");
+        ret = (char*) malloc(cnt);
+        if (!ret) break;
+        idl_snprintf(ret, cnt, "%s", literal->value.bln ? "True" : "False");
         break;
     case IDL_INT8:
-        idl_asprintf(&ret, "%" PRId8, literal->value.int8);
+        cnt = 1 + idl_snprintf(buf, 1, "%" PRId8, literal->value.int8);
+        ret = (char*) malloc(cnt);
+        if (!ret) break;
+        idl_snprintf(ret, cnt, "%" PRId8, literal->value.int8);
         break;
     case IDL_OCTET:
     case IDL_UINT8:
-        idl_asprintf(&ret, "%" PRIu8, literal->value.uint8);
+        cnt = 1 + idl_snprintf(buf, 1, "%" PRIu8, literal->value.uint8);
+        ret = (char*) malloc(cnt);
+        if (!ret) break;
+        idl_snprintf(ret, cnt, "%" PRIu8, literal->value.uint8);
         break;
     case IDL_SHORT:
     case IDL_INT16:
-        idl_asprintf(&ret, "%" PRId16, literal->value.int16);
+        cnt = 1 + idl_snprintf(buf, 1, "%" PRId16, literal->value.int16);
+        ret = (char*) malloc(cnt);
+        if (!ret) break;
+        idl_snprintf(ret, cnt, "%" PRId16, literal->value.int16);
         break;
     case IDL_USHORT:
     case IDL_UINT16:
-        idl_asprintf(&ret, "%" PRIu16, literal->value.uint16);
+        cnt = 1 + idl_snprintf(buf, 1, "%" PRIu16, literal->value.uint16);
+        ret = (char*) malloc(cnt);
+        if (!ret) break;
+        idl_snprintf(ret, cnt, "%" PRIu16, literal->value.uint16);
         break;
     case IDL_LONG:
     case IDL_INT32:
-        idl_asprintf(&ret, "%" PRId32, literal->value.int32);
+        cnt = 1 + idl_snprintf(buf, 1, "%" PRId32, literal->value.int32);
+        ret = (char*) malloc(cnt);
+        if (!ret) break;
+        idl_snprintf(ret, cnt, "%" PRId32, literal->value.int32);
         break;
     case IDL_ULONG:
     case IDL_UINT32:
-        idl_asprintf(&ret, "%" PRIu32, literal->value.uint32);
+        cnt = 1 + idl_snprintf(buf, 1, "%" PRIu32, literal->value.uint32);
+        ret = (char*) malloc(cnt);
+        if (!ret) break;
+        idl_snprintf(ret, cnt, "%" PRIu32, literal->value.uint32);
         break;
     case IDL_LLONG:
     case IDL_INT64:
-        idl_asprintf(&ret, "%" PRId64, literal->value.int64);
+        cnt = 1 + idl_snprintf(buf, 1, "%" PRId64, literal->value.int64);
+        ret = (char*) malloc(cnt);
+        if (!ret) break;
+        idl_snprintf(ret, cnt, "%" PRId64, literal->value.int64);
         break;
     case IDL_ULLONG:
     case IDL_UINT64:
-        idl_asprintf(&ret, "%" PRIu64, literal->value.uint64);
+        cnt = 1 + idl_snprintf(buf, 1, "%" PRIu64, literal->value.uint64);
+        ret = (char*) malloc(cnt);
+        if (!ret) break;
+        idl_snprintf(ret, cnt, "%" PRIu64, literal->value.uint64);
         break;
     case IDL_FLOAT:
-        idl_asprintf(&ret, "%.6f", literal->value.flt);
+        cnt = 1 + idl_snprintf(buf, 1, "%.6f", literal->value.flt);
+        ret = (char*) malloc(cnt);
+        if (!ret) break;
+        idl_snprintf(ret, cnt, "%.6f", literal->value.flt);
         break;
     case IDL_DOUBLE:
-        idl_asprintf(&ret, "%f", literal->value.dbl);
+        cnt = 1 + idl_snprintf(buf, 1, "%f", literal->value.dbl);
+        ret = (char*) malloc(cnt);
+        if (!ret) break;
+        idl_snprintf(ret, cnt, "%f", literal->value.dbl);
         break;
     case IDL_LDOUBLE:
-        idl_asprintf(&ret, "%Lf", literal->value.ldbl);
+        cnt = 1 + idl_snprintf(buf, 1, "%Lf", literal->value.ldbl);
+        ret = (char*) malloc(cnt);
+        if (!ret) break;
+        idl_snprintf(ret, cnt, "%Lf", literal->value.ldbl);
         break;
     case IDL_STRING:
-        idl_asprintf(&ret, "\"%s\"", literal->value.str);
+        cnt = 1 + idl_snprintf(buf, 1, "\"%s\"", literal->value.str);
+        ret = (char*) malloc(cnt);
+        if (!ret) break;
+        idl_snprintf(ret, cnt, "\"%s\"", literal->value.str);
         break;
     default:
     {
-        char *name;
         assert(type == IDL_ENUM);
-        name = typename(ctx, literal);
-        idl_asprintf(&ret, "%s", name);
-        free(name);
+        return typename(ctx, literal);
     }
     }
     return ret;
@@ -138,6 +180,7 @@ emit_field(
 
     const char *name = idl_identifier(node);
     const void* type_spec;
+    char* buf = { '\0' };
 
     if (idl_is_array(node) || idl_is_typedef(node))
         type_spec = node;
@@ -148,27 +191,39 @@ emit_field(
 
     if (idl_is_default_case(parent)) {
         char *ctype;
-        idl_asprintf(&ctype, "types.default[%s]", type);
+        const char *fmt = "types.default[%s]";
+        size_t cnt = 1 + idl_snprintf(buf, 1, fmt, type);
+        ctype = (char*) malloc(cnt);
+        if (!ctype) return IDL_RETCODE_NO_MEMORY;
+        idl_snprintf(ctype, cnt, fmt, type);
         free(type);
         type = ctype;
     }
     else if (idl_is_case(parent)) {
         const idl_case_t *mycase = (const idl_case_t*) parent;
-        char *ctype, *labels = idl_strdup("");
+        char *ctype, *labels = idlpy_strdup("");
         idl_literal_t* literal = (idl_literal_t*) mycase->labels->const_expr;
         const char *comma = "";
 
         for (; literal; literal = idl_next(literal)) {
             char *formatted = format_literal(ctx, literal);
             char *nlabels;
-            idl_asprintf(&nlabels, "%s%s%s", labels, comma, formatted);
+            const char *fmt = "%s%s%s";
+            size_t cnt = 1 + idl_snprintf(buf, 1, fmt, labels, comma, formatted);
+            nlabels = (char*) malloc(cnt);
+            if (!nlabels) return IDL_RETCODE_NO_MEMORY;
+            idl_snprintf(nlabels, cnt, fmt, labels, comma, formatted);
             free(labels);
             free(formatted);
             labels = nlabels;
             comma = ", ";
         }
 
-        idl_asprintf(&ctype, "types.case[[%s], %s]", labels, type);
+        const char *fmt = "types.case[[%s], %s]";
+        size_t cnt = 1 + idl_snprintf(buf, 1, fmt, labels, type);
+        ctype = (char*) malloc(cnt);
+        if (!ctype) return IDL_RETCODE_NO_MEMORY;
+        idl_snprintf(ctype, cnt, fmt, labels, type);
         free(type);
         free(labels);
         type = ctype;

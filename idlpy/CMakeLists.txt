@@ -10,7 +10,7 @@
 # SPDX-License-Identifier: EPL-2.0 OR BSD-3-Clause
 #
 
-add_compile_options(-g -O0 -Wall)
+#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address")
 
 add_library(
   idlpy SHARED
@@ -31,7 +31,10 @@ target_link_libraries(idlpy PUBLIC CycloneDDS::idl)
 
 install(
   TARGETS idlpy
+  ARCHIVE DESTINATION cyclonedds/.libs
   LIBRARY DESTINATION cyclonedds/.libs
+  RUNTIME DESTINATION cyclonedds/.libs
+  RESOURCE DESTINATION cyclonedds/.libs
 )
 
 if (DEFINED CIBUILDWHEEL AND "${CIBUILDWHEEL}")
