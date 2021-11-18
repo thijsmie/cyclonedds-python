@@ -16,9 +16,10 @@ import asyncio
 import concurrent
 import ctypes as ct
 from weakref import WeakValueDictionary
-from typing import Any, Callable, Dict, Optional, List, TYPE_CHECKING
+from typing import Any, Callable, Dict, Optional, List, TYPE_CHECKING, Union
+from datetime import datetime, time, timedelta
 
-from .internal import c_call, c_callable, dds_infinity, dds_c_t, DDS
+from .internal import c_call, c_callable, dds_infinity, dds_c_t, DDS, stat_kind
 from .qos import Qos, Policy, _CQos
 
 
@@ -1529,6 +1530,7 @@ class WaitSet(Entity):
         with concurrent.futures.ThreadPoolExecutor() as pool:
             return await loop.run_in_executor(pool, self.wait, timeout)
 
+
     @c_call("dds_create_waitset")
     def _create_waitset(self, domain_participant: dds_c_t.entity) -> dds_c_t.entity:
         pass
@@ -1556,6 +1558,94 @@ class WaitSet(Entity):
         pass
 
 
+class Statistics(DDS):
+    """Statistics object for entity.
+
+    Attributes
+    ----------
+    entity: Entity
+        The handle of entity to which this set of statistics applies.
+    opaque: int
+        The internal data.
+    time: datatime
+        Time stamp of lastest call to `Statistics(entity).refresh()`.
+    count: int
+        Number of key-value pairs.
+    data: dict
+        Data.
+    """
+    entity: Entity
+    opaque: int
+    time: datetime
+    count: int
+    data: Dict[str, Union[int, datetime]]
+
+    def __init__(self, entity: Entity):
+        self.entity = entity
+        self._c_statistics = self._create_statistics(entity._ref, 0, 0, 0, None)
+        self._update()
+
+    def __del__(self):
+        self._delete_statistics(self._c_statistics)
+
+    def _update(self):
+        self.opaque = self._c_statistics.opaque
+        self.time = datetime(nanoseconds=self._c_statistics.time)
+
+        pt = self._c_statistics.kv
+        while True:
+            if pt == None:
+                break
+            name = pt[0].name.value  # ct.c_char_p
+            value = None
+            if pt[0].kind == stat_kind.DDS_STAT_KIND_UINT32:
+                value = pt[0].u.u32
+            elif pt[0].kind == stat_kind.DDS_STAT_KIND_LENGTHTIME:
+                value = timedelta(nanoseconds=pt[0].u.lengthtime)
+            self.data[name] = value
+            pt += 1
+
+    def refresh(self):
+        """
+        Update a previously created statistics structure with current values.
+        """
+        self._refresh_statistics(self._c_statistics)
+        self._update()
+
+    def lookup(self, name):
+        """Lookup a specific value by name.
+
+        Parameters
+        ----------
+        name: str
+            The specified name in the data to look for.
+        """
+        if name is None:
+            return None
+        self._lookup_statistics(self._c_statistics, ct.byref(name))
+
+    def __str__(self):
+        return f"Statistics: {self._c_statistics}"
+
+    @c_call("dds_create_statistics")
+    def _create_statistics(self, entity: dds_c_t.entity, opaque: ct.c_int64, time: ct.c_int64, count: ct.c_size_t, kv: ct.c_char_p):
+        pass
+    
+    @c_call("dds_refresh_statistics")
+    def _refresh_statistics(self, stat: dds_c_t.statistics):
+        pass
+    
+    @c_call("dds_lookup_statistic")
+    def _lookup_statistic(self, stat: dds_c_t.statistics, name: ct.c_char_p):
+        pass
+
+    @c_call("dds_delete_statistics")
+    def _delete_statistics(self, stat: dds_c_t.statistics):
+        pass
+
+    __repr__ = __str__
+
+
 __all__ = ["DDSException", "Entity", "Qos", "Policy", "Listener", "DDSStatus", "ViewState",
            "InstanceState", "SampleState", "ReadCondition", "QueryCondition", "GuardCondition",
-           "WaitSet"]
+           "WaitSet", "Statistics"]
