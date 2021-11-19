@@ -16,10 +16,9 @@ import asyncio
 import concurrent
 import ctypes as ct
 from weakref import WeakValueDictionary
-from typing import Any, Callable, Dict, Optional, List, TYPE_CHECKING, Union
-from datetime import datetime, time, timedelta
+from typing import Any, Callable, Dict, Optional, List, TYPE_CHECKING
 
-from .internal import c_call, c_callable, dds_infinity, dds_c_t, DDS, stat_kind
+from .internal import c_call, c_callable, dds_infinity, dds_c_t, DDS, stat_keyvalue, stat_kind
 from .qos import Qos, Policy, _CQos
 
 
@@ -1568,7 +1567,7 @@ class Statistics(DDS):
     opaque: int
         The internal data.
     time: datatime
-        Time stamp of lastest call to `Statistics(entity).refresh()`.
+        Time stamp of lastest call to `Statistics(entity).refresh()` in nanoseconds since epoch.
     count: int
         Number of key-value pairs.
     data: dict
@@ -1576,71 +1575,62 @@ class Statistics(DDS):
     """
     entity: Entity
     opaque: int
-    time: datetime
+    time: int
     count: int
-    data: Dict[str, Union[int, datetime]]
+    data: Dict[str, int]
 
     def __init__(self, entity: Entity):
         self.entity = entity
-        self._c_statistics = self._create_statistics(entity._ref, 0, 0, 0, None)
+        self._c_statistics = self._create_statistics(entity._ref)
+        if not self._c_statistics:
+            raise DDSException(DDSException.DDS_RETCODE_ERROR, msg="Could not initialize statistics.")
+        self._c_statistics = ct.cast(
+            self._c_statistics, ct.POINTER(dds_c_t.stat_factory(self._c_statistics[0].count))
+        )
         self._update()
 
     def __del__(self):
-        self._delete_statistics(self._c_statistics)
+        self._delete_statistics(ct.cast(self._c_statistics, ct.POINTER(dds_c_t.statistics)))
 
     def _update(self):
-        self.opaque = self._c_statistics.opaque
-        self.time = datetime(nanoseconds=self._c_statistics.time)
+        self.data = {}
+        self.opaque = self._c_statistics[0].opaque
+        self.time = self._c_statistics[0].time
+        count = self._c_statistics[0].count
+        kv = self._c_statistics[0].kv
 
-        pt = self._c_statistics.kv
-        while True:
-            if pt == None:
-                break
-            name = pt[0].name.value  # ct.c_char_p
+        for i in range(count):
+            name = kv[i].name.decode('utf8')  # ct.c_char_p
             value = None
-            if pt[0].kind == stat_kind.DDS_STAT_KIND_UINT32:
-                value = pt[0].u.u32
-            elif pt[0].kind == stat_kind.DDS_STAT_KIND_LENGTHTIME:
-                value = timedelta(nanoseconds=pt[0].u.lengthtime)
+            if kv[i].kind == stat_kind.DDS_STAT_KIND_UINT32:
+                value = kv[i].u.u32
+            elif kv[i].kind == stat_kind.DDS_STAT_KIND_UINT64:
+                value = kv[i].u.u64
+            elif kv[i].kind == stat_kind.DDS_STAT_KIND_LENGTHTIME:
+                value = kv[i].u.lengthtime
             self.data[name] = value
-            pt += 1
 
     def refresh(self):
         """
         Update a previously created statistics structure with current values.
         """
-        self._refresh_statistics(self._c_statistics)
+        self._refresh_statistics(ct.byref(ct.cast(self._c_statistics, ct.POINTER(dds_c_t.statistics))))
+        self._c_statistics = ct.cast(self._c_statistics, dds_c_t.stat_factory(self._c_statistics.count))
         self._update()
 
-    def lookup(self, name):
-        """Lookup a specific value by name.
-
-        Parameters
-        ----------
-        name: str
-            The specified name in the data to look for.
-        """
-        if name is None:
-            return None
-        self._lookup_statistics(self._c_statistics, ct.byref(name))
-
     def __str__(self):
-        return f"Statistics: {self._c_statistics}"
+        return f"Statistics({self.entity}, opaque={self.opaque}, time={self.time}, data={self.data})"
 
     @c_call("dds_create_statistics")
-    def _create_statistics(self, entity: dds_c_t.entity, opaque: ct.c_int64, time: ct.c_int64, count: ct.c_size_t, kv: ct.c_char_p):
+    def _create_statistics(self, entity: dds_c_t.entity) -> ct.POINTER(dds_c_t.statistics):
         pass
-    
+
     @c_call("dds_refresh_statistics")
-    def _refresh_statistics(self, stat: dds_c_t.statistics):
-        pass
-    
-    @c_call("dds_lookup_statistic")
-    def _lookup_statistic(self, stat: dds_c_t.statistics, name: ct.c_char_p):
+    def _refresh_statistics(self, stat: ct.POINTER(dds_c_t.statistics)) -> dds_c_t.returnv:
         pass
 
     @c_call("dds_delete_statistics")
-    def _delete_statistics(self, stat: dds_c_t.statistics):
+    def _delete_statistics(self, stat: ct.POINTER(dds_c_t.statistics)) -> None:
         pass
 
     __repr__ = __str__

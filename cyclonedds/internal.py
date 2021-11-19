@@ -242,7 +242,7 @@ class stat_kind(IntEnum):
     DDS_STAT_KIND_LENGTHTIME = 2
 
 
-class _u(ct.Union):
+class stat_value(ct.Union):
     _fields_ = [
         ('u32', ct.c_uint32),
         ('u64', ct.c_uint64),
@@ -253,7 +253,7 @@ class stat_keyvalue(ct.Structure):
     _fields_ = [
         ('name', ct.c_char_p),
         ('kind', ct.c_int),
-        ('u', _u)
+        ('u', stat_value)
     ]
 
 class dds_c_t:  # noqa N801
@@ -372,8 +372,19 @@ class dds_c_t:  # noqa N801
             ('opaque', ct.c_uint64),
             ('time', ct.c_int64),
             ('count', ct.c_size_t),
-            ('kv', ct.POINTER(stat_keyvalue))
+            ('kv', ct.c_void_p)
         ]
+
+    def stat_factory(n_kv: int) -> ct.Structure:
+        class vstatistics(ct.Structure):
+            _fields_ = [
+                ('entity', ct.c_int32),
+                ('opaque', ct.c_uint64),
+                ('time', ct.c_int64),
+                ('count', ct.c_size_t),
+                ('kv', stat_keyvalue * n_kv)
+            ]
+        return vstatistics
 
 
 import cyclonedds._clayer as _clayer

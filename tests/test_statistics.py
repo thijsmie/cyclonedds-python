@@ -6,7 +6,13 @@ from cyclonedds.topic import Topic
 from cyclonedds.sub import Subscriber, DataReader
 from cyclonedds.pub import Publisher, DataWriter
 
+from testtopics import Message
 
 def test_create_statistics():
     dp = DomainParticipant(0)
-    assert Statistics(dp) is not None
+    tp = Topic(dp, "blah", Message)
+    dw = DataWriter(dp, tp)
+    stat = Statistics(dw)
+    print(stat)
+    print(stat.data)
+    assert stat.data
