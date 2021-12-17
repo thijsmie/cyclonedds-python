@@ -15,6 +15,7 @@ pr: [ '*' ]
 
 variables:
   build_type: RelWithDebugInfo
+  run_fuzzing: false
 
 jobs:
 - job: BuildCyclone
@@ -35,7 +36,7 @@ jobs:
   - template: /.azure/templates/build-cyclone.yml
   - publish: cyclone-$(Agent.OS)-$(build_type)
     artifact: cyclone-$(Agent.OS)-$(build_type)
-- job: AutomatedTests
+- job: RuntimeTests
   dependsOn: BuildCyclone
   pool:
     vmImage: $(image)
@@ -53,6 +54,10 @@ jobs:
       'Ubuntu 20.04 LTS with Python 3.10':
         image: ubuntu-20.04
         python-version: "3.10"
+      'Fuzzer on Ubuntu 20.04 LTS with Python 3.10':
+        image: ubuntu-20.04
+        python-version: "3.10"
+        run_fuzzing: false
       'macOS 10.15 with Python 3.9':
         image: macOS-10.15
         python-version: 3.9
@@ -75,9 +80,12 @@ jobs:
       chmod +x $(Pipeline.Workspace)/cyclone-$(Agent.OS)-$(build_type)/bin/* || true
     name: set_cyclonedds_home
     displayName: Set CYCLONEDDS_HOME
-  - template: /.azure/templates/build-test.yml
+  - ${{ if eq(run_fuzzing, false) }}:
+    - template: /.azure/templates/build-test.yml
+  - ${{ if eq(run_fuzzing, true) }}:
+    - template: /.azure/templates/build-fuzzing.yml
 - job: CoverageReport
-  dependsOn: AutomatedTests
+  dependsOn: RuntimeTests
   pool:
     vmImage: ubuntu-20.04
   steps:

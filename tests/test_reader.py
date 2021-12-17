@@ -7,7 +7,7 @@ from cyclonedds.pub import Publisher, DataWriter
 from cyclonedds.util import duration, isgoodentity
 
 
-from  testtopics import Message
+from support_modules.testtopics import Message
 
 def test_reader_initialize():
     dp = DomainParticipant(0)
