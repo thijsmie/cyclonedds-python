@@ -1901,7 +1901,7 @@ ddspy_domain_get_typeobj(PyObject *self, PyObject *args)
     ddspy_typeid_deser(&type_id_stream, &type_id);
     PyBuffer_Release(&type_id_buffer);
 
-    sts = dds_domain_get_typeobj(participant, type_id, timeout, &type_obj);
+    sts = dds_get_typeobj(participant, type_id, timeout, &type_obj);
 
     if (sts < 0 || type_obj == NULL) {
         return PyLong_FromLong((long) sts);
