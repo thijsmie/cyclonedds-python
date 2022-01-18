@@ -31,6 +31,7 @@ target_link_libraries(idlpy PUBLIC CycloneDDS::idl)
 
 install(
   TARGETS idlpy
+  RUNTIME DESTINATION cyclonedds/.libs
   LIBRARY DESTINATION cyclonedds/.libs
 )
 
