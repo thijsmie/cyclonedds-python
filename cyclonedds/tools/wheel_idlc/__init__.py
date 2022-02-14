@@ -18,7 +18,6 @@ cyclonedds/.libs.
 import os
 import sys
 import platform
-import subprocess
 import cyclonedds
 
 basedir = os.path.abspath(os.path.dirname(cyclonedds.__file__))

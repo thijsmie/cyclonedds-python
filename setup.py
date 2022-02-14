@@ -1,6 +1,7 @@
 #!/usr/bin/env python
+
 """
- * Copyright(c) 2021 ADLINK Technology Limited and others
+ * Copyright(c) 2022 ZettaScale Technology and others
  *
  * This program and the accompanying materials are made available under the
  * terms of the Eclipse Public License v. 2.0 which is available at
@@ -11,11 +12,58 @@
  * SPDX-License-Identifier: EPL-2.0 OR BSD-3-Clause
 """
 
-import re
-from os import environ
+import os
+import platform
 from pathlib import Path
-from skbuild import setup
-from setuptools import find_packages
+from setuptools import setup, Extension, find_packages
+
+
+class FoundCyclone(Exception):
+    def __init__(self, location) -> None:
+        self.location = location
+        super().__init__()
+
+
+def search_cyclone_pathlike(pathlike, upone=False):
+    for path in pathlike.split(os.pathsep):
+        if path != "":
+            try:
+                path = Path(path).resolve()
+                if upone:
+                    path = (path / '..').resolve()
+                if (path / 'lib' / 'cmake' / 'CycloneDDS' / 'CycloneDDSConfig.cmake').exists():
+                    return path
+            except:
+                pass
+
+
+def find_cyclonedds():
+    if "CYCLONEDDS_HOME" in os.environ:
+        return Path(os.environ["CYCLONEDDS_HOME"])
+    if "CycloneDDS_ROOT" in os.environ:
+        return Path(os.environ["CMAKE_CycloneDDS_ROOT"])
+    if "CycloneDDS_ROOT" in os.environ:
+        return Path(os.environ["CycloneDDS_ROOT"])
+    if "CMAKE_PREFIX_PATH" in os.environ:
+        dir = search_cyclone_pathlike(os.environ["CMAKE_PREFIX_PATH"])
+        if dir:
+            return dir
+    if "CMAKE_LIBRARY_PATH" in os.environ:
+        dir = search_cyclone_pathlike(os.environ["CMAKE_LIBRARY_PATH"])
+        if dir:
+            return dir
+    if platform.system() != "Windows" and "LIBRARY_PATH" in os.environ:
+        dir = search_cyclone_pathlike(os.environ["LIBRARY_PATH"], upone=True)
+        if dir:
+            return dir
+    if platform.system() != "Windows" and "LD_LIBRARY_PATH" in os.environ:
+        dir = search_cyclone_pathlike(os.environ["LD_LIBRARY_PATH"], upone=True)
+        if dir:
+            return dir
+    if platform.system() == "Windows" and "PATH" in os.environ:
+        dir = search_cyclone_pathlike(os.environ["PATH"], upone=True)
+        if dir:
+            return dir
 
 
 this_directory = Path(__file__).resolve().parent
@@ -23,11 +71,23 @@ with open(this_directory / 'README.md', encoding='utf-8') as f:
     long_description = f.read()
 
 
-# invalidate cmake cache
-for cache_file in (this_directory / "_skbuild").rglob("CMakeCache.txt"):
-    cache_file.write_text(
-        re.sub("^//.*$\n^[^#].*pip-build-env.*$", "", cache_file.read_text(), flags=re.M)
-    )
+cyclone = find_cyclonedds()
+
+if not cyclone:
+    print("Could not locate cyclonedds. Try to set CYCLONEDDS_HOME or CMAKE_PREFIX_PATH")
+    import sys
+    sys.exit(1)
+
+
+cyclone_library = None
+for file in cyclone.rglob("*ddsc*"):
+    if file.suffix in [".dll", ".so", ".dynlib"]:
+        cyclone_library = file
+        break
+
+with open(this_directory / 'cyclonedds' / '__library__.py', "w", encoding='utf-8') as f:
+    f.write(f"library_path = '{cyclone_library}'")
+
 
 console_scripts = [
     "ddsls=cyclonedds.tools.ddsls:command",
@@ -35,22 +95,18 @@ console_scripts = [
 ]
 cmake_args = []
 
-if "CIBUILDWHEEL" in environ:
+
+if "CIBUILDWHEEL" in os.environ:
     # We are building wheels! This means we should be including the idl compiler in the
     # resulting package. To do this we need to include the idlc executable and libidl,
     # this is done by cmake. We will add an idlc entrypoint that will make sure the load paths
     # of idlc are correct.
     console_scripts.append("idlc=cyclonedds.tools.wheel_idlc:command")
-    cmake_args.append("-DCIBUILDWHEEL=1")
-
-
-if "CYCLONEDDS_HOME" in environ and "CMAKE_PREFIX_PATH" not in environ:
-    cmake_args.append(f"-DCMAKE_PREFIX_PATH=\"{environ['CYCLONEDDS_HOME']}\"")
 
 
 setup(
     name='cyclonedds',
-    version='0.8.0',
+    version='0.9.0',
     description='Eclipse Cyclone DDS Python binding',
     long_description=long_description,
     long_description_content_type="text/markdown",
@@ -84,6 +140,24 @@ setup(
         "cyclonedds": ["*.so", "*.dylib", "*.dll", "idlc*", "*py.typed"],
         "cyclonedds.idl": ["py.typed"]
     },
+    ext_modules=[
+        Extension('cyclonedds._clayer', [
+                'clayer/cdrkeyvm.c',
+                'clayer/pysertype.c',
+                'clayer/typeser.c'
+            ],
+            include_dirs=[
+                f"{cyclone}/include",
+                str(this_directory / "clayer")
+            ],
+            libraries=['cycloneddsidl', 'ddsc'],
+            library_dirs=[
+                f"{cyclone}/lib",
+                f"{cyclone}/lib64",
+                f"{cyclone}/bin"
+            ]
+        )
+    ],
     entry_points={
         "console_scripts": console_scripts,
     },
@@ -106,6 +180,5 @@ setup(
             "sphinx-rtd-theme>=0.5.2"
         ]
     },
-    zip_safe=False,
-    cmake_args=cmake_args
+    zip_safe=False
 )
