@@ -150,7 +150,7 @@ setup(
                 f"{cyclone}/include",
                 str(this_directory / "clayer")
             ],
-            libraries=['cycloneddsidl', 'ddsc'],
+            libraries=['ddsc'],
             library_dirs=[
                 f"{cyclone}/lib",
                 f"{cyclone}/lib64",
