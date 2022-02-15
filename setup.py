@@ -13,60 +13,18 @@
 """
 
 import os
-import platform
+import sys
 from pathlib import Path
 from setuptools import setup, Extension, find_packages
 
-
-class FoundCyclone(Exception):
-    def __init__(self, location) -> None:
-        self.location = location
-        super().__init__()
-
-
-def search_cyclone_pathlike(pathlike, upone=False):
-    for path in pathlike.split(os.pathsep):
-        if path != "":
-            try:
-                path = Path(path).resolve()
-                if upone:
-                    path = (path / '..').resolve()
-                if (path / 'lib' / 'cmake' / 'CycloneDDS' / 'CycloneDDSConfig.cmake').exists():
-                    return path
-            except:
-                pass
-
-
-def find_cyclonedds():
-    if "CYCLONEDDS_HOME" in os.environ:
-        return Path(os.environ["CYCLONEDDS_HOME"])
-    if "CycloneDDS_ROOT" in os.environ:
-        return Path(os.environ["CMAKE_CycloneDDS_ROOT"])
-    if "CycloneDDS_ROOT" in os.environ:
-        return Path(os.environ["CycloneDDS_ROOT"])
-    if "CMAKE_PREFIX_PATH" in os.environ:
-        dir = search_cyclone_pathlike(os.environ["CMAKE_PREFIX_PATH"])
-        if dir:
-            return dir
-    if "CMAKE_LIBRARY_PATH" in os.environ:
-        dir = search_cyclone_pathlike(os.environ["CMAKE_LIBRARY_PATH"])
-        if dir:
-            return dir
-    if platform.system() != "Windows" and "LIBRARY_PATH" in os.environ:
-        dir = search_cyclone_pathlike(os.environ["LIBRARY_PATH"], upone=True)
-        if dir:
-            return dir
-    if platform.system() != "Windows" and "LD_LIBRARY_PATH" in os.environ:
-        dir = search_cyclone_pathlike(os.environ["LD_LIBRARY_PATH"], upone=True)
-        if dir:
-            return dir
-    if platform.system() == "Windows" and "PATH" in os.environ:
-        dir = search_cyclone_pathlike(os.environ["PATH"], upone=True)
-        if dir:
-            return dir
-
-
 this_directory = Path(__file__).resolve().parent
+sys.path.insert(0, str(this_directory / 'buildhelp'))
+
+from cyclone_search import find_cyclonedds
+from build_ext import build_ext, Library
+from bdist_wheel import bdist_wheel
+
+
 with open(this_directory / 'README.md', encoding='utf-8') as f:
     long_description = f.read()
 
@@ -79,29 +37,49 @@ if not cyclone:
     sys.exit(1)
 
 
-cyclone_library = None
-for file in cyclone.rglob("*ddsc*"):
-    if file.suffix in [".dll", ".so", ".dynlib"]:
-        cyclone_library = file
-        break
-
 with open(this_directory / 'cyclonedds' / '__library__.py', "w", encoding='utf-8') as f:
-    f.write(f"library_path = '{cyclone_library}'")
+    f.write(f"library_path = '{cyclone.ddsc_library}'")
 
 
-console_scripts = [
-    "ddsls=cyclonedds.tools.ddsls:command",
-    "pubsub=cyclonedds.tools.pubsub:command"
+ext_modules = [
+    Extension('cyclonedds._clayer', [
+            'clayer/cdrkeyvm.c',
+            'clayer/pysertype.c',
+            'clayer/typeser.c'
+        ],
+        include_dirs=[
+            str(cyclone.include_path),
+            str(this_directory / "clayer")
+        ],
+        libraries=['ddsc'],
+        library_dirs=[
+            str(cyclone.library_path),
+            str(cyclone.binary_path),
+        ]
+    )
 ]
-cmake_args = []
 
-
-if "CIBUILDWHEEL" in os.environ:
-    # We are building wheels! This means we should be including the idl compiler in the
-    # resulting package. To do this we need to include the idlc executable and libidl,
-    # this is done by cmake. We will add an idlc entrypoint that will make sure the load paths
-    # of idlc are correct.
-    console_scripts.append("idlc=cyclonedds.tools.wheel_idlc:command")
+if cyclone.idlc_library:
+    ext_modules += [
+        Library('cyclonedds._idlpy', [
+                'idlpy/src/context.c',
+                'idlpy/src/generator.c',
+                'idlpy/src/naming.c',
+                'idlpy/src/ssos.c',
+                'idlpy/src/types.c',
+                'idlpy/src/util.c'
+            ],
+            include_dirs=[
+                str(cyclone.include_path),
+                str(this_directory / "idlpy" / "include")
+            ],
+            libraries=['ddsc', 'cycloneddsidl'],
+            library_dirs=[
+                str(cyclone.library_path),
+                str(cyclone.binary_path)
+            ]
+        )
+    ]
 
 
 setup(
@@ -135,31 +113,21 @@ setup(
         "Programming Language :: Python :: 3.10",
         "Operating System :: OS Independent"
     ],
-    packages=find_packages(".", exclude=("tests", "tests.*", "docs.*")),
+    packages=find_packages(".", include=("cyclonedds", "cyclonedds.*")),
     package_data={
         "cyclonedds": ["*.so", "*.dylib", "*.dll", "idlc*", "*py.typed"],
         "cyclonedds.idl": ["py.typed"]
     },
-    ext_modules=[
-        Extension('cyclonedds._clayer', [
-                'clayer/cdrkeyvm.c',
-                'clayer/pysertype.c',
-                'clayer/typeser.c'
-            ],
-            include_dirs=[
-                f"{cyclone}/include",
-                str(this_directory / "clayer")
-            ],
-            libraries=['ddsc'],
-            library_dirs=[
-                f"{cyclone}/lib",
-                f"{cyclone}/lib64",
-                f"{cyclone}/bin"
-            ]
-        )
-    ],
+    ext_modules=ext_modules,
+    cmdclass={
+        'bdist_wheel': bdist_wheel,
+        'build_ext': build_ext,
+    },
     entry_points={
-        "console_scripts": console_scripts,
+        "console_scripts": [
+            "ddsls=cyclonedds.tools.ddsls:command",
+            "pubsub=cyclonedds.tools.pubsub:command"
+        ],
     },
     python_requires='>=3.7',
     install_requires=[
