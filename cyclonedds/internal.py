@@ -13,19 +13,124 @@
 import os
 import uuid
 import inspect
+import platform
 import ctypes as ct
 from ctypes.util import find_library
 from functools import wraps
 from dataclasses import dataclass
-from .__library__ import library_path
+from .__library__ import library_path, in_wheel
+
+
+class CycloneDDSLoaderException(Exception):
+    pass
+
+
+def _load(path):
+    """Most basic loader, return the loaded DLL on path"""
+    try:
+        library = ct.CDLL(path)
+    except OSError:
+        raise CycloneDDSLoaderException(f"Failed to load CycloneDDS library from {path}")
+    if not library:
+        raise CycloneDDSLoaderException(f"Failed to load CycloneDDS library from {path}")
+    return library
+
+
+def _loader_wheel_gen(rel_path, ext):
+    def _loader_wheel():
+        if in_wheel:
+            return _load(str(library_path))
+        return None
+    return _loader_wheel
+
+
+def _loader_cyclonedds_home_gen(name):
+    """
+        If CYCLONEDDS_HOME is set it is required to be valid and must be used to load.
+    """
+    def _loader_cyclonedds_home():
+        if "CYCLONEDDS_HOME" not in os.environ:
+            return None
+
+        return _load(os.path.join(os.environ["CYCLONEDDS_HOME"], name))
+    return _loader_cyclonedds_home
+
+
+def _loader_on_path_gen(name):
+    """
+        Attempt to load the library without specifying any path at all
+        the system might find it with LD_LIBRARY_PATH or the likes.
+    """
+    def _loader_on_path():
+        try:
+            lib = find_library("ddsc")
+            if lib:
+                return _load(lib)
+        except CycloneDDSLoaderException:
+            pass
+
+        try:
+            return _load(name)
+        except CycloneDDSLoaderException:
+            pass
+
+        return None
+    return _loader_on_path
+
+
+
+def _loader_install_path():
+        try:
+            return _load(str(library_path))
+        except CycloneDDSLoaderException:
+            pass
+        return None
+
+_loaders_per_system = {
+    "Linux": [
+        _loader_wheel_gen(["..", "cyclonedds.libs"], ".so"),
+        _loader_cyclonedds_home_gen("lib/libddsc.so"),
+        _loader_on_path_gen("libddsc.so"),
+        _loader_install_path
+    ],
+    "Windows": [
+        _loader_wheel_gen(["..", "cyclonedds.libs"], ".dll"),
+        _loader_cyclonedds_home_gen("bin\\ddsc.dll"),
+        _loader_on_path_gen("ddsc.dll"),
+        _loader_install_path
+    ],
+    "Darwin": [
+        _loader_wheel_gen([".dylibs"], ".dylib"),
+        _loader_cyclonedds_home_gen("lib/libddsc.dylib"),
+        _loader_on_path_gen("libddsc.dylib"),
+        _loader_install_path
+    ]
+}
 
 
 def load_cyclonedds() -> ct.CDLL:
-    lib = find_library("ddsc")
-    if lib:
-        return ct.CDLL(lib)
-    return ct.CDLL(library_path)
+    """
+        Internal method to load the Cyclone DDS Dynamic Library.
+        Handles platform specific naming/configuration.
+    """
 
+    system = platform.system()
+    if system not in _loaders_per_system:
+        raise CycloneDDSLoaderException(
+            f"You are running on an unknown system configuration {system}, unable to determine the CycloneDDS load path."
+        )
+
+    for loader in _loaders_per_system[system]:
+        if not loader:
+            continue
+        lib = loader()
+        if lib:
+            return lib
+
+    raise CycloneDDSLoaderException(
+        "The CycloneDDS library could not be located. "
+        "Try setting the CYCLONEDDS_HOME variable to what you used as CMAKE_INSTALL_PREFIX."
+    )
 
 def c_call(cname):
     """

@@ -15,5 +15,5 @@ class build_ext(_build_ext):
     def get_export_symbols(self, ext):
         if isinstance(ext, Library):
             return ext.export_symbols
-        return super().get_export_symbols()
+        return super().get_export_symbols(ext)
 

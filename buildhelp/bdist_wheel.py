@@ -24,6 +24,7 @@ class bdist_wheel(_bdist_wheel):
             os.makedirs(newlibdir, exist_ok=True)
             with open(Path(self.bdist_dir) / 'cyclonedds' / '__library__.py', "w", encoding='utf-8') as f:
                 f.write("from pathlib import Path\n\n")
+                f.write("in_wheel = True\n")
                 f.write(f"library_path = Path(__file__).parent / '.libs' / '{cyclone.ddsc_library.name}'")
 
             shutil.copy(cyclone.ddsc_library, newlibdir / cyclone.ddsc_library.name)

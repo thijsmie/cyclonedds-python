@@ -38,6 +38,7 @@ if not cyclone:
 
 
 with open(this_directory / 'cyclonedds' / '__library__.py', "w", encoding='utf-8') as f:
+    f.write("in_wheel = False\n")
     f.write(f"library_path = '{cyclone.ddsc_library}'")
 
 
