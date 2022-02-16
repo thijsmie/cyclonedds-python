@@ -89,19 +89,19 @@ def _loader_install_path():
 _loaders_per_system = {
     "Linux": [
         _loader_wheel_gen(["..", "cyclonedds.libs"], ".so"),
-        _loader_cyclonedds_home_gen("lib/libddsc.so"),
+        _loader_cyclonedds_home_gen(f"lib{os.sep}libddsc.so"),
         _loader_on_path_gen("libddsc.so"),
         _loader_install_path
     ],
     "Windows": [
         _loader_wheel_gen(["..", "cyclonedds.libs"], ".dll"),
-        _loader_cyclonedds_home_gen("bin\\ddsc.dll"),
+        _loader_cyclonedds_home_gen(f"bin{os.sep}ddsc.dll"),
         _loader_on_path_gen("ddsc.dll"),
         _loader_install_path
     ],
     "Darwin": [
         _loader_wheel_gen([".dylibs"], ".dylib"),
-        _loader_cyclonedds_home_gen("lib/libddsc.dylib"),
+        _loader_cyclonedds_home_gen(f"lib{os.sep}libddsc.dylib"),
         _loader_on_path_gen("libddsc.dylib"),
         _loader_install_path
     ]
