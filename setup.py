@@ -14,15 +14,27 @@
 
 import os
 import sys
+import sys
+import importlib
 from pathlib import Path
 from setuptools import setup, Extension, find_packages
 
-this_directory = Path(__file__).resolve().parent
-sys.path.insert(0, str(this_directory / 'buildhelp'))
 
-from cyclone_search import find_cyclonedds
-from build_ext import build_ext, Library
-from bdist_wheel import bdist_wheel
+this_directory = Path(__file__).resolve().parent
+
+def get_buildhelp():
+    spec = importlib.util.spec_from_file_location('buildhelp', str(this_directory / 'buildhelp' / 'buildhelp.py'))
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = module
+    spec.loader.exec_module(module)
+    return module
+
+
+buildhelp = get_buildhelp()
+find_cyclonedds = buildhelp.find_cyclonedds
+build_ext = buildhelp.build_ext
+Library = buildhelp.Library
+bdist_wheel = buildhelp.bdist_wheel
 
 
 with open(this_directory / 'README.md', encoding='utf-8') as f:
