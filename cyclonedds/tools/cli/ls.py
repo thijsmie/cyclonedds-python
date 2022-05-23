@@ -6,12 +6,30 @@ from .utils import TimeDeltaParamType, LiveData, background_progress_viewer
 from .discovery.main import ls_discovery
 
 
-
 @click.command(short_help="Scan and display DDS entities in your network")
-@click.option('-i', '--id', '--domain-id', type=int, default=0, help="DDS Domain to inspect.")
-@click.option('-r', '--runtime', type=TimeDeltaParamType(), default='1s', help="Duration of discovery scan.")
-@click.option('-t', '--topic', type=str, help="Filter which entity types to display by topic name (supports regex)", default=".*")
-@click.option('--show-self', type=bool, is_flag=True, help="Show the tools own participant and subscriptions.")
+@click.option(
+    "-i", "--id", "--domain-id", type=int, default=0, help="DDS Domain to inspect."
+)
+@click.option(
+    "-r",
+    "--runtime",
+    type=TimeDeltaParamType(),
+    default="1s",
+    help="Duration of discovery scan.",
+)
+@click.option(
+    "-t",
+    "--topic",
+    type=str,
+    help="Filter which entity types to display by topic name (supports regex)",
+    default=".*",
+)
+@click.option(
+    "--show-self",
+    type=bool,
+    is_flag=True,
+    help="Show the tools own participant and subscriptions.",
+)
 def ls(topic, id, runtime, show_self):
     """Scan and display DDS entities in your network."""
     live = LiveData()

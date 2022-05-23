@@ -19,11 +19,11 @@ def _type_repr(obj):
     if type(obj) == str:
         return obj
     if isinstance(obj, type):
-        if obj.__module__ == 'builtins':
+        if obj.__module__ == "builtins":
             return obj.__qualname__
-        return f'{obj.__module__}.{obj.__qualname__}'
+        return f"{obj.__module__}.{obj.__qualname__}"
     if obj is ...:
-        return '...'
+        return "..."
     if _th.get_origin(obj) == _th.Annotated:
         return _type_repr(_th.get_args(obj)[1])
     return repr(obj)
@@ -36,7 +36,9 @@ class array:
             tup = (tup,)
 
         if len(tup) != 2 or type(tup[1]) != int:
-            raise TypeError("An array takes two arguments: an element type and a constant length.")
+            raise TypeError(
+                "An array takes two arguments: an element type and a constant length."
+            )
         return _th.Annotated[_typing.Sequence[tup[0]], cls(*tup)]
 
     def __init__(self, subtype: type, length: int):
@@ -47,7 +49,11 @@ class array:
         return f"array[{_type_repr(self.subtype)}, {self.length}]"
 
     def __eq__(self, o: object) -> bool:
-        return isinstance(o, array) and o.subtype == self.subtype and o.length == self.length
+        return (
+            isinstance(o, array)
+            and o.subtype == self.subtype
+            and o.length == self.length
+        )
 
     def __hash__(self) -> int:
         return (241813571056069 * self.length) ^ hash(self.subtype)
@@ -62,7 +68,9 @@ class sequence:
             tup = (tup,)
 
         if len(tup) not in [1, 2] or (len(tup) == 2 and type(tup[1]) != int):
-            raise TypeError("A sequence takes a subtype and an optional maximum length.")
+            raise TypeError(
+                "A sequence takes a subtype and an optional maximum length."
+            )
         if len(tup) > 1 and (tup[1] <= 0 or tup[1] > 65535):
             return TypeError("Sequence max length should be between 0 and 65536.")
         return _th.Annotated[_typing.Sequence[tup[0]], cls(*tup)]
@@ -78,7 +86,11 @@ class sequence:
             return f"sequence[{_type_repr(self.subtype)}]"
 
     def __eq__(self, o: object) -> bool:
-        return isinstance(o, sequence) and o.subtype == self.subtype and o.max_length == self.max_length
+        return (
+            isinstance(o, sequence)
+            and o.subtype == self.subtype
+            and o.max_length == self.max_length
+        )
 
     def __hash__(self) -> int:
         if self.max_length:
@@ -111,7 +123,7 @@ class typedef:
         return f"typedef[{self.name}, {_type_repr(self.subtype)}]"
 
     def __eq__(self, o: object) -> bool:
-        return (isinstance(o, typedef) and o.subtype == self.subtype)
+        return isinstance(o, typedef) and o.subtype == self.subtype
 
     def __hash__(self) -> int:
         return hash(self.name) ^ hash(self.subtype)
@@ -164,18 +176,28 @@ class case(ValidUnionHolder):
             tup = (tup,)
 
         if len(tup) != 2:
-            raise TypeError("A case takes two arguments: the discriminator value(s) and the type.")
+            raise TypeError(
+                "A case takes two arguments: the discriminator value(s) and the type."
+            )
         return _th.Annotated[_typing.Optional[tup[1]], cls(*tup)]
 
     def __init__(self, discriminator_value, subtype: type) -> None:
-        self.labels: _typing.List[int] = discriminator_value if type(discriminator_value) == list else [discriminator_value]
+        self.labels: _typing.List[int] = (
+            discriminator_value
+            if type(discriminator_value) == list
+            else [discriminator_value]
+        )
         self.subtype: type = subtype
 
     def __repr__(self) -> str:
         return f"case[{self.labels}, {_type_repr(self.subtype)}]"
 
     def __eq__(self, o: object) -> bool:
-        return isinstance(o, case) and o.subtype == self.subtype and o.labels == self.labels
+        return (
+            isinstance(o, case)
+            and o.subtype == self.subtype
+            and o.labels == self.labels
+        )
 
     def __hash__(self) -> int:
         return hash(self.subtype)
@@ -223,18 +245,18 @@ float64 = _th.Annotated[float, "float64"]
 NoneType = type(None)
 
 _type_code_align_size_default_mapping = {
-    int8: ('b', 1, 1, 0),
-    int16: ('h', 2, 2, 0),
-    int32: ('i', 4, 4, 0),
-    int64: ('q', 8, 8, 0),
-    uint8: ('B', 1, 1, 0),
-    uint16: ('H', 2, 2, 0),
-    uint32: ('I', 4, 4, 0),
-    uint64: ('Q', 8, 8, 0),
-    float32: ('f', 4, 4, 0.0),
-    float64: ('d', 8, 8, 0.0),
-    wchar: ('h', 2, 2, 0),
-    int: ('q', 8, 8, 0),
-    bool: ('?', 1, 1, False),
-    float: ('d', 8, 8, 0.0),
+    int8: ("b", 1, 1, 0),
+    int16: ("h", 2, 2, 0),
+    int32: ("i", 4, 4, 0),
+    int64: ("q", 8, 8, 0),
+    uint8: ("B", 1, 1, 0),
+    uint16: ("H", 2, 2, 0),
+    uint32: ("I", 4, 4, 0),
+    uint64: ("Q", 8, 8, 0),
+    float32: ("f", 4, 4, 0.0),
+    float64: ("d", 8, 8, 0.0),
+    wchar: ("h", 2, 2, 0),
+    int: ("q", 8, 8, 0),
+    bool: ("?", 1, 1, False),
+    float: ("d", 8, 8, 0.0),
 }

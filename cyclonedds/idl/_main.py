@@ -19,7 +19,11 @@ from hashlib import md5
 
 from ._support import Buffer, Endianness, CdrKeyVmNamedJumpOp, KeyScanner, KeyScanResult
 from ._type_helper import get_origin, get_args, Annotated
-from ._type_normalize import get_idl_annotations, get_idl_field_annotations, get_extended_type_hints
+from ._type_normalize import (
+    get_idl_annotations,
+    get_idl_field_annotations,
+    get_extended_type_hints,
+)
 from ._machinery import Machine
 
 from . import types
@@ -61,7 +65,9 @@ class IDL:
         self.v2_key_max_size: int = None
         self.version_support: XCDRSupported = None
 
-        self.idl_transformed_typename: str = self.datatype.__idl_typename__.replace(".", "::")
+        self.idl_transformed_typename: str = self.datatype.__idl_typename__.replace(
+            ".", "::"
+        )
         self.re_entrancy_protection: bool = False
         self._xt_data: Tuple[TypeInformation, TypeMapping] = (None, None)
         self._xt_bytedata: Tuple[Optional[bytes], Optional[bytes]] = (None, None)
@@ -73,11 +79,11 @@ class IDL:
             annotations = get_idl_annotations(self.datatype)
             field_annotations = get_idl_field_annotations(self.datatype)
 
-            a = annotations.get('extensibility', 'final')
-            if a == 'appendable':
+            a = annotations.get("extensibility", "final")
+            if a == "appendable":
                 self.xcdrv2_head = 0x08
-            elif a == 'mutable':
-                self.xcdrv2_head = 0x0a
+            elif a == "mutable":
+                self.xcdrv2_head = 0x0A
             else:
                 self.xcdrv2_head = 0x06
 
@@ -93,7 +99,15 @@ class IDL:
                         mid = f_annot["id"]
                     elif "hash_id" in f_annot or is_hash_id:
                         # compute 4 byte hash, interpret as little endian 32 bit integer and zero out top four bits
-                        mid = unpack("<I", md5(f_annot.get("hash_id", "") or name.encode()).digest()[:4])[0] & 0x0FFFFFFF
+                        mid = (
+                            unpack(
+                                "<I",
+                                md5(
+                                    f_annot.get("hash_id", "") or name.encode()
+                                ).digest()[:4],
+                            )[0]
+                            & 0x0FFFFFFF
+                        )
                     else:
                         mid = idc
 
@@ -103,23 +117,37 @@ class IDL:
                 self.member_ids = ids
 
             from ._builder import Builder
-            self.v0_machine, self.v2_machine, self.keyless, self.version_support = Builder.build_machines(self.datatype)
+
+            (
+                self.v0_machine,
+                self.v2_machine,
+                self.keyless,
+                self.version_support,
+            ) = Builder.build_machines(self.datatype)
 
             if self.version_support.SupportsBasic & self.version_support:
                 self.v0_keyresult: KeyScanner = self.v0_machine.key_scan()
-                if self.v0_keyresult.rtype != KeyScanResult.PossiblyInfinite and self.v0_keyresult.size <= 16:
+                if (
+                    self.v0_keyresult.rtype != KeyScanResult.PossiblyInfinite
+                    and self.v0_keyresult.size <= 16
+                ):
                     self.v0_key_max_size = self.v0_keyresult.size
                 else:
                     self.v0_key_max_size = 17  # or bigger ;)
 
             if self.version_support.SupportsV2 & self.version_support:
                 self.v2_keyresult: KeyScanner = self.v2_machine.key_scan()
-                if self.v2_keyresult.rtype != KeyScanResult.PossiblyInfinite and self.v2_keyresult.size <= 16:
+                if (
+                    self.v2_keyresult.rtype != KeyScanResult.PossiblyInfinite
+                    and self.v2_keyresult.size <= 16
+                ):
                     self.v2_key_max_size = self.v2_keyresult.size
                 else:
                     self.v2_key_max_size = 17  # or bigger ;)
 
-    def serialize(self, object, use_version_2: bool = None, buffer=None, endianness=None) -> bytes:
+    def serialize(
+        self, object, use_version_2: bool = None, buffer=None, endianness=None
+    ) -> bytes:
         if not self._populated:
             self.populate()
 
@@ -128,7 +156,9 @@ class IDL:
         else:
             # version 0 not supported
             if use_version_2 is not None and not use_version_2:
-                raise Exception("Cannot encode this type with version 0, contains xcdrv2-type structures")
+                raise Exception(
+                    "Cannot encode this type with version 0, contains xcdrv2-type structures"
+                )
             use_version_2 = True
 
         ibuffer = buffer or self.buffer
@@ -139,15 +169,15 @@ class IDL:
         ibuffer._align_max = 4 if use_version_2 else 8
 
         if ibuffer.endianness == Endianness.Big:
-            ibuffer.write('b', 1, 0)
-            ibuffer.write('b', 1, 0 | (self.xcdrv2_head if use_version_2 else 0))
-            ibuffer.write('b', 1, 0)
-            ibuffer.write('b', 1, 0)
+            ibuffer.write("b", 1, 0)
+            ibuffer.write("b", 1, 0 | (self.xcdrv2_head if use_version_2 else 0))
+            ibuffer.write("b", 1, 0)
+            ibuffer.write("b", 1, 0)
         else:
-            ibuffer.write('b', 1, 0)
-            ibuffer.write('b', 1, 1 | (self.xcdrv2_head if use_version_2 else 0))
-            ibuffer.write('b', 1, 0)
-            ibuffer.write('b', 1, 0)
+            ibuffer.write("b", 1, 0)
+            ibuffer.write("b", 1, 1 | (self.xcdrv2_head if use_version_2 else 0))
+            ibuffer.write("b", 1, 0)
+            ibuffer.write("b", 1, 0)
 
         ibuffer.set_align_offset(4)
 
@@ -163,26 +193,36 @@ class IDL:
             self.populate()
 
         if has_header and use_version_2 is not None:
-            raise Exception("Considered programmer error to set a version of xcdr to use if a header is present in the data.")
-        elif not has_header and self.version_support.SupportsBasic & self.version_support:
+            raise Exception(
+                "Considered programmer error to set a version of xcdr to use if a header is present in the data."
+            )
+        elif (
+            not has_header and self.version_support.SupportsBasic & self.version_support
+        ):
             use_version_2 = False if use_version_2 is None else use_version_2
         else:
             # version 0 not supported
             if use_version_2 is not None and not use_version_2:
-                raise Exception("Cannot encode this type with version 0, contains xcdrv2-type structures")
+                raise Exception(
+                    "Cannot encode this type with version 0, contains xcdrv2-type structures"
+                )
             use_version_2 = True
 
-        buffer = Buffer(data, align_offset=4 if has_header else 0) if not isinstance(data, Buffer) else data
+        buffer = (
+            Buffer(data, align_offset=4 if has_header else 0)
+            if not isinstance(data, Buffer)
+            else data
+        )
 
         if has_header and buffer.tell() == 0:
-            buffer.read('b', 1)
-            v = buffer.read('b', 1)
+            buffer.read("b", 1)
+            v = buffer.read("b", 1)
             if (v & 1) > 0:
                 buffer.set_endianness(Endianness.Little)
             else:
                 buffer.set_endianness(Endianness.Big)
-            buffer.read('b', 1)
-            buffer.read('b', 1)
+            buffer.read("b", 1)
+            buffer.read("b", 1)
             if v > 1:
                 buffer._align_max = 4
                 machine = self.v2_machine
@@ -208,11 +248,13 @@ class IDL:
         else:
             # version 0 not supported
             if use_version_2 is not None and not use_version_2:
-                raise Exception("Cannot encode this type with version 0, contains xcdrv2-type structures")
+                raise Exception(
+                    "Cannot encode this type with version 0, contains xcdrv2-type structures"
+                )
             use_version_2 = True
 
         if self.keyless:
-            return b''
+            return b""
 
         self.buffer.seek(0)
         self.buffer.zero_out()
@@ -236,15 +278,17 @@ class IDL:
         else:
             # version 0 not supported
             if use_version_2 is not None and not use_version_2:
-                raise Exception("Cannot encode this type with version 0, contains xcdrv2-type structures")
+                raise Exception(
+                    "Cannot encode this type with version 0, contains xcdrv2-type structures"
+                )
             use_version_2 = True
 
         if use_version_2:
             if self.v2_key_max_size <= 16:
-                return self.key(object, True).ljust(16, b'\0')
+                return self.key(object, True).ljust(16, b"\0")
         else:
             if self.v0_key_max_size <= 16:
-                return self.key(object, False).ljust(16, b'\0')
+                return self.key(object, False).ljust(16, b"\0")
 
         m = md5()
         m.update(self.key(object, use_version_2))
@@ -264,7 +308,9 @@ class IDL:
         else:
             # version 0 not supported
             if use_version_2 is not None and not use_version_2:
-                raise Exception("Cannot encode this type with version 0, contains xcdrv2-type structures")
+                raise Exception(
+                    "Cannot encode this type with version 0, contains xcdrv2-type structures"
+                )
             use_version_2 = True
 
         self.re_entrancy_protection = True
@@ -292,7 +338,9 @@ class IDL:
         else:
             # version 0 not supported
             if use_version_2 is not None and not use_version_2:
-                raise Exception("Cannot encode this type with version 0, contains xcdrv2-type structures")
+                raise Exception(
+                    "Cannot encode this type with version 0, contains xcdrv2-type structures"
+                )
             use_version_2 = True
 
         self.re_entrancy_protection = True
@@ -315,36 +363,43 @@ class IDL:
 
         if self._xt_data[0] is None:
             from ._xt_builder import XTBuilder
+
             self._xt_data = XTBuilder.process_type(self.datatype)
             self._xt_bytedata = (
-                self._xt_data[0].serialize(endianness=Endianness.Little, use_version_2=True)[4:],
-                self._xt_data[1].serialize(endianness=Endianness.Little, use_version_2=True)[4:]
+                self._xt_data[0].serialize(
+                    endianness=Endianness.Little, use_version_2=True
+                )[4:],
+                self._xt_data[1].serialize(
+                    endianness=Endianness.Little, use_version_2=True
+                )[4:],
             )
 
-    def get_type_info(self) -> 'TypeInformation':
+    def get_type_info(self) -> "TypeInformation":
         if self._xt_data[0] is None:
             self.fill_type_data()
         return self._xt_data[0]
 
-    def get_type_mapping(self) -> 'TypeMapping':
+    def get_type_mapping(self) -> "TypeMapping":
         if self._xt_data[0] is None:
             self.fill_type_data()
         return self._xt_data[1]
 
-    def get_type_id(self) -> 'TypeIdentifier':
+    def get_type_id(self) -> "TypeIdentifier":
         if self._xt_data[0] is None:
             self.fill_type_data()
         return self._xt_data[0].complete.typeid_with_size.type_id
 
 
 class IdlMeta(type):
-    __idl__: ClassVar['IDL']
+    __idl__: ClassVar["IDL"]
     __idl_typename__: ClassVar[str]
     __idl_annotations__: ClassVar[Dict[str, Any]]
     __idl_field_annotations__: ClassVar[Dict[str, Dict[str, Any]]]
 
     @classmethod
-    def __prepare__(metacls, __name: str, __bases: Tuple[type, ...], **kwds: Any) -> Mapping[str, Any]:
+    def __prepare__(
+        metacls, __name: str, __bases: Tuple[type, ...], **kwds: Any
+    ) -> Mapping[str, Any]:
         typename = None
         if "typename" in kwds:
             typename = kwds["typename"]
@@ -404,7 +459,7 @@ def _union_default_finder(_type, cases):
         types.uint16: (0, 1, 65535),
         types.uint32: (0, 1, 4294967295),
         types.uint64: (0, 1, 18446744073709551615),
-        types.char: (0, 1, 127)
+        types.char: (0, 1, 127),
     }.get(_type, (None, None, None))
 
     if val is None:
@@ -427,7 +482,9 @@ class IdlUnionMeta(IdlMeta):
     __idl_default__: Optional[Tuple[Any, Any]]
 
     @classmethod
-    def __prepare__(metacls, __name: str, __bases: Tuple[type, ...], **kwds: Any) -> Mapping[str, Any]:
+    def __prepare__(
+        metacls, __name: str, __bases: Tuple[type, ...], **kwds: Any
+    ) -> Mapping[str, Any]:
         if not len(__bases):
             return super().__prepare__(__name, __bases, **kwds)
 
@@ -465,14 +522,18 @@ class IdlUnionMeta(IdlMeta):
         # Use RAW annotations here because the type strings can maybe not be resolved yet
         for name, _type in new_cls.__annotations__.items():
             if get_origin(_type) != Annotated and len(get_args(_type)) != 2:
-                raise TypeError(f"Fields of a union need to be case or default, '{name}: {_type}' is not.")
+                raise TypeError(
+                    f"Fields of a union need to be case or default, '{name}: {_type}' is not."
+                )
 
             _type = get_args(_type)[1]
             if isinstance(_type, types.case):
                 for label in _type.labels:
                     if label in cases:
-                        raise TypeError(f"Discriminator values must uniquely define a case, "
-                                        f"but the case {label} occurred multiple times.")
+                        raise TypeError(
+                            f"Discriminator values must uniquely define a case, "
+                            f"but the case {label} occurred multiple times."
+                        )
                     cases[label] = (name, _type.subtype)
                     names.add(name)
             elif isinstance(_type, types.default):
@@ -481,13 +542,17 @@ class IdlUnionMeta(IdlMeta):
                 default = (name, _type.subtype)
                 names.add(name)
             else:
-                raise TypeError(f"Fields of a union need to be case or default, '{name}: {_type}' is not.")
+                raise TypeError(
+                    f"Fields of a union need to be case or default, '{name}: {_type}' is not."
+                )
 
         new_cls.__idl_cases__ = cases
         new_cls.__idl_default__ = default
         new_cls.__idl_names__ = names
-        new_cls.__idl_discriminator__ = namespace['__idl_discriminator__']
-        new_cls.__idl_default_discriminator__ = _union_default_finder(namespace['__idl_discriminator__'], cases)
+        new_cls.__idl_discriminator__ = namespace["__idl_discriminator__"]
+        new_cls.__idl_default_discriminator__ = _union_default_finder(
+            namespace["__idl_discriminator__"], cases
+        )
 
         return new_cls
 
@@ -507,7 +572,9 @@ class IdlBitmaskMeta(type):
     __idl_highest_position__: ClassVar[int]
 
     @classmethod
-    def __prepare__(metacls, __name: str, __bases: Tuple[type, ...], **kwds: Any) -> Mapping[str, Any]:
+    def __prepare__(
+        metacls, __name: str, __bases: Tuple[type, ...], **kwds: Any
+    ) -> Mapping[str, Any]:
         typename = None
         if "typename" in kwds:
             typename = kwds["typename"]
@@ -547,7 +614,7 @@ class IdlBitmaskMeta(type):
                 raise TypeError("Bitmask type contains non-bools.")
 
             if name in new_cls.__idl_field_annotations__:
-                if 'position' in new_cls.__idl_field_annotations__[name]:
+                if "position" in new_cls.__idl_field_annotations__[name]:
                     position = new_cls.__idl_field_annotations__[name]["position"]
 
             if position < 0 or position >= new_cls.__idl_annotations__["bit_bound"]:
@@ -556,13 +623,17 @@ class IdlBitmaskMeta(type):
                     f"[0, {new_cls.__idl_annotations__['bit_bound']})."
                 )
 
-            idl_bit = 2 ** position
+            idl_bit = 2**position
             if idl_bit in idl_bits:
                 raise TypeError(f"Duplicate bit for position {position}.")
 
             idl_bits[idl_bit] = name
             idl_positions[name] = position
-            idl_highest_position = max(idl_highest_position, position) if idl_highest_position is not None else position
+            idl_highest_position = (
+                max(idl_highest_position, position)
+                if idl_highest_position is not None
+                else position
+            )
             position += 1
 
         new_cls.__idl_bits__ = idl_bits
@@ -582,10 +653,12 @@ class IdlEnumMeta(EnumMeta):
     __idl_typename__: ClassVar[str]
     __idl_annotations__: ClassVar[Dict[str, Any]]
     __idl_field_annotations__: ClassVar[Dict[str, Dict[str, Any]]]
-    __idl_enum_default_value__: ClassVar[Optional['IdlEnum']]
+    __idl_enum_default_value__: ClassVar[Optional["IdlEnum"]]
 
     @classmethod
-    def __prepare__(metacls, __name: str, __bases: Tuple[type, ...], **kwds: Any) -> Mapping[str, Any]:
+    def __prepare__(
+        metacls, __name: str, __bases: Tuple[type, ...], **kwds: Any
+    ) -> Mapping[str, Any]:
         typename = None
         if "typename" in kwds:
             typename = kwds["typename"]
@@ -618,7 +691,9 @@ class IdlEnumMeta(EnumMeta):
             new_cls.__idl_typename__ = namespace["__idl_typename__"]
 
         if namespace.get("__idl_enum_default_value__"):
-            new_cls.__idl_enum_default_value__ = new_cls[namespace.get("__idl_enum_default_value__")]
+            new_cls.__idl_enum_default_value__ = new_cls[
+                namespace.get("__idl_enum_default_value__")
+            ]
 
         return new_cls
 

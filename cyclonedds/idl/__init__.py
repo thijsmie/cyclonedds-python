@@ -18,32 +18,52 @@ from ._main import IdlMeta, IdlUnionMeta, IdlBitmaskMeta, IdlEnumMeta
 from ._support import Buffer, Endianness
 
 
-_TIS = TypeVar('_TIS', bound='IdlStruct')
-_TIU = TypeVar('_TIU', bound='IdlUnion')
-_TIB = TypeVar('_TIB', bound='IdlBitmask')
-_TIE = TypeVar('_TIE', bound='IdlEnum')
+_TIS = TypeVar("_TIS", bound="IdlStruct")
+_TIU = TypeVar("_TIU", bound="IdlUnion")
+_TIB = TypeVar("_TIB", bound="IdlBitmask")
+_TIE = TypeVar("_TIE", bound="IdlEnum")
 
 
 class IdlStruct(metaclass=IdlMeta):
-    def serialize(self, buffer: Optional[Buffer] = None, endianness: Optional[Endianness] = None, use_version_2: Optional[bool] = None) -> bytes:
-        return self.__idl__.serialize(self, buffer=buffer, endianness=endianness, use_version_2=use_version_2)
+    def serialize(
+        self,
+        buffer: Optional[Buffer] = None,
+        endianness: Optional[Endianness] = None,
+        use_version_2: Optional[bool] = None,
+    ) -> bytes:
+        return self.__idl__.serialize(
+            self, buffer=buffer, endianness=endianness, use_version_2=use_version_2
+        )
 
     @classmethod
-    def deserialize(cls: Type[_TIS], data: bytes, has_header: bool = True, use_version_2: Optional[bool] = None) -> _TIS:
-        return cls.__idl__.deserialize(data, has_header=has_header, use_version_2=use_version_2)
+    def deserialize(
+        cls: Type[_TIS],
+        data: bytes,
+        has_header: bool = True,
+        use_version_2: Optional[bool] = None,
+    ) -> _TIS:
+        return cls.__idl__.deserialize(
+            data, has_header=has_header, use_version_2=use_version_2
+        )
 
 
-def make_idl_struct(class_name: str, typename: str, fields: Dict[str, Any], *, dataclassify=True,
-                    field_annotations: Optional[Dict[str, Dict[str, Any]]] = None,
-                    bases: Tuple[Type[IdlStruct], ...] = ()) -> Type[IdlStruct]:
+def make_idl_struct(
+    class_name: str,
+    typename: str,
+    fields: Dict[str, Any],
+    *,
+    dataclassify=True,
+    field_annotations: Optional[Dict[str, Dict[str, Any]]] = None,
+    bases: Tuple[Type[IdlStruct], ...] = (),
+) -> Type[IdlStruct]:
     bases = tuple(list(*bases) + [IdlStruct])
     namespace = IdlMeta.__prepare__(class_name, bases, typename=typename)
 
     for fieldname, _type in fields.items():
-        namespace['__annotations__'][fieldname] = _type
+        namespace["__annotations__"][fieldname] = _type
 
     if field_annotations:
-        namespace['__idl_field_annotations__'] = field_annotations
+        namespace["__idl_field_annotations__"] = field_annotations
 
     cls = IdlMeta(class_name, bases, namespace)
     if dataclassify:
@@ -57,8 +77,8 @@ class IdlUnion(metaclass=IdlUnionMeta):
         self.__discriminator = None
         self.__value = None
 
-        if len(kwargs) == 2 and 'discriminator' in kwargs and 'value' in kwargs:
-            self.set(kwargs['discriminator'], kwargs['value'])
+        if len(kwargs) == 2 and "discriminator" in kwargs and "value" in kwargs:
+            self.set(kwargs["discriminator"], kwargs["value"])
         elif len(kwargs) == 1:
             for key, value in kwargs.items():
                 self.__setattr__(key, value)
@@ -149,38 +169,64 @@ class IdlUnion(metaclass=IdlUnionMeta):
         if self.__class__ != other.__class__:
             return False
         if self.discriminator != other.discriminator:
-            if self.discriminator is None and other.discriminator != self.__idl_default_discriminator__:
+            if (
+                self.discriminator is None
+                and other.discriminator != self.__idl_default_discriminator__
+            ):
                 return False
-            if other.discriminator is None and self.discriminator != self.__idl_default_discriminator__:
+            if (
+                other.discriminator is None
+                and self.discriminator != self.__idl_default_discriminator__
+            ):
                 return False
         if self.value != other.value:
             return False
         return True
 
-    def serialize(self, buffer: Optional[Buffer] = None, endianness: Optional[Endianness] = None, use_version_2: Optional[bool] = None) -> bytes:
-        return self.__idl__.serialize(self, buffer=buffer, endianness=endianness, use_version_2=use_version_2)
+    def serialize(
+        self,
+        buffer: Optional[Buffer] = None,
+        endianness: Optional[Endianness] = None,
+        use_version_2: Optional[bool] = None,
+    ) -> bytes:
+        return self.__idl__.serialize(
+            self, buffer=buffer, endianness=endianness, use_version_2=use_version_2
+        )
 
     @classmethod
-    def deserialize(cls: Type[_TIU], data: bytes, has_header: bool = True, use_version_2: Optional[bool] = None) -> _TIU:
-        return cls.__idl__.deserialize(data, has_header=has_header, use_version_2=use_version_2)
+    def deserialize(
+        cls: Type[_TIU],
+        data: bytes,
+        has_header: bool = True,
+        use_version_2: Optional[bool] = None,
+    ) -> _TIU:
+        return cls.__idl__.deserialize(
+            data, has_header=has_header, use_version_2=use_version_2
+        )
 
 
-def make_idl_union(class_name: str, typename: str, fields: Dict[str, ValidUnionHolder],
-                   discriminator: type, *,
-                   field_annotations: Optional[Dict[str, Dict[str, Any]]] = None,
-                   discriminator_is_key: bool = False) -> Type[IdlUnion]:
+def make_idl_union(
+    class_name: str,
+    typename: str,
+    fields: Dict[str, ValidUnionHolder],
+    discriminator: type,
+    *,
+    field_annotations: Optional[Dict[str, Dict[str, Any]]] = None,
+    discriminator_is_key: bool = False,
+) -> Type[IdlUnion]:
     namespace = IdlUnionMeta.__prepare__(
-        class_name, (IdlUnion,),
+        class_name,
+        (IdlUnion,),
         typename=typename,
         discriminator=discriminator,
-        discriminator_is_key=discriminator_is_key
+        discriminator_is_key=discriminator_is_key,
     )
 
     for fieldname, _type in fields.items():
-        namespace['__annotations__'][fieldname] = _type
+        namespace["__annotations__"][fieldname] = _type
 
     if field_annotations:
-        namespace['__idl_field_annotations__'] = field_annotations
+        namespace["__idl_field_annotations__"] = field_annotations
 
     return IdlUnionMeta(class_name, (IdlUnion,), namespace)
 
@@ -194,22 +240,30 @@ class IdlBitmask(metaclass=IdlBitmaskMeta):
         return cls(**values)
 
     def as_mask(self) -> int:
-        return sum(mask for mask, name in self.__idl_bits__.items() if getattr(self, name))
+        return sum(
+            mask for mask, name in self.__idl_bits__.items() if getattr(self, name)
+        )
 
     def __eq__(self, other):
         return self.__class__ == other.__class__ and self.as_mask() == other.as_mask()
 
 
-def make_idl_bitmask(class_name: str, typename: str, fields: Sequence[str], *, dataclassify=True,
-                     field_annotations: Optional[Dict[str, Dict[str, Any]]] = None) -> Type[IdlBitmask]:
+def make_idl_bitmask(
+    class_name: str,
+    typename: str,
+    fields: Sequence[str],
+    *,
+    dataclassify=True,
+    field_annotations: Optional[Dict[str, Dict[str, Any]]] = None,
+) -> Type[IdlBitmask]:
 
     namespace = IdlBitmaskMeta.__prepare__(class_name, (IdlBitmask,), typename=typename)
 
     for fieldname in fields:
-        namespace['__annotations__'][fieldname] = bool
+        namespace["__annotations__"][fieldname] = bool
 
     if field_annotations:
-        namespace['__idl_field_annotations__'] = field_annotations
+        namespace["__idl_field_annotations__"] = field_annotations
 
     cls = IdlBitmaskMeta(class_name, (IdlBitmask,), namespace)
     if dataclassify:
@@ -225,8 +279,12 @@ class IdlEnum(Enum, metaclass=IdlEnumMeta):
         return hash(self.value)
 
 
-def make_idl_enum(class_name: str, typename: str, fields: Dict[str, int],
-                  default: Optional[str] = None) -> Type[IdlEnum]:
+def make_idl_enum(
+    class_name: str,
+    typename: str,
+    fields: Dict[str, int],
+    default: Optional[str] = None,
+) -> Type[IdlEnum]:
     namespace = IdlEnumMeta.__prepare__(class_name, (IdlEnum,), typename=typename)
 
     for fieldname, value in fields.items():
@@ -236,7 +294,12 @@ def make_idl_enum(class_name: str, typename: str, fields: Dict[str, int],
 
 
 __all__ = [
-    "IdlUnion", "IdlStruct", "IdlBitmask", "IdlEnum",
-    "make_idl_struct", "make_idl_union", "make_idl_bitmask",
-    "make_idl_enum"
+    "IdlUnion",
+    "IdlStruct",
+    "IdlBitmask",
+    "IdlEnum",
+    "make_idl_struct",
+    "make_idl_union",
+    "make_idl_bitmask",
+    "make_idl_enum",
 ]

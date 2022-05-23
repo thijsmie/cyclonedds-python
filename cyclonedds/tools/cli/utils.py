@@ -13,8 +13,12 @@ from rich.progress import Progress, BarColumn, TextColumn, TimeElapsedColumn
 class TimeDeltaParamType(click.ParamType):
     name = "timedelta"
 
-    _wordy_format = re.compile(r"^\s*((?P<hours>\d+)h(?:r|rs|ours|our)?)?\s*((?P<minutes>\d+)m(?:i|in|inutes|inute)?)?\s*((?P<seconds>\d+)s(?:e|ec|econds|econd)?)?\s*$")
-    _colon_format = re.compile(r"^\s*((?P<hours>\d+)\s*:)?(\s*(?P<minutes>\d+)\s*:)?\s*(?P<seconds>\d+)\s*$")
+    _wordy_format = re.compile(
+        r"^\s*((?P<hours>\d+)h(?:r|rs|ours|our)?)?\s*((?P<minutes>\d+)m(?:i|in|inutes|inute)?)?\s*((?P<seconds>\d+)s(?:e|ec|econds|econd)?)?\s*$"
+    )
+    _colon_format = re.compile(
+        r"^\s*((?P<hours>\d+)\s*:)?(\s*(?P<minutes>\d+)\s*:)?\s*(?P<seconds>\d+)\s*$"
+    )
 
     def convert(self, value, param, ctx):
         if isinstance(value, timedelta):
@@ -24,9 +28,9 @@ class TimeDeltaParamType(click.ParamType):
             m = regex.match(value)
             if m:
                 return timedelta(
-                    hours=int(m.group('hours') or 0),
-                    minutes=int(m.group('minutes') or 0),
-                    seconds=int(m.group('seconds') or 0),
+                    hours=int(m.group("hours") or 0),
+                    minutes=int(m.group("minutes") or 0),
+                    seconds=int(m.group("seconds") or 0),
                 )
 
         self.fail(f"{value} is not a valid timedelta", param, ctx)
@@ -45,8 +49,9 @@ progress = Progress(
     TextColumn("  "),
     TimeElapsedColumn(),
     BarColumn(),
-    TextColumn("[blue]Entities discovered:[/] [bold purple]{task.fields[entities]}[/]")
+    TextColumn("[blue]Entities discovered:[/] [bold purple]{task.fields[entities]}[/]"),
 )
+
 
 def background_progress_viewer(runtime: timedelta, data: LiveData):
     start = datetime.now()
@@ -56,7 +61,11 @@ def background_progress_viewer(runtime: timedelta, data: LiveData):
             task = progress.add_task("", entities=0, total=1)
             while end > datetime.now() and not data.terminate:
                 time.sleep(0.2)
-                progress.update(task, completed=((datetime.now()-start)/runtime), entities=data.entities)
+                progress.update(
+                    task,
+                    completed=((datetime.now() - start) / runtime),
+                    entities=data.entities,
+                )
             progress.update(task, completed=1)
             time.sleep(0.1)
         except KeyboardInterrupt:
@@ -74,4 +83,3 @@ def background_printer(data: LiveData):
     except KeyboardInterrupt:
         data.terminate = True
         return
-

@@ -24,8 +24,12 @@ from .idl._xt_builder import XTInterpreter, XTTypeIdScanner
 from .idl._typesupport.DDS.XTypes._ddsi_xt_type_object import TypeIdentifier, TypeObject
 
 
-def get_types_for_typeid(participant: DomainParticipant, type_id: TypeIdentifier, timeout: int) -> \
-        Tuple[Union[IdlUnion, IdlStruct], Dict[str, Union[IdlUnion, IdlStruct, IdlEnum, IdlBitmask]]]:
+def get_types_for_typeid(
+    participant: DomainParticipant, type_id: TypeIdentifier, timeout: int
+) -> Tuple[
+    Union[IdlUnion, IdlStruct],
+    Dict[str, Union[IdlUnion, IdlStruct, IdlEnum, IdlBitmask]],
+]:
     """Attempt to gather the Python types that match a TypeIdentifier. This might involve several
     network roundtrips to request necessary type information.
 
@@ -41,7 +45,10 @@ def get_types_for_typeid(participant: DomainParticipant, type_id: TypeIdentifier
         If ENABLE_TYPE_DISCOVERY is not set upon compiling Cyclone DDS this does not work.
     """
     if not feature_type_discovery:
-        raise DDSException(DDSException.DDS_RETCODE_ILLEGAL_OPERATION, "CycloneDDS was not compiled with type support")
+        raise DDSException(
+            DDSException.DDS_RETCODE_ILLEGAL_OPERATION,
+            "CycloneDDS was not compiled with type support",
+        )
 
     typemap = {}
     to_resolve = deque((type_id,))
@@ -52,14 +59,20 @@ def get_types_for_typeid(participant: DomainParticipant, type_id: TypeIdentifier
             continue
 
         # ddspy_get_typeobj releases gil
-        ret = cl.ddspy_get_typeobj(participant._ref, tid.serialize(use_version_2=True)[4:], timeout)
+        ret = cl.ddspy_get_typeobj(
+            participant._ref, tid.serialize(use_version_2=True)[4:], timeout
+        )
         if type(ret) == int:
             raise DDSException(ret, f"Could not fetch typeobject for {tid}")
 
         try:
-            type_object = TypeObject.deserialize(ret, has_header=False, use_version_2=True)
+            type_object = TypeObject.deserialize(
+                ret, has_header=False, use_version_2=True
+            )
         except Exception as e:
-            raise DDSException(DDSException.DDS_RETCODE_ERROR, "Got invalid TypeObject from C layer.") from e
+            raise DDSException(
+                DDSException.DDS_RETCODE_ERROR, "Got invalid TypeObject from C layer."
+            ) from e
 
         for dep_tid in XTTypeIdScanner.find_all_typeids(type_object):
             to_resolve.append(dep_tid)
@@ -69,12 +82,21 @@ def get_types_for_typeid(participant: DomainParticipant, type_id: TypeIdentifier
     return XTInterpreter.xt_to_class(type_id, typemap)
 
 
-async def async_get_types_for_typeid(participant: DomainParticipant, type_id: TypeIdentifier, timeout: int) -> \
-        Tuple[Union[IdlUnion, IdlStruct], Dict[str, Union[IdlUnion, IdlStruct, IdlEnum, IdlBitmask]]]:
+async def async_get_types_for_typeid(
+    participant: DomainParticipant, type_id: TypeIdentifier, timeout: int
+) -> Tuple[
+    Union[IdlUnion, IdlStruct],
+    Dict[str, Union[IdlUnion, IdlStruct, IdlEnum, IdlBitmask]],
+]:
     """Async version of get_types_for_typeid. Runs in separate thread."""
     if not feature_type_discovery:
-        raise DDSException(DDSException.DDS_RETCODE_ILLEGAL_OPERATION, "CycloneDDS was not compiled with type support")
+        raise DDSException(
+            DDSException.DDS_RETCODE_ILLEGAL_OPERATION,
+            "CycloneDDS was not compiled with type support",
+        )
 
     loop = asyncio.get_running_loop()
     with concurrent.futures.ThreadPoolExecutor() as pool:
-        return await loop.run_in_executor(pool, get_types_for_typeid, participant, type_id, timeout)
+        return await loop.run_in_executor(
+            pool, get_types_for_typeid, participant, type_id, timeout
+        )

@@ -24,6 +24,7 @@ def fmt_ident(tid: TypeIdentifier) -> str:
     else:
         return f"MINIMAL {tid.equivalence_hash.hex().upper()}"
 
+
 @group()
 def rich_qos(qos):
     for policy in qos:
@@ -46,12 +47,17 @@ class DParticipant(Discoverable):
             return self.sample.qos[Policy.EntityName].name
         return None
 
-    def __rich_console__(self, console: Console, options: ConsoleOptions) -> RenderResult:
+    def __rich_console__(
+        self, console: Console, options: ConsoleOptions
+    ) -> RenderResult:
         name = self.name()
-        title = f"[bold bright_magenta]{name}[/] ([bold magenta]{self.sample.key}[/])" if name else f"[bold bright_magenta]{self.sample.key}[/]"
+        title = (
+            f"[bold bright_magenta]{name}[/] ([bold magenta]{self.sample.key}[/])"
+            if name
+            else f"[bold bright_magenta]{self.sample.key}[/]"
+        )
         yield Panel.fit(
-            self.get_subcontent(console, options),
-            title=f"Participant {title}"
+            self.get_subcontent(console, options), title=f"Participant {title}"
         )
 
     @group()
@@ -67,9 +73,7 @@ class DParticipant(Discoverable):
 
         if qos.policies:
             yield Panel.fit(
-                rich_qos(qos),
-                border_style="cyan",
-                title='[bold bright_cyan] QoS'
+                rich_qos(qos), border_style="cyan", title="[bold bright_cyan] QoS"
             )
             yield ""
 
@@ -120,8 +124,12 @@ class DTopic(Discoverable):
             return
 
         common_qos = self.shared_qos(pubsub)
-        common_writer_qos = self.shared_qos(self.publications) if self.publications else common_qos
-        common_reader_qos = self.shared_qos(self.subscriptions) if self.subscriptions else common_qos
+        common_writer_qos = (
+            self.shared_qos(self.publications) if self.publications else common_qos
+        )
+        common_reader_qos = (
+            self.shared_qos(self.subscriptions) if self.subscriptions else common_qos
+        )
         writer_qos = self.unshared_qos(common_writer_qos, self.publications)
         reader_qos = self.unshared_qos(common_reader_qos, self.subscriptions)
         common_writer_qos = common_writer_qos - common_qos
@@ -152,16 +160,32 @@ class DTopic(Discoverable):
         properties.add_row("XTypes Type ID", type_id)
 
         if not common_writer_qos and not common_reader_qos:
-            qos_display = Panel.fit(rich_qos(common_qos), border_style="cyan", title="[bold bright_cyan]Common QoS[/]")
+            qos_display = Panel.fit(
+                rich_qos(common_qos),
+                border_style="cyan",
+                title="[bold bright_cyan]Common QoS[/]",
+            )
         else:
             qos_display = Table.grid()
             qos_display.add_column()
             qos_display.add_column()
             qos_display.add_column()
             qos_display.add_row(
-                Panel.fit(rich_qos(common_qos), border_style="cyan", title="[bold bright_cyan]Common QoS[/]"),
-                Panel.fit(rich_qos(common_writer_qos), border_style="cyan", title="[bold bright_cyan]Common Writer QoS[/]"),
-                Panel.fit(rich_qos(common_reader_qos), border_style="cyan", title="[bold bright_cyan]Common Reader QoS[/]")
+                Panel.fit(
+                    rich_qos(common_qos),
+                    border_style="cyan",
+                    title="[bold bright_cyan]Common QoS[/]",
+                ),
+                Panel.fit(
+                    rich_qos(common_writer_qos),
+                    border_style="cyan",
+                    title="[bold bright_cyan]Common Writer QoS[/]",
+                ),
+                Panel.fit(
+                    rich_qos(common_reader_qos),
+                    border_style="cyan",
+                    title="[bold bright_cyan]Common Reader QoS[/]",
+                ),
             )
 
         pub_display = None
@@ -187,10 +211,14 @@ class DTopic(Discoverable):
                     props = []
 
                     if pub.endpoint.type_name != typename:
-                        props.append(f"Typename: [bold bright_magenta]{pub.endpoint.type_name}[/]")
+                        props.append(
+                            f"Typename: [bold bright_magenta]{pub.endpoint.type_name}[/]"
+                        )
 
                     if pub.endpoint.type_id != type_id:
-                        props.append(f"XTypes Type ID: [bold bright_magenta]{fmt_ident(pub.endpoint.type_id)}[/]")
+                        props.append(
+                            f"XTypes Type ID: [bold bright_magenta]{fmt_ident(pub.endpoint.type_id)}[/]"
+                        )
 
                     if not props:
                         row.append("")
@@ -224,10 +252,14 @@ class DTopic(Discoverable):
                     props = []
 
                     if sub.endpoint.type_name != typename:
-                        props.append(f"Typename: [bold bright_magenta]{sub.endpoint.type_name}[/]")
+                        props.append(
+                            f"Typename: [bold bright_magenta]{sub.endpoint.type_name}[/]"
+                        )
 
                     if sub.endpoint.type_id != type_id:
-                        props.append(f"XTypes Type ID: [bold bright_magenta]{fmt_ident(sub.endpoint.type_id)}[/]")
+                        props.append(
+                            f"XTypes Type ID: [bold bright_magenta]{fmt_ident(sub.endpoint.type_id)}[/]"
+                        )
 
                     if not props:
                         row.append("")
@@ -251,8 +283,7 @@ class DTopic(Discoverable):
         if sub_display:
             yield sub_display
 
-    def __rich_console__(self, console: Console, options: ConsoleOptions) -> RenderResult:
-        yield Panel.fit(
-            self.render(),
-            title=f"[bold green]{self.name}[/]"
-        )
+    def __rich_console__(
+        self, console: Console, options: ConsoleOptions
+    ) -> RenderResult:
+        yield Panel.fit(self.render(), title=f"[bold green]{self.name}[/]")

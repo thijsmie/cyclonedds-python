@@ -15,13 +15,26 @@ import ctypes as ct
 from dataclasses import dataclass
 from typing import Optional, Union, TYPE_CHECKING
 
-from .core import Entity, DDSException, Qos, ReadCondition, ViewState, InstanceState, SampleState
+from .core import (
+    Entity,
+    DDSException,
+    Qos,
+    ReadCondition,
+    ViewState,
+    InstanceState,
+    SampleState,
+)
 from .topic import Topic
 from .sub import DataReader
 from .internal import dds_c_t
 from .qos import _CQos
 
-from cyclonedds._clayer import ddspy_read_participant, ddspy_take_participant, ddspy_read_endpoint, ddspy_take_endpoint
+from cyclonedds._clayer import (
+    ddspy_read_participant,
+    ddspy_take_participant,
+    ddspy_read_endpoint,
+    ddspy_take_endpoint,
+)
 from cyclonedds.idl._typesupport.DDS.XTypes import TypeIdentifier
 
 
@@ -96,11 +109,15 @@ class BuiltinDataReader(DataReader):
     instead of the normal DataReader. They are identical in the rest of their functionality.
     """
 
-    def __init__(self,
-                 subscriber_or_participant: Union['cyclonedds.sub.Subscriber', 'cyclonedds.domain.DomainParticipant'],
-                 builtin_topic: 'cyclonedds.builtin.BuiltinTopic',
-                 qos: Optional['cyclonedds.core.Qos'] = None,
-                 listener: Optional['cyclonedds.core.Listener'] = None) -> None:
+    def __init__(
+        self,
+        subscriber_or_participant: Union[
+            "cyclonedds.sub.Subscriber", "cyclonedds.domain.DomainParticipant"
+        ],
+        builtin_topic: "cyclonedds.builtin.BuiltinTopic",
+        qos: Optional["cyclonedds.core.Qos"] = None,
+        listener: Optional["cyclonedds.core.Listener"] = None,
+    ) -> None:
         """Initialize the BuiltinDataReader
 
         Parameters
@@ -127,10 +144,12 @@ class BuiltinDataReader(DataReader):
                 subscriber_or_participant._ref,
                 builtin_topic._ref,
                 cqos,
-                listener._ref if listener else None
-            )
+                listener._ref if listener else None,
+            ),
         )
-        self._next_condition = ReadCondition(self, ViewState.Any | SampleState.NotRead | InstanceState.Any)
+        self._next_condition = ReadCondition(
+            self, ViewState.Any | SampleState.NotRead | InstanceState.Any
+        )
         if cqos:
             _CQos.cqos_destroy(cqos)
         self._make_constructors()
@@ -142,12 +161,22 @@ class BuiltinDataReader(DataReader):
             s.sample_info = sampleinfo
             return s
 
-        def endpoint_constructor(keybytes, participant_keybytes, p_instance_handle, topic_name, type_name,
-                                 qosobject, sampleinfo, typeid_bytes):
+        def endpoint_constructor(
+            keybytes,
+            participant_keybytes,
+            p_instance_handle,
+            topic_name,
+            type_name,
+            qosobject,
+            sampleinfo,
+            typeid_bytes,
+        ):
             ident = None
             if typeid_bytes is not None:
                 try:
-                    ident = TypeIdentifier.deserialize(typeid_bytes, has_header=False, use_version_2=True)
+                    ident = TypeIdentifier.deserialize(
+                        typeid_bytes, has_header=False, use_version_2=True
+                    )
                 except Exception:
                     pass
 
@@ -158,7 +187,7 @@ class BuiltinDataReader(DataReader):
                 topic_name,
                 type_name,
                 qosobject,
-                ident
+                ident,
             )
             s.sample_info = sampleinfo
             return s
@@ -177,8 +206,13 @@ class BuiltinDataReader(DataReader):
             self._constructor = endpoint_constructor
         self._cqos_conv = cqos_to_qos
 
-    def read(self, N: int = 1,
-             condition: Union['cyclonedds.core.ReadCondition', 'cyclonedds.core.QueryCondition'] = None):
+    def read(
+        self,
+        N: int = 1,
+        condition: Union[
+            "cyclonedds.core.ReadCondition", "cyclonedds.core.QueryCondition"
+        ] = None,
+    ):
         """Read a maximum of N samples, non-blocking. Optionally use a read/query-condition to select which samples
         you are interested in.
 
@@ -227,7 +261,7 @@ class BuiltinDataReader(DataReader):
         return ret
 
 
-_pseudo_handle = 0x7fff0000
+_pseudo_handle = 0x7FFF0000
 BuiltinTopicDcpsParticipant = BuiltinTopic(_pseudo_handle + 1, DcpsParticipant)
 """Built-in topic, is published to when a new participants appear on the network."""
 
@@ -241,7 +275,11 @@ BuiltinTopicDcpsSubscription = BuiltinTopic(_pseudo_handle + 4, DcpsEndpoint)
 """Built-in topic, is published to when a subscription happens."""
 
 __all__ = [
-    "DcpsParticipant", "DcpsEndpoint", "BuiltinDataReader",
-    "BuiltinTopicDcpsParticipant", "BuiltinTopicDcpsTopic",
-    "BuiltinTopicDcpsPublication", "BuiltinTopicDcpsSubscription"
+    "DcpsParticipant",
+    "DcpsEndpoint",
+    "BuiltinDataReader",
+    "BuiltinTopicDcpsParticipant",
+    "BuiltinTopicDcpsTopic",
+    "BuiltinTopicDcpsPublication",
+    "BuiltinTopicDcpsSubscription",
 ]

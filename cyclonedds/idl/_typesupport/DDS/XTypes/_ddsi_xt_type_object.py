@@ -17,11 +17,11 @@ import cyclonedds.idl.types as types
 # root module import for resolving types
 import cyclonedds.idl._typesupport.DDS
 
-EquivalenceKind = types.typedef['EquivalenceKind', types.uint8]
+EquivalenceKind = types.typedef["EquivalenceKind", types.uint8]
 EK_MINIMAL = 241
 EK_COMPLETE = 242
 EK_BOTH = 243
-TypeKind = types.typedef['TypeKind', types.uint8]
+TypeKind = types.typedef["TypeKind", types.uint8]
 TK_NONE = 0
 TK_BOOLEAN = 1
 TK_BYTE = 2
@@ -48,7 +48,7 @@ TK_BITSET = 83
 TK_SEQUENCE = 96
 TK_ARRAY = 97
 TK_MAP = 98
-TypeIdentiferKind = types.typedef['TypeIdentiferKind', types.uint8]
+TypeIdentiferKind = types.typedef["TypeIdentiferKind", types.uint8]
 TI_STRING8_SMALL = 112
 TI_STRING8_LARGE = 113
 TI_STRING16_SMALL = 114
@@ -61,23 +61,32 @@ TI_PLAIN_MAP_SMALL = 160
 TI_PLAIN_MAP_LARGE = 161
 TI_STRONGLY_CONNECTED_COMPONENT = 176
 MEMBER_NAME_MAX_LENGTH = 256
-MemberName = types.typedef['MemberName', types.bounded_str[256]]
+MemberName = types.typedef["MemberName", types.bounded_str[256]]
 TYPE_NAME_MAX_LENGTH = 256
-QualifiedTypeName = types.typedef['QualifiedTypeName', types.bounded_str[256]]
-PrimitiveTypeId = types.typedef['PrimitiveTypeId', types.uint8]
-EquivalenceHash = types.typedef['EquivalenceHash', types.array[types.uint8, 14]]
-NameHash = types.typedef['NameHash', types.array[types.uint8, 4]]
-LBound = types.typedef['LBound', types.uint32]
-LBoundSeq = types.typedef['LBoundSeq', types.sequence['cyclonedds.idl._typesupport.DDS.XTypes.LBound']]
+QualifiedTypeName = types.typedef["QualifiedTypeName", types.bounded_str[256]]
+PrimitiveTypeId = types.typedef["PrimitiveTypeId", types.uint8]
+EquivalenceHash = types.typedef["EquivalenceHash", types.array[types.uint8, 14]]
+NameHash = types.typedef["NameHash", types.array[types.uint8, 4]]
+LBound = types.typedef["LBound", types.uint32]
+LBoundSeq = types.typedef[
+    "LBoundSeq", types.sequence["cyclonedds.idl._typesupport.DDS.XTypes.LBound"]
+]
 INVALID_LBOUND = 0
-SBound = types.typedef['SBound', types.uint8]
-SBoundSeq = types.typedef['SBoundSeq', types.sequence['cyclonedds.idl._typesupport.DDS.XTypes.SBound']]
+SBound = types.typedef["SBound", types.uint8]
+SBoundSeq = types.typedef[
+    "SBoundSeq", types.sequence["cyclonedds.idl._typesupport.DDS.XTypes.SBound"]
+]
 INVALID_SBOUND = 0
 
 
 @annotate.final
 @annotate.nested
-class TypeObjectHashId(idl.IdlUnion, discriminator=types.uint8, discriminator_is_key=False, typename="DDS.XTypes.TypeObjectHashId"):
+class TypeObjectHashId(
+    idl.IdlUnion,
+    discriminator=types.uint8,
+    discriminator_is_key=False,
+    typename="DDS.XTypes.TypeObjectHashId",
+):
     hash: types.case[[242, 241], types.array[types.uint8, 14]]
 
 
@@ -99,16 +108,36 @@ class MemberFlag(idl.IdlBitmask, typename="DDS.XTypes.MemberFlag"):
     IS_DEFAULT: bool = False
     annotate.position("IS_DEFAULT", 6)
 
-CollectionElementFlag = types.typedef['CollectionElementFlag', 'cyclonedds.idl._typesupport.DDS.XTypes.MemberFlag']
-StructMemberFlag = types.typedef['StructMemberFlag', 'cyclonedds.idl._typesupport.DDS.XTypes.MemberFlag']
-UnionMemberFlag = types.typedef['UnionMemberFlag', 'cyclonedds.idl._typesupport.DDS.XTypes.MemberFlag']
-UnionDiscriminatorFlag = types.typedef['UnionDiscriminatorFlag', 'cyclonedds.idl._typesupport.DDS.XTypes.MemberFlag']
-EnumeratedLiteralFlag = types.typedef['EnumeratedLiteralFlag', 'cyclonedds.idl._typesupport.DDS.XTypes.MemberFlag']
-AnnotationParameterFlag = types.typedef['AnnotationParameterFlag', 'cyclonedds.idl._typesupport.DDS.XTypes.MemberFlag']
-AliasMemberFlag = types.typedef['AliasMemberFlag', 'cyclonedds.idl._typesupport.DDS.XTypes.MemberFlag']
-BitflagFlag = types.typedef['BitflagFlag', 'cyclonedds.idl._typesupport.DDS.XTypes.MemberFlag']
-BitsetMemberFlag = types.typedef['BitsetMemberFlag', 'cyclonedds.idl._typesupport.DDS.XTypes.MemberFlag']
+
+CollectionElementFlag = types.typedef[
+    "CollectionElementFlag", "cyclonedds.idl._typesupport.DDS.XTypes.MemberFlag"
+]
+StructMemberFlag = types.typedef[
+    "StructMemberFlag", "cyclonedds.idl._typesupport.DDS.XTypes.MemberFlag"
+]
+UnionMemberFlag = types.typedef[
+    "UnionMemberFlag", "cyclonedds.idl._typesupport.DDS.XTypes.MemberFlag"
+]
+UnionDiscriminatorFlag = types.typedef[
+    "UnionDiscriminatorFlag", "cyclonedds.idl._typesupport.DDS.XTypes.MemberFlag"
+]
+EnumeratedLiteralFlag = types.typedef[
+    "EnumeratedLiteralFlag", "cyclonedds.idl._typesupport.DDS.XTypes.MemberFlag"
+]
+AnnotationParameterFlag = types.typedef[
+    "AnnotationParameterFlag", "cyclonedds.idl._typesupport.DDS.XTypes.MemberFlag"
+]
+AliasMemberFlag = types.typedef[
+    "AliasMemberFlag", "cyclonedds.idl._typesupport.DDS.XTypes.MemberFlag"
+]
+BitflagFlag = types.typedef[
+    "BitflagFlag", "cyclonedds.idl._typesupport.DDS.XTypes.MemberFlag"
+]
+BitsetMemberFlag = types.typedef[
+    "BitsetMemberFlag", "cyclonedds.idl._typesupport.DDS.XTypes.MemberFlag"
+]
 MemberFlagMinimalMask = 63
+
 
 @dataclass
 @annotate.bit_bound(16)
@@ -124,22 +153,40 @@ class TypeFlag(idl.IdlBitmask, typename="DDS.XTypes.TypeFlag"):
     IS_AUTOID_HASH: bool = False
     annotate.position("IS_AUTOID_HASH", 4)
 
-StructTypeFlag = types.typedef['StructTypeFlag', 'cyclonedds.idl._typesupport.DDS.XTypes.TypeFlag']
-UnionTypeFlag = types.typedef['UnionTypeFlag', 'cyclonedds.idl._typesupport.DDS.XTypes.TypeFlag']
-CollectionTypeFlag = types.typedef['CollectionTypeFlag', 'cyclonedds.idl._typesupport.DDS.XTypes.TypeFlag']
-AnnotationTypeFlag = types.typedef['AnnotationTypeFlag', 'cyclonedds.idl._typesupport.DDS.XTypes.TypeFlag']
-AliasTypeFlag = types.typedef['AliasTypeFlag', 'cyclonedds.idl._typesupport.DDS.XTypes.TypeFlag']
-EnumTypeFlag = types.typedef['EnumTypeFlag', 'cyclonedds.idl._typesupport.DDS.XTypes.TypeFlag']
-BitmaskTypeFlag = types.typedef['BitmaskTypeFlag', 'cyclonedds.idl._typesupport.DDS.XTypes.TypeFlag']
-BitsetTypeFlag = types.typedef['BitsetTypeFlag', 'cyclonedds.idl._typesupport.DDS.XTypes.TypeFlag']
+
+StructTypeFlag = types.typedef[
+    "StructTypeFlag", "cyclonedds.idl._typesupport.DDS.XTypes.TypeFlag"
+]
+UnionTypeFlag = types.typedef[
+    "UnionTypeFlag", "cyclonedds.idl._typesupport.DDS.XTypes.TypeFlag"
+]
+CollectionTypeFlag = types.typedef[
+    "CollectionTypeFlag", "cyclonedds.idl._typesupport.DDS.XTypes.TypeFlag"
+]
+AnnotationTypeFlag = types.typedef[
+    "AnnotationTypeFlag", "cyclonedds.idl._typesupport.DDS.XTypes.TypeFlag"
+]
+AliasTypeFlag = types.typedef[
+    "AliasTypeFlag", "cyclonedds.idl._typesupport.DDS.XTypes.TypeFlag"
+]
+EnumTypeFlag = types.typedef[
+    "EnumTypeFlag", "cyclonedds.idl._typesupport.DDS.XTypes.TypeFlag"
+]
+BitmaskTypeFlag = types.typedef[
+    "BitmaskTypeFlag", "cyclonedds.idl._typesupport.DDS.XTypes.TypeFlag"
+]
+BitsetTypeFlag = types.typedef[
+    "BitsetTypeFlag", "cyclonedds.idl._typesupport.DDS.XTypes.TypeFlag"
+]
 TypeFlagMinimalMask = 7
+
 
 @dataclass
 @annotate.final
 @annotate.autoid("sequential")
 @annotate.nested
 class StringSTypeDefn(idl.IdlStruct, typename="DDS.XTypes.StringSTypeDefn"):
-    bound: 'cyclonedds.idl._typesupport.DDS.XTypes.SBound'
+    bound: "cyclonedds.idl._typesupport.DDS.XTypes.SBound"
 
 
 @dataclass
@@ -147,7 +194,7 @@ class StringSTypeDefn(idl.IdlStruct, typename="DDS.XTypes.StringSTypeDefn"):
 @annotate.autoid("sequential")
 @annotate.nested
 class StringLTypeDefn(idl.IdlStruct, typename="DDS.XTypes.StringLTypeDefn"):
-    bound: 'cyclonedds.idl._typesupport.DDS.XTypes.LBound'
+    bound: "cyclonedds.idl._typesupport.DDS.XTypes.LBound"
 
 
 @dataclass
@@ -155,18 +202,20 @@ class StringLTypeDefn(idl.IdlStruct, typename="DDS.XTypes.StringLTypeDefn"):
 @annotate.autoid("sequential")
 @annotate.nested
 class PlainCollectionHeader(idl.IdlStruct, typename="DDS.XTypes.PlainCollectionHeader"):
-    equiv_kind: 'cyclonedds.idl._typesupport.DDS.XTypes.EquivalenceKind'
-    element_flags: 'cyclonedds.idl._typesupport.DDS.XTypes.CollectionElementFlag'
+    equiv_kind: "cyclonedds.idl._typesupport.DDS.XTypes.EquivalenceKind"
+    element_flags: "cyclonedds.idl._typesupport.DDS.XTypes.CollectionElementFlag"
 
 
 @dataclass
 @annotate.final
 @annotate.autoid("sequential")
 @annotate.nested
-class PlainSequenceSElemDefn(idl.IdlStruct, typename="DDS.XTypes.PlainSequenceSElemDefn"):
-    header: 'cyclonedds.idl._typesupport.DDS.XTypes.PlainCollectionHeader'
-    bound: 'cyclonedds.idl._typesupport.DDS.XTypes.SBound'
-    element_identifier: 'cyclonedds.idl._typesupport.DDS.XTypes.TypeIdentifier'
+class PlainSequenceSElemDefn(
+    idl.IdlStruct, typename="DDS.XTypes.PlainSequenceSElemDefn"
+):
+    header: "cyclonedds.idl._typesupport.DDS.XTypes.PlainCollectionHeader"
+    bound: "cyclonedds.idl._typesupport.DDS.XTypes.SBound"
+    element_identifier: "cyclonedds.idl._typesupport.DDS.XTypes.TypeIdentifier"
     annotate.external("element_identifier")
 
 
@@ -174,10 +223,12 @@ class PlainSequenceSElemDefn(idl.IdlStruct, typename="DDS.XTypes.PlainSequenceSE
 @annotate.final
 @annotate.autoid("sequential")
 @annotate.nested
-class PlainSequenceLElemDefn(idl.IdlStruct, typename="DDS.XTypes.PlainSequenceLElemDefn"):
-    header: 'cyclonedds.idl._typesupport.DDS.XTypes.PlainCollectionHeader'
-    bound: 'cyclonedds.idl._typesupport.DDS.XTypes.LBound'
-    element_identifier: 'cyclonedds.idl._typesupport.DDS.XTypes.TypeIdentifier'
+class PlainSequenceLElemDefn(
+    idl.IdlStruct, typename="DDS.XTypes.PlainSequenceLElemDefn"
+):
+    header: "cyclonedds.idl._typesupport.DDS.XTypes.PlainCollectionHeader"
+    bound: "cyclonedds.idl._typesupport.DDS.XTypes.LBound"
+    element_identifier: "cyclonedds.idl._typesupport.DDS.XTypes.TypeIdentifier"
     annotate.external("element_identifier")
 
 
@@ -186,9 +237,9 @@ class PlainSequenceLElemDefn(idl.IdlStruct, typename="DDS.XTypes.PlainSequenceLE
 @annotate.autoid("sequential")
 @annotate.nested
 class PlainArraySElemDefn(idl.IdlStruct, typename="DDS.XTypes.PlainArraySElemDefn"):
-    header: 'cyclonedds.idl._typesupport.DDS.XTypes.PlainCollectionHeader'
-    array_bound_seq: 'cyclonedds.idl._typesupport.DDS.XTypes.SBoundSeq'
-    element_identifier: 'cyclonedds.idl._typesupport.DDS.XTypes.TypeIdentifier'
+    header: "cyclonedds.idl._typesupport.DDS.XTypes.PlainCollectionHeader"
+    array_bound_seq: "cyclonedds.idl._typesupport.DDS.XTypes.SBoundSeq"
+    element_identifier: "cyclonedds.idl._typesupport.DDS.XTypes.TypeIdentifier"
     annotate.external("element_identifier")
 
 
@@ -197,9 +248,9 @@ class PlainArraySElemDefn(idl.IdlStruct, typename="DDS.XTypes.PlainArraySElemDef
 @annotate.autoid("sequential")
 @annotate.nested
 class PlainArrayLElemDefn(idl.IdlStruct, typename="DDS.XTypes.PlainArrayLElemDefn"):
-    header: 'cyclonedds.idl._typesupport.DDS.XTypes.PlainCollectionHeader'
-    array_bound_seq: 'cyclonedds.idl._typesupport.DDS.XTypes.LBoundSeq'
-    element_identifier: 'cyclonedds.idl._typesupport.DDS.XTypes.TypeIdentifier'
+    header: "cyclonedds.idl._typesupport.DDS.XTypes.PlainCollectionHeader"
+    array_bound_seq: "cyclonedds.idl._typesupport.DDS.XTypes.LBoundSeq"
+    element_identifier: "cyclonedds.idl._typesupport.DDS.XTypes.TypeIdentifier"
     annotate.external("element_identifier")
 
 
@@ -208,12 +259,12 @@ class PlainArrayLElemDefn(idl.IdlStruct, typename="DDS.XTypes.PlainArrayLElemDef
 @annotate.autoid("sequential")
 @annotate.nested
 class PlainMapSTypeDefn(idl.IdlStruct, typename="DDS.XTypes.PlainMapSTypeDefn"):
-    header: 'cyclonedds.idl._typesupport.DDS.XTypes.PlainCollectionHeader'
-    bound: 'cyclonedds.idl._typesupport.DDS.XTypes.SBound'
-    element_identifier: 'cyclonedds.idl._typesupport.DDS.XTypes.TypeIdentifier'
+    header: "cyclonedds.idl._typesupport.DDS.XTypes.PlainCollectionHeader"
+    bound: "cyclonedds.idl._typesupport.DDS.XTypes.SBound"
+    element_identifier: "cyclonedds.idl._typesupport.DDS.XTypes.TypeIdentifier"
     annotate.external("element_identifier")
-    key_flags: 'cyclonedds.idl._typesupport.DDS.XTypes.CollectionElementFlag'
-    key_identifier: 'cyclonedds.idl._typesupport.DDS.XTypes.TypeIdentifier'
+    key_flags: "cyclonedds.idl._typesupport.DDS.XTypes.CollectionElementFlag"
+    key_identifier: "cyclonedds.idl._typesupport.DDS.XTypes.TypeIdentifier"
     annotate.external("key_identifier")
 
 
@@ -222,12 +273,12 @@ class PlainMapSTypeDefn(idl.IdlStruct, typename="DDS.XTypes.PlainMapSTypeDefn"):
 @annotate.autoid("sequential")
 @annotate.nested
 class PlainMapLTypeDefn(idl.IdlStruct, typename="DDS.XTypes.PlainMapLTypeDefn"):
-    header: 'cyclonedds.idl._typesupport.DDS.XTypes.PlainCollectionHeader'
-    bound: 'cyclonedds.idl._typesupport.DDS.XTypes.LBound'
-    element_identifier: 'cyclonedds.idl._typesupport.DDS.XTypes.TypeIdentifier'
+    header: "cyclonedds.idl._typesupport.DDS.XTypes.PlainCollectionHeader"
+    bound: "cyclonedds.idl._typesupport.DDS.XTypes.LBound"
+    element_identifier: "cyclonedds.idl._typesupport.DDS.XTypes.TypeIdentifier"
     annotate.external("element_identifier")
-    key_flags: 'cyclonedds.idl._typesupport.DDS.XTypes.CollectionElementFlag'
-    key_identifier: 'cyclonedds.idl._typesupport.DDS.XTypes.TypeIdentifier'
+    key_flags: "cyclonedds.idl._typesupport.DDS.XTypes.CollectionElementFlag"
+    key_identifier: "cyclonedds.idl._typesupport.DDS.XTypes.TypeIdentifier"
     annotate.external("key_identifier")
 
 
@@ -235,8 +286,10 @@ class PlainMapLTypeDefn(idl.IdlStruct, typename="DDS.XTypes.PlainMapLTypeDefn"):
 @annotate.appendable
 @annotate.autoid("sequential")
 @annotate.nested
-class StronglyConnectedComponentId(idl.IdlStruct, typename="DDS.XTypes.StronglyConnectedComponentId"):
-    sc_component_id: 'cyclonedds.idl._typesupport.DDS.XTypes.TypeObjectHashId'
+class StronglyConnectedComponentId(
+    idl.IdlStruct, typename="DDS.XTypes.StronglyConnectedComponentId"
+):
+    sc_component_id: "cyclonedds.idl._typesupport.DDS.XTypes.TypeObjectHashId"
     scc_length: types.int32
     scc_index: types.int32
 
@@ -249,38 +302,71 @@ class ExtendedTypeDefn(idl.IdlStruct, typename="DDS.XTypes.ExtendedTypeDefn"):
     pass
 
 
-
 @annotate.final
 @annotate.nested
-class TypeIdentifier(idl.IdlUnion, discriminator=types.uint8, discriminator_is_key=False, typename="DDS.XTypes.TypeIdentifier"):
-    string_sdefn: types.case[[112, 114], 'cyclonedds.idl._typesupport.DDS.XTypes.StringSTypeDefn']
-    string_ldefn: types.case[[113, 115], 'cyclonedds.idl._typesupport.DDS.XTypes.StringLTypeDefn']
-    seq_sdefn: types.case[[128], 'cyclonedds.idl._typesupport.DDS.XTypes.PlainSequenceSElemDefn']
-    seq_ldefn: types.case[[129], 'cyclonedds.idl._typesupport.DDS.XTypes.PlainSequenceLElemDefn']
-    array_sdefn: types.case[[144], 'cyclonedds.idl._typesupport.DDS.XTypes.PlainArraySElemDefn']
-    array_ldefn: types.case[[145], 'cyclonedds.idl._typesupport.DDS.XTypes.PlainArrayLElemDefn']
-    map_sdefn: types.case[[160], 'cyclonedds.idl._typesupport.DDS.XTypes.PlainMapSTypeDefn']
-    map_ldefn: types.case[[161], 'cyclonedds.idl._typesupport.DDS.XTypes.PlainMapLTypeDefn']
-    sc_component_id: types.case[[176], 'cyclonedds.idl._typesupport.DDS.XTypes.StronglyConnectedComponentId']
+class TypeIdentifier(
+    idl.IdlUnion,
+    discriminator=types.uint8,
+    discriminator_is_key=False,
+    typename="DDS.XTypes.TypeIdentifier",
+):
+    string_sdefn: types.case[
+        [112, 114], "cyclonedds.idl._typesupport.DDS.XTypes.StringSTypeDefn"
+    ]
+    string_ldefn: types.case[
+        [113, 115], "cyclonedds.idl._typesupport.DDS.XTypes.StringLTypeDefn"
+    ]
+    seq_sdefn: types.case[
+        [128], "cyclonedds.idl._typesupport.DDS.XTypes.PlainSequenceSElemDefn"
+    ]
+    seq_ldefn: types.case[
+        [129], "cyclonedds.idl._typesupport.DDS.XTypes.PlainSequenceLElemDefn"
+    ]
+    array_sdefn: types.case[
+        [144], "cyclonedds.idl._typesupport.DDS.XTypes.PlainArraySElemDefn"
+    ]
+    array_ldefn: types.case[
+        [145], "cyclonedds.idl._typesupport.DDS.XTypes.PlainArrayLElemDefn"
+    ]
+    map_sdefn: types.case[
+        [160], "cyclonedds.idl._typesupport.DDS.XTypes.PlainMapSTypeDefn"
+    ]
+    map_ldefn: types.case[
+        [161], "cyclonedds.idl._typesupport.DDS.XTypes.PlainMapLTypeDefn"
+    ]
+    sc_component_id: types.case[
+        [176], "cyclonedds.idl._typesupport.DDS.XTypes.StronglyConnectedComponentId"
+    ]
     equivalence_hash: types.case[[242, 241], types.array[types.uint8, 14]]
 
-TypeIdentifierSeq = types.typedef['TypeIdentifierSeq', types.sequence['cyclonedds.idl._typesupport.DDS.XTypes.TypeIdentifier']]
-MemberId = types.typedef['MemberId', types.uint32]
+
+TypeIdentifierSeq = types.typedef[
+    "TypeIdentifierSeq",
+    types.sequence["cyclonedds.idl._typesupport.DDS.XTypes.TypeIdentifier"],
+]
+MemberId = types.typedef["MemberId", types.uint32]
 ANNOTATION_STR_VALUE_MAX_LEN = 128
 ANNOTATION_OCTETSEC_VALUE_MAX_LEN = 128
+
 
 @dataclass
 @annotate.mutable
 @annotate.autoid("sequential")
 @annotate.nested
-class ExtendedAnnotationParameterValue(idl.IdlStruct, typename="DDS.XTypes.ExtendedAnnotationParameterValue"):
+class ExtendedAnnotationParameterValue(
+    idl.IdlStruct, typename="DDS.XTypes.ExtendedAnnotationParameterValue"
+):
     pass
-
 
 
 @annotate.final
 @annotate.nested
-class AnnotationParameterValue(idl.IdlUnion, discriminator=types.uint8, discriminator_is_key=False, typename="DDS.XTypes.AnnotationParameterValue"):
+class AnnotationParameterValue(
+    idl.IdlUnion,
+    discriminator=types.uint8,
+    discriminator_is_key=False,
+    typename="DDS.XTypes.AnnotationParameterValue",
+):
     boolean_value: types.case[[1], bool]
     byte_value: types.case[[2], types.uint8]
     int16_value: types.case[[3], types.int16]
@@ -300,27 +386,43 @@ class AnnotationParameterValue(idl.IdlUnion, discriminator=types.uint8, discrimi
 @annotate.appendable
 @annotate.autoid("sequential")
 @annotate.nested
-class AppliedAnnotationParameter(idl.IdlStruct, typename="DDS.XTypes.AppliedAnnotationParameter"):
+class AppliedAnnotationParameter(
+    idl.IdlStruct, typename="DDS.XTypes.AppliedAnnotationParameter"
+):
     paramname_hash: types.array[types.uint8, 4]
-    value: 'cyclonedds.idl._typesupport.DDS.XTypes.AnnotationParameterValue'
+    value: "cyclonedds.idl._typesupport.DDS.XTypes.AnnotationParameterValue"
 
-AppliedAnnotationParameterSeq = types.typedef['AppliedAnnotationParameterSeq', types.sequence['cyclonedds.idl._typesupport.DDS.XTypes.AppliedAnnotationParameter']]
+
+AppliedAnnotationParameterSeq = types.typedef[
+    "AppliedAnnotationParameterSeq",
+    types.sequence["cyclonedds.idl._typesupport.DDS.XTypes.AppliedAnnotationParameter"],
+]
+
 
 @dataclass
 @annotate.appendable
 @annotate.autoid("sequential")
 @annotate.nested
 class AppliedAnnotation(idl.IdlStruct, typename="DDS.XTypes.AppliedAnnotation"):
-    annotation_typeid: 'cyclonedds.idl._typesupport.DDS.XTypes.TypeIdentifier'
-    param_seq: Optional['cyclonedds.idl._typesupport.DDS.XTypes.AppliedAnnotationParameterSeq']
+    annotation_typeid: "cyclonedds.idl._typesupport.DDS.XTypes.TypeIdentifier"
+    param_seq: Optional[
+        "cyclonedds.idl._typesupport.DDS.XTypes.AppliedAnnotationParameterSeq"
+    ]
 
-AppliedAnnotationSeq = types.typedef['AppliedAnnotationSeq', types.sequence['cyclonedds.idl._typesupport.DDS.XTypes.AppliedAnnotation']]
+
+AppliedAnnotationSeq = types.typedef[
+    "AppliedAnnotationSeq",
+    types.sequence["cyclonedds.idl._typesupport.DDS.XTypes.AppliedAnnotation"],
+]
+
 
 @dataclass
 @annotate.final
 @annotate.autoid("sequential")
 @annotate.nested
-class AppliedVerbatimAnnotation(idl.IdlStruct, typename="DDS.XTypes.AppliedVerbatimAnnotation"):
+class AppliedVerbatimAnnotation(
+    idl.IdlStruct, typename="DDS.XTypes.AppliedVerbatimAnnotation"
+):
     placement: types.bounded_str[32]
     language: types.bounded_str[32]
     text: str
@@ -330,10 +432,12 @@ class AppliedVerbatimAnnotation(idl.IdlStruct, typename="DDS.XTypes.AppliedVerba
 @annotate.appendable
 @annotate.autoid("sequential")
 @annotate.nested
-class AppliedBuiltinMemberAnnotations(idl.IdlStruct, typename="DDS.XTypes.AppliedBuiltinMemberAnnotations"):
+class AppliedBuiltinMemberAnnotations(
+    idl.IdlStruct, typename="DDS.XTypes.AppliedBuiltinMemberAnnotations"
+):
     unit: Optional[str]
-    min: Optional['cyclonedds.idl._typesupport.DDS.XTypes.AnnotationParameterValue']
-    max: Optional['cyclonedds.idl._typesupport.DDS.XTypes.AnnotationParameterValue']
+    min: Optional["cyclonedds.idl._typesupport.DDS.XTypes.AnnotationParameterValue"]
+    max: Optional["cyclonedds.idl._typesupport.DDS.XTypes.AnnotationParameterValue"]
     hash_id: Optional[str]
 
 
@@ -342,9 +446,9 @@ class AppliedBuiltinMemberAnnotations(idl.IdlStruct, typename="DDS.XTypes.Applie
 @annotate.autoid("sequential")
 @annotate.nested
 class CommonStructMember(idl.IdlStruct, typename="DDS.XTypes.CommonStructMember"):
-    member_id: 'cyclonedds.idl._typesupport.DDS.XTypes.MemberId'
-    member_flags: 'cyclonedds.idl._typesupport.DDS.XTypes.StructMemberFlag'
-    member_type_id: 'cyclonedds.idl._typesupport.DDS.XTypes.TypeIdentifier'
+    member_id: "cyclonedds.idl._typesupport.DDS.XTypes.MemberId"
+    member_flags: "cyclonedds.idl._typesupport.DDS.XTypes.StructMemberFlag"
+    member_type_id: "cyclonedds.idl._typesupport.DDS.XTypes.TypeIdentifier"
 
 
 @dataclass
@@ -352,9 +456,11 @@ class CommonStructMember(idl.IdlStruct, typename="DDS.XTypes.CommonStructMember"
 @annotate.autoid("sequential")
 @annotate.nested
 class CompleteMemberDetail(idl.IdlStruct, typename="DDS.XTypes.CompleteMemberDetail"):
-    name: 'cyclonedds.idl._typesupport.DDS.XTypes.MemberName'
-    ann_builtin: Optional['cyclonedds.idl._typesupport.DDS.XTypes.AppliedBuiltinMemberAnnotations']
-    ann_custom: Optional['cyclonedds.idl._typesupport.DDS.XTypes.AppliedAnnotationSeq']
+    name: "cyclonedds.idl._typesupport.DDS.XTypes.MemberName"
+    ann_builtin: Optional[
+        "cyclonedds.idl._typesupport.DDS.XTypes.AppliedBuiltinMemberAnnotations"
+    ]
+    ann_custom: Optional["cyclonedds.idl._typesupport.DDS.XTypes.AppliedAnnotationSeq"]
 
 
 @dataclass
@@ -370,27 +476,41 @@ class MinimalMemberDetail(idl.IdlStruct, typename="DDS.XTypes.MinimalMemberDetai
 @annotate.autoid("sequential")
 @annotate.nested
 class CompleteStructMember(idl.IdlStruct, typename="DDS.XTypes.CompleteStructMember"):
-    common: 'cyclonedds.idl._typesupport.DDS.XTypes.CommonStructMember'
-    detail: 'cyclonedds.idl._typesupport.DDS.XTypes.CompleteMemberDetail'
+    common: "cyclonedds.idl._typesupport.DDS.XTypes.CommonStructMember"
+    detail: "cyclonedds.idl._typesupport.DDS.XTypes.CompleteMemberDetail"
 
-CompleteStructMemberSeq = types.typedef['CompleteStructMemberSeq', types.sequence['cyclonedds.idl._typesupport.DDS.XTypes.CompleteStructMember']]
+
+CompleteStructMemberSeq = types.typedef[
+    "CompleteStructMemberSeq",
+    types.sequence["cyclonedds.idl._typesupport.DDS.XTypes.CompleteStructMember"],
+]
+
 
 @dataclass
 @annotate.appendable
 @annotate.autoid("sequential")
 @annotate.nested
 class MinimalStructMember(idl.IdlStruct, typename="DDS.XTypes.MinimalStructMember"):
-    common: 'cyclonedds.idl._typesupport.DDS.XTypes.CommonStructMember'
-    detail: 'cyclonedds.idl._typesupport.DDS.XTypes.MinimalMemberDetail'
+    common: "cyclonedds.idl._typesupport.DDS.XTypes.CommonStructMember"
+    detail: "cyclonedds.idl._typesupport.DDS.XTypes.MinimalMemberDetail"
 
-MinimalStructMemberSeq = types.typedef['MinimalStructMemberSeq', types.sequence['cyclonedds.idl._typesupport.DDS.XTypes.MinimalStructMember']]
+
+MinimalStructMemberSeq = types.typedef[
+    "MinimalStructMemberSeq",
+    types.sequence["cyclonedds.idl._typesupport.DDS.XTypes.MinimalStructMember"],
+]
+
 
 @dataclass
 @annotate.appendable
 @annotate.autoid("sequential")
 @annotate.nested
-class AppliedBuiltinTypeAnnotations(idl.IdlStruct, typename="DDS.XTypes.AppliedBuiltinTypeAnnotations"):
-    verbatim: Optional['cyclonedds.idl._typesupport.DDS.XTypes.AppliedVerbatimAnnotation']
+class AppliedBuiltinTypeAnnotations(
+    idl.IdlStruct, typename="DDS.XTypes.AppliedBuiltinTypeAnnotations"
+):
+    verbatim: Optional[
+        "cyclonedds.idl._typesupport.DDS.XTypes.AppliedVerbatimAnnotation"
+    ]
 
 
 @dataclass
@@ -406,9 +526,11 @@ class MinimalTypeDetail(idl.IdlStruct, typename="DDS.XTypes.MinimalTypeDetail"):
 @annotate.autoid("sequential")
 @annotate.nested
 class CompleteTypeDetail(idl.IdlStruct, typename="DDS.XTypes.CompleteTypeDetail"):
-    ann_builtin: Optional['cyclonedds.idl._typesupport.DDS.XTypes.AppliedBuiltinTypeAnnotations']
-    ann_custom: Optional['cyclonedds.idl._typesupport.DDS.XTypes.AppliedAnnotationSeq']
-    type_name: 'cyclonedds.idl._typesupport.DDS.XTypes.QualifiedTypeName'
+    ann_builtin: Optional[
+        "cyclonedds.idl._typesupport.DDS.XTypes.AppliedBuiltinTypeAnnotations"
+    ]
+    ann_custom: Optional["cyclonedds.idl._typesupport.DDS.XTypes.AppliedAnnotationSeq"]
+    type_name: "cyclonedds.idl._typesupport.DDS.XTypes.QualifiedTypeName"
 
 
 @dataclass
@@ -416,8 +538,8 @@ class CompleteTypeDetail(idl.IdlStruct, typename="DDS.XTypes.CompleteTypeDetail"
 @annotate.autoid("sequential")
 @annotate.nested
 class CompleteStructHeader(idl.IdlStruct, typename="DDS.XTypes.CompleteStructHeader"):
-    base_type: 'cyclonedds.idl._typesupport.DDS.XTypes.TypeIdentifier'
-    detail: 'cyclonedds.idl._typesupport.DDS.XTypes.CompleteTypeDetail'
+    base_type: "cyclonedds.idl._typesupport.DDS.XTypes.TypeIdentifier"
+    detail: "cyclonedds.idl._typesupport.DDS.XTypes.CompleteTypeDetail"
 
 
 @dataclass
@@ -425,8 +547,8 @@ class CompleteStructHeader(idl.IdlStruct, typename="DDS.XTypes.CompleteStructHea
 @annotate.autoid("sequential")
 @annotate.nested
 class MinimalStructHeader(idl.IdlStruct, typename="DDS.XTypes.MinimalStructHeader"):
-    base_type: 'cyclonedds.idl._typesupport.DDS.XTypes.TypeIdentifier'
-    detail: 'cyclonedds.idl._typesupport.DDS.XTypes.MinimalTypeDetail'
+    base_type: "cyclonedds.idl._typesupport.DDS.XTypes.TypeIdentifier"
+    detail: "cyclonedds.idl._typesupport.DDS.XTypes.MinimalTypeDetail"
 
 
 @dataclass
@@ -434,9 +556,9 @@ class MinimalStructHeader(idl.IdlStruct, typename="DDS.XTypes.MinimalStructHeade
 @annotate.autoid("sequential")
 @annotate.nested
 class CompleteStructType(idl.IdlStruct, typename="DDS.XTypes.CompleteStructType"):
-    struct_flags: 'cyclonedds.idl._typesupport.DDS.XTypes.StructTypeFlag'
-    header: 'cyclonedds.idl._typesupport.DDS.XTypes.CompleteStructHeader'
-    member_seq: 'cyclonedds.idl._typesupport.DDS.XTypes.CompleteStructMemberSeq'
+    struct_flags: "cyclonedds.idl._typesupport.DDS.XTypes.StructTypeFlag"
+    header: "cyclonedds.idl._typesupport.DDS.XTypes.CompleteStructHeader"
+    member_seq: "cyclonedds.idl._typesupport.DDS.XTypes.CompleteStructMemberSeq"
 
 
 @dataclass
@@ -444,21 +566,23 @@ class CompleteStructType(idl.IdlStruct, typename="DDS.XTypes.CompleteStructType"
 @annotate.autoid("sequential")
 @annotate.nested
 class MinimalStructType(idl.IdlStruct, typename="DDS.XTypes.MinimalStructType"):
-    struct_flags: 'cyclonedds.idl._typesupport.DDS.XTypes.StructTypeFlag'
-    header: 'cyclonedds.idl._typesupport.DDS.XTypes.MinimalStructHeader'
-    member_seq: 'cyclonedds.idl._typesupport.DDS.XTypes.MinimalStructMemberSeq'
+    struct_flags: "cyclonedds.idl._typesupport.DDS.XTypes.StructTypeFlag"
+    header: "cyclonedds.idl._typesupport.DDS.XTypes.MinimalStructHeader"
+    member_seq: "cyclonedds.idl._typesupport.DDS.XTypes.MinimalStructMemberSeq"
 
-UnionCaseLabelSeq = types.typedef['UnionCaseLabelSeq', types.sequence[types.int32]]
+
+UnionCaseLabelSeq = types.typedef["UnionCaseLabelSeq", types.sequence[types.int32]]
+
 
 @dataclass
 @annotate.final
 @annotate.autoid("sequential")
 @annotate.nested
 class CommonUnionMember(idl.IdlStruct, typename="DDS.XTypes.CommonUnionMember"):
-    member_id: 'cyclonedds.idl._typesupport.DDS.XTypes.MemberId'
-    member_flags: 'cyclonedds.idl._typesupport.DDS.XTypes.UnionMemberFlag'
-    type_id: 'cyclonedds.idl._typesupport.DDS.XTypes.TypeIdentifier'
-    label_seq: 'cyclonedds.idl._typesupport.DDS.XTypes.UnionCaseLabelSeq'
+    member_id: "cyclonedds.idl._typesupport.DDS.XTypes.MemberId"
+    member_flags: "cyclonedds.idl._typesupport.DDS.XTypes.UnionMemberFlag"
+    type_id: "cyclonedds.idl._typesupport.DDS.XTypes.TypeIdentifier"
+    label_seq: "cyclonedds.idl._typesupport.DDS.XTypes.UnionCaseLabelSeq"
 
 
 @dataclass
@@ -466,46 +590,64 @@ class CommonUnionMember(idl.IdlStruct, typename="DDS.XTypes.CommonUnionMember"):
 @annotate.autoid("sequential")
 @annotate.nested
 class CompleteUnionMember(idl.IdlStruct, typename="DDS.XTypes.CompleteUnionMember"):
-    common: 'cyclonedds.idl._typesupport.DDS.XTypes.CommonUnionMember'
-    detail: 'cyclonedds.idl._typesupport.DDS.XTypes.CompleteMemberDetail'
+    common: "cyclonedds.idl._typesupport.DDS.XTypes.CommonUnionMember"
+    detail: "cyclonedds.idl._typesupport.DDS.XTypes.CompleteMemberDetail"
 
-CompleteUnionMemberSeq = types.typedef['CompleteUnionMemberSeq', types.sequence['cyclonedds.idl._typesupport.DDS.XTypes.CompleteUnionMember']]
+
+CompleteUnionMemberSeq = types.typedef[
+    "CompleteUnionMemberSeq",
+    types.sequence["cyclonedds.idl._typesupport.DDS.XTypes.CompleteUnionMember"],
+]
+
 
 @dataclass
 @annotate.appendable
 @annotate.autoid("sequential")
 @annotate.nested
 class MinimalUnionMember(idl.IdlStruct, typename="DDS.XTypes.MinimalUnionMember"):
-    common: 'cyclonedds.idl._typesupport.DDS.XTypes.CommonUnionMember'
-    detail: 'cyclonedds.idl._typesupport.DDS.XTypes.MinimalMemberDetail'
+    common: "cyclonedds.idl._typesupport.DDS.XTypes.CommonUnionMember"
+    detail: "cyclonedds.idl._typesupport.DDS.XTypes.MinimalMemberDetail"
 
-MinimalUnionMemberSeq = types.typedef['MinimalUnionMemberSeq', types.sequence['cyclonedds.idl._typesupport.DDS.XTypes.MinimalUnionMember']]
+
+MinimalUnionMemberSeq = types.typedef[
+    "MinimalUnionMemberSeq",
+    types.sequence["cyclonedds.idl._typesupport.DDS.XTypes.MinimalUnionMember"],
+]
+
 
 @dataclass
 @annotate.final
 @annotate.autoid("sequential")
 @annotate.nested
-class CommonDiscriminatorMember(idl.IdlStruct, typename="DDS.XTypes.CommonDiscriminatorMember"):
-    member_flags: 'cyclonedds.idl._typesupport.DDS.XTypes.UnionDiscriminatorFlag'
-    type_id: 'cyclonedds.idl._typesupport.DDS.XTypes.TypeIdentifier'
+class CommonDiscriminatorMember(
+    idl.IdlStruct, typename="DDS.XTypes.CommonDiscriminatorMember"
+):
+    member_flags: "cyclonedds.idl._typesupport.DDS.XTypes.UnionDiscriminatorFlag"
+    type_id: "cyclonedds.idl._typesupport.DDS.XTypes.TypeIdentifier"
 
 
 @dataclass
 @annotate.appendable
 @annotate.autoid("sequential")
 @annotate.nested
-class CompleteDiscriminatorMember(idl.IdlStruct, typename="DDS.XTypes.CompleteDiscriminatorMember"):
-    common: 'cyclonedds.idl._typesupport.DDS.XTypes.CommonDiscriminatorMember'
-    ann_builtin: Optional['cyclonedds.idl._typesupport.DDS.XTypes.AppliedBuiltinTypeAnnotations']
-    ann_custom: Optional['cyclonedds.idl._typesupport.DDS.XTypes.AppliedAnnotationSeq']
+class CompleteDiscriminatorMember(
+    idl.IdlStruct, typename="DDS.XTypes.CompleteDiscriminatorMember"
+):
+    common: "cyclonedds.idl._typesupport.DDS.XTypes.CommonDiscriminatorMember"
+    ann_builtin: Optional[
+        "cyclonedds.idl._typesupport.DDS.XTypes.AppliedBuiltinTypeAnnotations"
+    ]
+    ann_custom: Optional["cyclonedds.idl._typesupport.DDS.XTypes.AppliedAnnotationSeq"]
 
 
 @dataclass
 @annotate.appendable
 @annotate.autoid("sequential")
 @annotate.nested
-class MinimalDiscriminatorMember(idl.IdlStruct, typename="DDS.XTypes.MinimalDiscriminatorMember"):
-    common: 'cyclonedds.idl._typesupport.DDS.XTypes.CommonDiscriminatorMember'
+class MinimalDiscriminatorMember(
+    idl.IdlStruct, typename="DDS.XTypes.MinimalDiscriminatorMember"
+):
+    common: "cyclonedds.idl._typesupport.DDS.XTypes.CommonDiscriminatorMember"
 
 
 @dataclass
@@ -513,7 +655,7 @@ class MinimalDiscriminatorMember(idl.IdlStruct, typename="DDS.XTypes.MinimalDisc
 @annotate.autoid("sequential")
 @annotate.nested
 class CompleteUnionHeader(idl.IdlStruct, typename="DDS.XTypes.CompleteUnionHeader"):
-    detail: 'cyclonedds.idl._typesupport.DDS.XTypes.CompleteTypeDetail'
+    detail: "cyclonedds.idl._typesupport.DDS.XTypes.CompleteTypeDetail"
 
 
 @dataclass
@@ -521,7 +663,7 @@ class CompleteUnionHeader(idl.IdlStruct, typename="DDS.XTypes.CompleteUnionHeade
 @annotate.autoid("sequential")
 @annotate.nested
 class MinimalUnionHeader(idl.IdlStruct, typename="DDS.XTypes.MinimalUnionHeader"):
-    detail: 'cyclonedds.idl._typesupport.DDS.XTypes.MinimalTypeDetail'
+    detail: "cyclonedds.idl._typesupport.DDS.XTypes.MinimalTypeDetail"
 
 
 @dataclass
@@ -529,10 +671,10 @@ class MinimalUnionHeader(idl.IdlStruct, typename="DDS.XTypes.MinimalUnionHeader"
 @annotate.autoid("sequential")
 @annotate.nested
 class CompleteUnionType(idl.IdlStruct, typename="DDS.XTypes.CompleteUnionType"):
-    union_flags: 'cyclonedds.idl._typesupport.DDS.XTypes.UnionTypeFlag'
-    header: 'cyclonedds.idl._typesupport.DDS.XTypes.CompleteUnionHeader'
-    discriminator: 'cyclonedds.idl._typesupport.DDS.XTypes.CompleteDiscriminatorMember'
-    member_seq: 'cyclonedds.idl._typesupport.DDS.XTypes.CompleteUnionMemberSeq'
+    union_flags: "cyclonedds.idl._typesupport.DDS.XTypes.UnionTypeFlag"
+    header: "cyclonedds.idl._typesupport.DDS.XTypes.CompleteUnionHeader"
+    discriminator: "cyclonedds.idl._typesupport.DDS.XTypes.CompleteDiscriminatorMember"
+    member_seq: "cyclonedds.idl._typesupport.DDS.XTypes.CompleteUnionMemberSeq"
 
 
 @dataclass
@@ -540,56 +682,78 @@ class CompleteUnionType(idl.IdlStruct, typename="DDS.XTypes.CompleteUnionType"):
 @annotate.autoid("sequential")
 @annotate.nested
 class MinimalUnionType(idl.IdlStruct, typename="DDS.XTypes.MinimalUnionType"):
-    union_flags: 'cyclonedds.idl._typesupport.DDS.XTypes.UnionTypeFlag'
-    header: 'cyclonedds.idl._typesupport.DDS.XTypes.MinimalUnionHeader'
-    discriminator: 'cyclonedds.idl._typesupport.DDS.XTypes.MinimalDiscriminatorMember'
-    member_seq: 'cyclonedds.idl._typesupport.DDS.XTypes.MinimalUnionMemberSeq'
+    union_flags: "cyclonedds.idl._typesupport.DDS.XTypes.UnionTypeFlag"
+    header: "cyclonedds.idl._typesupport.DDS.XTypes.MinimalUnionHeader"
+    discriminator: "cyclonedds.idl._typesupport.DDS.XTypes.MinimalDiscriminatorMember"
+    member_seq: "cyclonedds.idl._typesupport.DDS.XTypes.MinimalUnionMemberSeq"
 
 
 @dataclass
 @annotate.final
 @annotate.autoid("sequential")
 @annotate.nested
-class CommonAnnotationParameter(idl.IdlStruct, typename="DDS.XTypes.CommonAnnotationParameter"):
-    member_flags: 'cyclonedds.idl._typesupport.DDS.XTypes.AnnotationParameterFlag'
-    member_type_id: 'cyclonedds.idl._typesupport.DDS.XTypes.TypeIdentifier'
+class CommonAnnotationParameter(
+    idl.IdlStruct, typename="DDS.XTypes.CommonAnnotationParameter"
+):
+    member_flags: "cyclonedds.idl._typesupport.DDS.XTypes.AnnotationParameterFlag"
+    member_type_id: "cyclonedds.idl._typesupport.DDS.XTypes.TypeIdentifier"
 
 
 @dataclass
 @annotate.appendable
 @annotate.autoid("sequential")
 @annotate.nested
-class CompleteAnnotationParameter(idl.IdlStruct, typename="DDS.XTypes.CompleteAnnotationParameter"):
-    common: 'cyclonedds.idl._typesupport.DDS.XTypes.CommonAnnotationParameter'
-    name: 'cyclonedds.idl._typesupport.DDS.XTypes.MemberName'
-    default_value: 'cyclonedds.idl._typesupport.DDS.XTypes.AnnotationParameterValue'
+class CompleteAnnotationParameter(
+    idl.IdlStruct, typename="DDS.XTypes.CompleteAnnotationParameter"
+):
+    common: "cyclonedds.idl._typesupport.DDS.XTypes.CommonAnnotationParameter"
+    name: "cyclonedds.idl._typesupport.DDS.XTypes.MemberName"
+    default_value: "cyclonedds.idl._typesupport.DDS.XTypes.AnnotationParameterValue"
 
-CompleteAnnotationParameterSeq = types.typedef['CompleteAnnotationParameterSeq', types.sequence['cyclonedds.idl._typesupport.DDS.XTypes.CompleteAnnotationParameter']]
+
+CompleteAnnotationParameterSeq = types.typedef[
+    "CompleteAnnotationParameterSeq",
+    types.sequence[
+        "cyclonedds.idl._typesupport.DDS.XTypes.CompleteAnnotationParameter"
+    ],
+]
+
 
 @dataclass
 @annotate.appendable
 @annotate.autoid("sequential")
 @annotate.nested
-class MinimalAnnotationParameter(idl.IdlStruct, typename="DDS.XTypes.MinimalAnnotationParameter"):
-    common: 'cyclonedds.idl._typesupport.DDS.XTypes.CommonAnnotationParameter'
+class MinimalAnnotationParameter(
+    idl.IdlStruct, typename="DDS.XTypes.MinimalAnnotationParameter"
+):
+    common: "cyclonedds.idl._typesupport.DDS.XTypes.CommonAnnotationParameter"
     name_hash: types.array[types.uint8, 4]
-    default_value: 'cyclonedds.idl._typesupport.DDS.XTypes.AnnotationParameterValue'
+    default_value: "cyclonedds.idl._typesupport.DDS.XTypes.AnnotationParameterValue"
 
-MinimalAnnotationParameterSeq = types.typedef['MinimalAnnotationParameterSeq', types.sequence['cyclonedds.idl._typesupport.DDS.XTypes.MinimalAnnotationParameter']]
 
-@dataclass
-@annotate.appendable
-@annotate.autoid("sequential")
-@annotate.nested
-class CompleteAnnotationHeader(idl.IdlStruct, typename="DDS.XTypes.CompleteAnnotationHeader"):
-    annotation_name: 'cyclonedds.idl._typesupport.DDS.XTypes.QualifiedTypeName'
+MinimalAnnotationParameterSeq = types.typedef[
+    "MinimalAnnotationParameterSeq",
+    types.sequence["cyclonedds.idl._typesupport.DDS.XTypes.MinimalAnnotationParameter"],
+]
 
 
 @dataclass
 @annotate.appendable
 @annotate.autoid("sequential")
 @annotate.nested
-class MinimalAnnotationHeader(idl.IdlStruct, typename="DDS.XTypes.MinimalAnnotationHeader"):
+class CompleteAnnotationHeader(
+    idl.IdlStruct, typename="DDS.XTypes.CompleteAnnotationHeader"
+):
+    annotation_name: "cyclonedds.idl._typesupport.DDS.XTypes.QualifiedTypeName"
+
+
+@dataclass
+@annotate.appendable
+@annotate.autoid("sequential")
+@annotate.nested
+class MinimalAnnotationHeader(
+    idl.IdlStruct, typename="DDS.XTypes.MinimalAnnotationHeader"
+):
     pass
 
 
@@ -597,10 +761,12 @@ class MinimalAnnotationHeader(idl.IdlStruct, typename="DDS.XTypes.MinimalAnnotat
 @annotate.final
 @annotate.autoid("sequential")
 @annotate.nested
-class CompleteAnnotationType(idl.IdlStruct, typename="DDS.XTypes.CompleteAnnotationType"):
-    annotation_flag: 'cyclonedds.idl._typesupport.DDS.XTypes.AnnotationTypeFlag'
-    header: 'cyclonedds.idl._typesupport.DDS.XTypes.CompleteAnnotationHeader'
-    member_seq: 'cyclonedds.idl._typesupport.DDS.XTypes.CompleteAnnotationParameterSeq'
+class CompleteAnnotationType(
+    idl.IdlStruct, typename="DDS.XTypes.CompleteAnnotationType"
+):
+    annotation_flag: "cyclonedds.idl._typesupport.DDS.XTypes.AnnotationTypeFlag"
+    header: "cyclonedds.idl._typesupport.DDS.XTypes.CompleteAnnotationHeader"
+    member_seq: "cyclonedds.idl._typesupport.DDS.XTypes.CompleteAnnotationParameterSeq"
 
 
 @dataclass
@@ -608,9 +774,9 @@ class CompleteAnnotationType(idl.IdlStruct, typename="DDS.XTypes.CompleteAnnotat
 @annotate.autoid("sequential")
 @annotate.nested
 class MinimalAnnotationType(idl.IdlStruct, typename="DDS.XTypes.MinimalAnnotationType"):
-    annotation_flag: 'cyclonedds.idl._typesupport.DDS.XTypes.AnnotationTypeFlag'
-    header: 'cyclonedds.idl._typesupport.DDS.XTypes.MinimalAnnotationHeader'
-    member_seq: 'cyclonedds.idl._typesupport.DDS.XTypes.MinimalAnnotationParameterSeq'
+    annotation_flag: "cyclonedds.idl._typesupport.DDS.XTypes.AnnotationTypeFlag"
+    header: "cyclonedds.idl._typesupport.DDS.XTypes.MinimalAnnotationHeader"
+    member_seq: "cyclonedds.idl._typesupport.DDS.XTypes.MinimalAnnotationParameterSeq"
 
 
 @dataclass
@@ -618,8 +784,8 @@ class MinimalAnnotationType(idl.IdlStruct, typename="DDS.XTypes.MinimalAnnotatio
 @annotate.autoid("sequential")
 @annotate.nested
 class CommonAliasBody(idl.IdlStruct, typename="DDS.XTypes.CommonAliasBody"):
-    related_flags: 'cyclonedds.idl._typesupport.DDS.XTypes.AliasMemberFlag'
-    related_type: 'cyclonedds.idl._typesupport.DDS.XTypes.TypeIdentifier'
+    related_flags: "cyclonedds.idl._typesupport.DDS.XTypes.AliasMemberFlag"
+    related_type: "cyclonedds.idl._typesupport.DDS.XTypes.TypeIdentifier"
 
 
 @dataclass
@@ -627,9 +793,11 @@ class CommonAliasBody(idl.IdlStruct, typename="DDS.XTypes.CommonAliasBody"):
 @annotate.autoid("sequential")
 @annotate.nested
 class CompleteAliasBody(idl.IdlStruct, typename="DDS.XTypes.CompleteAliasBody"):
-    common: 'cyclonedds.idl._typesupport.DDS.XTypes.CommonAliasBody'
-    ann_builtin: Optional['cyclonedds.idl._typesupport.DDS.XTypes.AppliedBuiltinMemberAnnotations']
-    ann_custom: Optional['cyclonedds.idl._typesupport.DDS.XTypes.AppliedAnnotationSeq']
+    common: "cyclonedds.idl._typesupport.DDS.XTypes.CommonAliasBody"
+    ann_builtin: Optional[
+        "cyclonedds.idl._typesupport.DDS.XTypes.AppliedBuiltinMemberAnnotations"
+    ]
+    ann_custom: Optional["cyclonedds.idl._typesupport.DDS.XTypes.AppliedAnnotationSeq"]
 
 
 @dataclass
@@ -637,7 +805,7 @@ class CompleteAliasBody(idl.IdlStruct, typename="DDS.XTypes.CompleteAliasBody"):
 @annotate.autoid("sequential")
 @annotate.nested
 class MinimalAliasBody(idl.IdlStruct, typename="DDS.XTypes.MinimalAliasBody"):
-    common: 'cyclonedds.idl._typesupport.DDS.XTypes.CommonAliasBody'
+    common: "cyclonedds.idl._typesupport.DDS.XTypes.CommonAliasBody"
 
 
 @dataclass
@@ -645,7 +813,7 @@ class MinimalAliasBody(idl.IdlStruct, typename="DDS.XTypes.MinimalAliasBody"):
 @annotate.autoid("sequential")
 @annotate.nested
 class CompleteAliasHeader(idl.IdlStruct, typename="DDS.XTypes.CompleteAliasHeader"):
-    detail: 'cyclonedds.idl._typesupport.DDS.XTypes.CompleteTypeDetail'
+    detail: "cyclonedds.idl._typesupport.DDS.XTypes.CompleteTypeDetail"
 
 
 @dataclass
@@ -661,9 +829,9 @@ class MinimalAliasHeader(idl.IdlStruct, typename="DDS.XTypes.MinimalAliasHeader"
 @annotate.autoid("sequential")
 @annotate.nested
 class CompleteAliasType(idl.IdlStruct, typename="DDS.XTypes.CompleteAliasType"):
-    alias_flags: 'cyclonedds.idl._typesupport.DDS.XTypes.AliasTypeFlag'
-    header: 'cyclonedds.idl._typesupport.DDS.XTypes.CompleteAliasHeader'
-    body: 'cyclonedds.idl._typesupport.DDS.XTypes.CompleteAliasBody'
+    alias_flags: "cyclonedds.idl._typesupport.DDS.XTypes.AliasTypeFlag"
+    header: "cyclonedds.idl._typesupport.DDS.XTypes.CompleteAliasHeader"
+    body: "cyclonedds.idl._typesupport.DDS.XTypes.CompleteAliasBody"
 
 
 @dataclass
@@ -671,9 +839,9 @@ class CompleteAliasType(idl.IdlStruct, typename="DDS.XTypes.CompleteAliasType"):
 @annotate.autoid("sequential")
 @annotate.nested
 class MinimalAliasType(idl.IdlStruct, typename="DDS.XTypes.MinimalAliasType"):
-    alias_flags: 'cyclonedds.idl._typesupport.DDS.XTypes.AliasTypeFlag'
-    header: 'cyclonedds.idl._typesupport.DDS.XTypes.MinimalAliasHeader'
-    body: 'cyclonedds.idl._typesupport.DDS.XTypes.MinimalAliasBody'
+    alias_flags: "cyclonedds.idl._typesupport.DDS.XTypes.AliasTypeFlag"
+    header: "cyclonedds.idl._typesupport.DDS.XTypes.MinimalAliasHeader"
+    body: "cyclonedds.idl._typesupport.DDS.XTypes.MinimalAliasBody"
 
 
 @dataclass
@@ -681,59 +849,73 @@ class MinimalAliasType(idl.IdlStruct, typename="DDS.XTypes.MinimalAliasType"):
 @annotate.autoid("sequential")
 @annotate.nested
 class CompleteElementDetail(idl.IdlStruct, typename="DDS.XTypes.CompleteElementDetail"):
-    ann_builtin: Optional['cyclonedds.idl._typesupport.DDS.XTypes.AppliedBuiltinMemberAnnotations']
-    ann_custom: Optional['cyclonedds.idl._typesupport.DDS.XTypes.AppliedAnnotationSeq']
+    ann_builtin: Optional[
+        "cyclonedds.idl._typesupport.DDS.XTypes.AppliedBuiltinMemberAnnotations"
+    ]
+    ann_custom: Optional["cyclonedds.idl._typesupport.DDS.XTypes.AppliedAnnotationSeq"]
 
 
 @dataclass
 @annotate.final
 @annotate.autoid("sequential")
 @annotate.nested
-class CommonCollectionElement(idl.IdlStruct, typename="DDS.XTypes.CommonCollectionElement"):
-    element_flags: 'cyclonedds.idl._typesupport.DDS.XTypes.CollectionElementFlag'
-    type: 'cyclonedds.idl._typesupport.DDS.XTypes.TypeIdentifier'
+class CommonCollectionElement(
+    idl.IdlStruct, typename="DDS.XTypes.CommonCollectionElement"
+):
+    element_flags: "cyclonedds.idl._typesupport.DDS.XTypes.CollectionElementFlag"
+    type: "cyclonedds.idl._typesupport.DDS.XTypes.TypeIdentifier"
 
 
 @dataclass
 @annotate.appendable
 @annotate.autoid("sequential")
 @annotate.nested
-class CompleteCollectionElement(idl.IdlStruct, typename="DDS.XTypes.CompleteCollectionElement"):
-    common: 'cyclonedds.idl._typesupport.DDS.XTypes.CommonCollectionElement'
-    detail: 'cyclonedds.idl._typesupport.DDS.XTypes.CompleteElementDetail'
+class CompleteCollectionElement(
+    idl.IdlStruct, typename="DDS.XTypes.CompleteCollectionElement"
+):
+    common: "cyclonedds.idl._typesupport.DDS.XTypes.CommonCollectionElement"
+    detail: "cyclonedds.idl._typesupport.DDS.XTypes.CompleteElementDetail"
 
 
 @dataclass
 @annotate.appendable
 @annotate.autoid("sequential")
 @annotate.nested
-class MinimalCollectionElement(idl.IdlStruct, typename="DDS.XTypes.MinimalCollectionElement"):
-    common: 'cyclonedds.idl._typesupport.DDS.XTypes.CommonCollectionElement'
+class MinimalCollectionElement(
+    idl.IdlStruct, typename="DDS.XTypes.MinimalCollectionElement"
+):
+    common: "cyclonedds.idl._typesupport.DDS.XTypes.CommonCollectionElement"
 
 
 @dataclass
 @annotate.final
 @annotate.autoid("sequential")
 @annotate.nested
-class CommonCollectionHeader(idl.IdlStruct, typename="DDS.XTypes.CommonCollectionHeader"):
-    bound: 'cyclonedds.idl._typesupport.DDS.XTypes.LBound'
+class CommonCollectionHeader(
+    idl.IdlStruct, typename="DDS.XTypes.CommonCollectionHeader"
+):
+    bound: "cyclonedds.idl._typesupport.DDS.XTypes.LBound"
 
 
 @dataclass
 @annotate.appendable
 @annotate.autoid("sequential")
 @annotate.nested
-class CompleteCollectionHeader(idl.IdlStruct, typename="DDS.XTypes.CompleteCollectionHeader"):
-    common: 'cyclonedds.idl._typesupport.DDS.XTypes.CommonCollectionHeader'
-    detail: Optional['cyclonedds.idl._typesupport.DDS.XTypes.CompleteTypeDetail']
+class CompleteCollectionHeader(
+    idl.IdlStruct, typename="DDS.XTypes.CompleteCollectionHeader"
+):
+    common: "cyclonedds.idl._typesupport.DDS.XTypes.CommonCollectionHeader"
+    detail: Optional["cyclonedds.idl._typesupport.DDS.XTypes.CompleteTypeDetail"]
 
 
 @dataclass
 @annotate.appendable
 @annotate.autoid("sequential")
 @annotate.nested
-class MinimalCollectionHeader(idl.IdlStruct, typename="DDS.XTypes.MinimalCollectionHeader"):
-    common: 'cyclonedds.idl._typesupport.DDS.XTypes.CommonCollectionHeader'
+class MinimalCollectionHeader(
+    idl.IdlStruct, typename="DDS.XTypes.MinimalCollectionHeader"
+):
+    common: "cyclonedds.idl._typesupport.DDS.XTypes.CommonCollectionHeader"
 
 
 @dataclass
@@ -741,9 +923,9 @@ class MinimalCollectionHeader(idl.IdlStruct, typename="DDS.XTypes.MinimalCollect
 @annotate.autoid("sequential")
 @annotate.nested
 class CompleteSequenceType(idl.IdlStruct, typename="DDS.XTypes.CompleteSequenceType"):
-    collection_flag: 'cyclonedds.idl._typesupport.DDS.XTypes.CollectionTypeFlag'
-    header: 'cyclonedds.idl._typesupport.DDS.XTypes.CompleteCollectionHeader'
-    element: 'cyclonedds.idl._typesupport.DDS.XTypes.CompleteCollectionElement'
+    collection_flag: "cyclonedds.idl._typesupport.DDS.XTypes.CollectionTypeFlag"
+    header: "cyclonedds.idl._typesupport.DDS.XTypes.CompleteCollectionHeader"
+    element: "cyclonedds.idl._typesupport.DDS.XTypes.CompleteCollectionElement"
 
 
 @dataclass
@@ -751,9 +933,9 @@ class CompleteSequenceType(idl.IdlStruct, typename="DDS.XTypes.CompleteSequenceT
 @annotate.autoid("sequential")
 @annotate.nested
 class MinimalSequenceType(idl.IdlStruct, typename="DDS.XTypes.MinimalSequenceType"):
-    collection_flag: 'cyclonedds.idl._typesupport.DDS.XTypes.CollectionTypeFlag'
-    header: 'cyclonedds.idl._typesupport.DDS.XTypes.MinimalCollectionHeader'
-    element: 'cyclonedds.idl._typesupport.DDS.XTypes.MinimalCollectionElement'
+    collection_flag: "cyclonedds.idl._typesupport.DDS.XTypes.CollectionTypeFlag"
+    header: "cyclonedds.idl._typesupport.DDS.XTypes.MinimalCollectionHeader"
+    element: "cyclonedds.idl._typesupport.DDS.XTypes.MinimalCollectionElement"
 
 
 @dataclass
@@ -761,7 +943,7 @@ class MinimalSequenceType(idl.IdlStruct, typename="DDS.XTypes.MinimalSequenceTyp
 @annotate.autoid("sequential")
 @annotate.nested
 class CommonArrayHeader(idl.IdlStruct, typename="DDS.XTypes.CommonArrayHeader"):
-    bound_seq: 'cyclonedds.idl._typesupport.DDS.XTypes.LBoundSeq'
+    bound_seq: "cyclonedds.idl._typesupport.DDS.XTypes.LBoundSeq"
 
 
 @dataclass
@@ -769,8 +951,8 @@ class CommonArrayHeader(idl.IdlStruct, typename="DDS.XTypes.CommonArrayHeader"):
 @annotate.autoid("sequential")
 @annotate.nested
 class CompleteArrayHeader(idl.IdlStruct, typename="DDS.XTypes.CompleteArrayHeader"):
-    common: 'cyclonedds.idl._typesupport.DDS.XTypes.CommonArrayHeader'
-    detail: 'cyclonedds.idl._typesupport.DDS.XTypes.CompleteTypeDetail'
+    common: "cyclonedds.idl._typesupport.DDS.XTypes.CommonArrayHeader"
+    detail: "cyclonedds.idl._typesupport.DDS.XTypes.CompleteTypeDetail"
 
 
 @dataclass
@@ -778,7 +960,7 @@ class CompleteArrayHeader(idl.IdlStruct, typename="DDS.XTypes.CompleteArrayHeade
 @annotate.autoid("sequential")
 @annotate.nested
 class MinimalArrayHeader(idl.IdlStruct, typename="DDS.XTypes.MinimalArrayHeader"):
-    common: 'cyclonedds.idl._typesupport.DDS.XTypes.CommonArrayHeader'
+    common: "cyclonedds.idl._typesupport.DDS.XTypes.CommonArrayHeader"
 
 
 @dataclass
@@ -786,9 +968,9 @@ class MinimalArrayHeader(idl.IdlStruct, typename="DDS.XTypes.MinimalArrayHeader"
 @annotate.autoid("sequential")
 @annotate.nested
 class CompleteArrayType(idl.IdlStruct, typename="DDS.XTypes.CompleteArrayType"):
-    collection_flag: 'cyclonedds.idl._typesupport.DDS.XTypes.CollectionTypeFlag'
-    header: 'cyclonedds.idl._typesupport.DDS.XTypes.CompleteArrayHeader'
-    element: 'cyclonedds.idl._typesupport.DDS.XTypes.CompleteCollectionElement'
+    collection_flag: "cyclonedds.idl._typesupport.DDS.XTypes.CollectionTypeFlag"
+    header: "cyclonedds.idl._typesupport.DDS.XTypes.CompleteArrayHeader"
+    element: "cyclonedds.idl._typesupport.DDS.XTypes.CompleteCollectionElement"
 
 
 @dataclass
@@ -796,9 +978,9 @@ class CompleteArrayType(idl.IdlStruct, typename="DDS.XTypes.CompleteArrayType"):
 @annotate.autoid("sequential")
 @annotate.nested
 class MinimalArrayType(idl.IdlStruct, typename="DDS.XTypes.MinimalArrayType"):
-    collection_flag: 'cyclonedds.idl._typesupport.DDS.XTypes.CollectionTypeFlag'
-    header: 'cyclonedds.idl._typesupport.DDS.XTypes.MinimalArrayHeader'
-    element: 'cyclonedds.idl._typesupport.DDS.XTypes.MinimalCollectionElement'
+    collection_flag: "cyclonedds.idl._typesupport.DDS.XTypes.CollectionTypeFlag"
+    header: "cyclonedds.idl._typesupport.DDS.XTypes.MinimalArrayHeader"
+    element: "cyclonedds.idl._typesupport.DDS.XTypes.MinimalCollectionElement"
 
 
 @dataclass
@@ -806,10 +988,10 @@ class MinimalArrayType(idl.IdlStruct, typename="DDS.XTypes.MinimalArrayType"):
 @annotate.autoid("sequential")
 @annotate.nested
 class CompleteMapType(idl.IdlStruct, typename="DDS.XTypes.CompleteMapType"):
-    collection_flag: 'cyclonedds.idl._typesupport.DDS.XTypes.CollectionTypeFlag'
-    header: 'cyclonedds.idl._typesupport.DDS.XTypes.CompleteCollectionHeader'
-    key: 'cyclonedds.idl._typesupport.DDS.XTypes.CompleteCollectionElement'
-    element: 'cyclonedds.idl._typesupport.DDS.XTypes.CompleteCollectionElement'
+    collection_flag: "cyclonedds.idl._typesupport.DDS.XTypes.CollectionTypeFlag"
+    header: "cyclonedds.idl._typesupport.DDS.XTypes.CompleteCollectionHeader"
+    key: "cyclonedds.idl._typesupport.DDS.XTypes.CompleteCollectionElement"
+    element: "cyclonedds.idl._typesupport.DDS.XTypes.CompleteCollectionElement"
 
 
 @dataclass
@@ -817,75 +999,101 @@ class CompleteMapType(idl.IdlStruct, typename="DDS.XTypes.CompleteMapType"):
 @annotate.autoid("sequential")
 @annotate.nested
 class MinimalMapType(idl.IdlStruct, typename="DDS.XTypes.MinimalMapType"):
-    collection_flag: 'cyclonedds.idl._typesupport.DDS.XTypes.CollectionTypeFlag'
-    header: 'cyclonedds.idl._typesupport.DDS.XTypes.MinimalCollectionHeader'
-    key: 'cyclonedds.idl._typesupport.DDS.XTypes.MinimalCollectionElement'
-    element: 'cyclonedds.idl._typesupport.DDS.XTypes.MinimalCollectionElement'
+    collection_flag: "cyclonedds.idl._typesupport.DDS.XTypes.CollectionTypeFlag"
+    header: "cyclonedds.idl._typesupport.DDS.XTypes.MinimalCollectionHeader"
+    key: "cyclonedds.idl._typesupport.DDS.XTypes.MinimalCollectionElement"
+    element: "cyclonedds.idl._typesupport.DDS.XTypes.MinimalCollectionElement"
 
-BitBound = types.typedef['BitBound', types.uint16]
+
+BitBound = types.typedef["BitBound", types.uint16]
+
 
 @dataclass
 @annotate.appendable
 @annotate.autoid("sequential")
 @annotate.nested
-class CommonEnumeratedLiteral(idl.IdlStruct, typename="DDS.XTypes.CommonEnumeratedLiteral"):
+class CommonEnumeratedLiteral(
+    idl.IdlStruct, typename="DDS.XTypes.CommonEnumeratedLiteral"
+):
     value: types.int32
-    flags: 'cyclonedds.idl._typesupport.DDS.XTypes.EnumeratedLiteralFlag'
+    flags: "cyclonedds.idl._typesupport.DDS.XTypes.EnumeratedLiteralFlag"
 
 
 @dataclass
 @annotate.appendable
 @annotate.autoid("sequential")
 @annotate.nested
-class CompleteEnumeratedLiteral(idl.IdlStruct, typename="DDS.XTypes.CompleteEnumeratedLiteral"):
-    common: 'cyclonedds.idl._typesupport.DDS.XTypes.CommonEnumeratedLiteral'
-    detail: 'cyclonedds.idl._typesupport.DDS.XTypes.CompleteMemberDetail'
+class CompleteEnumeratedLiteral(
+    idl.IdlStruct, typename="DDS.XTypes.CompleteEnumeratedLiteral"
+):
+    common: "cyclonedds.idl._typesupport.DDS.XTypes.CommonEnumeratedLiteral"
+    detail: "cyclonedds.idl._typesupport.DDS.XTypes.CompleteMemberDetail"
 
-CompleteEnumeratedLiteralSeq = types.typedef['CompleteEnumeratedLiteralSeq', types.sequence['cyclonedds.idl._typesupport.DDS.XTypes.CompleteEnumeratedLiteral']]
 
-@dataclass
-@annotate.appendable
-@annotate.autoid("sequential")
-@annotate.nested
-class MinimalEnumeratedLiteral(idl.IdlStruct, typename="DDS.XTypes.MinimalEnumeratedLiteral"):
-    common: 'cyclonedds.idl._typesupport.DDS.XTypes.CommonEnumeratedLiteral'
-    detail: 'cyclonedds.idl._typesupport.DDS.XTypes.MinimalMemberDetail'
-
-MinimalEnumeratedLiteralSeq = types.typedef['MinimalEnumeratedLiteralSeq', types.sequence['cyclonedds.idl._typesupport.DDS.XTypes.MinimalEnumeratedLiteral']]
-
-@dataclass
-@annotate.final
-@annotate.autoid("sequential")
-@annotate.nested
-class CommonEnumeratedHeader(idl.IdlStruct, typename="DDS.XTypes.CommonEnumeratedHeader"):
-    bit_bound: 'cyclonedds.idl._typesupport.DDS.XTypes.BitBound'
+CompleteEnumeratedLiteralSeq = types.typedef[
+    "CompleteEnumeratedLiteralSeq",
+    types.sequence["cyclonedds.idl._typesupport.DDS.XTypes.CompleteEnumeratedLiteral"],
+]
 
 
 @dataclass
 @annotate.appendable
 @annotate.autoid("sequential")
 @annotate.nested
-class CompleteEnumeratedHeader(idl.IdlStruct, typename="DDS.XTypes.CompleteEnumeratedHeader"):
-    common: 'cyclonedds.idl._typesupport.DDS.XTypes.CommonEnumeratedHeader'
-    detail: 'cyclonedds.idl._typesupport.DDS.XTypes.CompleteTypeDetail'
+class MinimalEnumeratedLiteral(
+    idl.IdlStruct, typename="DDS.XTypes.MinimalEnumeratedLiteral"
+):
+    common: "cyclonedds.idl._typesupport.DDS.XTypes.CommonEnumeratedLiteral"
+    detail: "cyclonedds.idl._typesupport.DDS.XTypes.MinimalMemberDetail"
 
 
-@dataclass
-@annotate.appendable
-@annotate.autoid("sequential")
-@annotate.nested
-class MinimalEnumeratedHeader(idl.IdlStruct, typename="DDS.XTypes.MinimalEnumeratedHeader"):
-    common: 'cyclonedds.idl._typesupport.DDS.XTypes.CommonEnumeratedHeader'
+MinimalEnumeratedLiteralSeq = types.typedef[
+    "MinimalEnumeratedLiteralSeq",
+    types.sequence["cyclonedds.idl._typesupport.DDS.XTypes.MinimalEnumeratedLiteral"],
+]
 
 
 @dataclass
 @annotate.final
 @annotate.autoid("sequential")
 @annotate.nested
-class CompleteEnumeratedType(idl.IdlStruct, typename="DDS.XTypes.CompleteEnumeratedType"):
-    enum_flags: 'cyclonedds.idl._typesupport.DDS.XTypes.EnumTypeFlag'
-    header: 'cyclonedds.idl._typesupport.DDS.XTypes.CompleteEnumeratedHeader'
-    literal_seq: 'cyclonedds.idl._typesupport.DDS.XTypes.CompleteEnumeratedLiteralSeq'
+class CommonEnumeratedHeader(
+    idl.IdlStruct, typename="DDS.XTypes.CommonEnumeratedHeader"
+):
+    bit_bound: "cyclonedds.idl._typesupport.DDS.XTypes.BitBound"
+
+
+@dataclass
+@annotate.appendable
+@annotate.autoid("sequential")
+@annotate.nested
+class CompleteEnumeratedHeader(
+    idl.IdlStruct, typename="DDS.XTypes.CompleteEnumeratedHeader"
+):
+    common: "cyclonedds.idl._typesupport.DDS.XTypes.CommonEnumeratedHeader"
+    detail: "cyclonedds.idl._typesupport.DDS.XTypes.CompleteTypeDetail"
+
+
+@dataclass
+@annotate.appendable
+@annotate.autoid("sequential")
+@annotate.nested
+class MinimalEnumeratedHeader(
+    idl.IdlStruct, typename="DDS.XTypes.MinimalEnumeratedHeader"
+):
+    common: "cyclonedds.idl._typesupport.DDS.XTypes.CommonEnumeratedHeader"
+
+
+@dataclass
+@annotate.final
+@annotate.autoid("sequential")
+@annotate.nested
+class CompleteEnumeratedType(
+    idl.IdlStruct, typename="DDS.XTypes.CompleteEnumeratedType"
+):
+    enum_flags: "cyclonedds.idl._typesupport.DDS.XTypes.EnumTypeFlag"
+    header: "cyclonedds.idl._typesupport.DDS.XTypes.CompleteEnumeratedHeader"
+    literal_seq: "cyclonedds.idl._typesupport.DDS.XTypes.CompleteEnumeratedLiteralSeq"
 
 
 @dataclass
@@ -893,9 +1101,9 @@ class CompleteEnumeratedType(idl.IdlStruct, typename="DDS.XTypes.CompleteEnumera
 @annotate.autoid("sequential")
 @annotate.nested
 class MinimalEnumeratedType(idl.IdlStruct, typename="DDS.XTypes.MinimalEnumeratedType"):
-    enum_flags: 'cyclonedds.idl._typesupport.DDS.XTypes.EnumTypeFlag'
-    header: 'cyclonedds.idl._typesupport.DDS.XTypes.MinimalEnumeratedHeader'
-    literal_seq: 'cyclonedds.idl._typesupport.DDS.XTypes.MinimalEnumeratedLiteralSeq'
+    enum_flags: "cyclonedds.idl._typesupport.DDS.XTypes.EnumTypeFlag"
+    header: "cyclonedds.idl._typesupport.DDS.XTypes.MinimalEnumeratedHeader"
+    literal_seq: "cyclonedds.idl._typesupport.DDS.XTypes.MinimalEnumeratedLiteralSeq"
 
 
 @dataclass
@@ -904,7 +1112,7 @@ class MinimalEnumeratedType(idl.IdlStruct, typename="DDS.XTypes.MinimalEnumerate
 @annotate.nested
 class CommonBitflag(idl.IdlStruct, typename="DDS.XTypes.CommonBitflag"):
     position: types.uint16
-    flags: 'cyclonedds.idl._typesupport.DDS.XTypes.BitflagFlag'
+    flags: "cyclonedds.idl._typesupport.DDS.XTypes.BitflagFlag"
 
 
 @dataclass
@@ -912,39 +1120,57 @@ class CommonBitflag(idl.IdlStruct, typename="DDS.XTypes.CommonBitflag"):
 @annotate.autoid("sequential")
 @annotate.nested
 class CompleteBitflag(idl.IdlStruct, typename="DDS.XTypes.CompleteBitflag"):
-    common: 'cyclonedds.idl._typesupport.DDS.XTypes.CommonBitflag'
-    detail: 'cyclonedds.idl._typesupport.DDS.XTypes.CompleteMemberDetail'
+    common: "cyclonedds.idl._typesupport.DDS.XTypes.CommonBitflag"
+    detail: "cyclonedds.idl._typesupport.DDS.XTypes.CompleteMemberDetail"
 
-CompleteBitflagSeq = types.typedef['CompleteBitflagSeq', types.sequence['cyclonedds.idl._typesupport.DDS.XTypes.CompleteBitflag']]
+
+CompleteBitflagSeq = types.typedef[
+    "CompleteBitflagSeq",
+    types.sequence["cyclonedds.idl._typesupport.DDS.XTypes.CompleteBitflag"],
+]
+
 
 @dataclass
 @annotate.appendable
 @annotate.autoid("sequential")
 @annotate.nested
 class MinimalBitflag(idl.IdlStruct, typename="DDS.XTypes.MinimalBitflag"):
-    common: 'cyclonedds.idl._typesupport.DDS.XTypes.CommonBitflag'
-    detail: 'cyclonedds.idl._typesupport.DDS.XTypes.MinimalMemberDetail'
+    common: "cyclonedds.idl._typesupport.DDS.XTypes.CommonBitflag"
+    detail: "cyclonedds.idl._typesupport.DDS.XTypes.MinimalMemberDetail"
 
-MinimalBitflagSeq = types.typedef['MinimalBitflagSeq', types.sequence['cyclonedds.idl._typesupport.DDS.XTypes.MinimalBitflag']]
+
+MinimalBitflagSeq = types.typedef[
+    "MinimalBitflagSeq",
+    types.sequence["cyclonedds.idl._typesupport.DDS.XTypes.MinimalBitflag"],
+]
+
 
 @dataclass
 @annotate.final
 @annotate.autoid("sequential")
 @annotate.nested
 class CommonBitmaskHeader(idl.IdlStruct, typename="DDS.XTypes.CommonBitmaskHeader"):
-    bit_bound: 'cyclonedds.idl._typesupport.DDS.XTypes.BitBound'
+    bit_bound: "cyclonedds.idl._typesupport.DDS.XTypes.BitBound"
 
-CompleteBitmaskHeader = types.typedef['CompleteBitmaskHeader', 'cyclonedds.idl._typesupport.DDS.XTypes.CompleteEnumeratedHeader']
-MinimalBitmaskHeader = types.typedef['MinimalBitmaskHeader', 'cyclonedds.idl._typesupport.DDS.XTypes.MinimalEnumeratedHeader']
+
+CompleteBitmaskHeader = types.typedef[
+    "CompleteBitmaskHeader",
+    "cyclonedds.idl._typesupport.DDS.XTypes.CompleteEnumeratedHeader",
+]
+MinimalBitmaskHeader = types.typedef[
+    "MinimalBitmaskHeader",
+    "cyclonedds.idl._typesupport.DDS.XTypes.MinimalEnumeratedHeader",
+]
+
 
 @dataclass
 @annotate.appendable
 @annotate.autoid("sequential")
 @annotate.nested
 class CompleteBitmaskType(idl.IdlStruct, typename="DDS.XTypes.CompleteBitmaskType"):
-    bitmask_flags: 'cyclonedds.idl._typesupport.DDS.XTypes.BitmaskTypeFlag'
-    header: 'cyclonedds.idl._typesupport.DDS.XTypes.CompleteBitmaskHeader'
-    flag_seq: 'cyclonedds.idl._typesupport.DDS.XTypes.CompleteBitflagSeq'
+    bitmask_flags: "cyclonedds.idl._typesupport.DDS.XTypes.BitmaskTypeFlag"
+    header: "cyclonedds.idl._typesupport.DDS.XTypes.CompleteBitmaskHeader"
+    flag_seq: "cyclonedds.idl._typesupport.DDS.XTypes.CompleteBitflagSeq"
 
 
 @dataclass
@@ -952,9 +1178,9 @@ class CompleteBitmaskType(idl.IdlStruct, typename="DDS.XTypes.CompleteBitmaskTyp
 @annotate.autoid("sequential")
 @annotate.nested
 class MinimalBitmaskType(idl.IdlStruct, typename="DDS.XTypes.MinimalBitmaskType"):
-    bitmask_flags: 'cyclonedds.idl._typesupport.DDS.XTypes.BitmaskTypeFlag'
-    header: 'cyclonedds.idl._typesupport.DDS.XTypes.MinimalBitmaskHeader'
-    flag_seq: 'cyclonedds.idl._typesupport.DDS.XTypes.MinimalBitflagSeq'
+    bitmask_flags: "cyclonedds.idl._typesupport.DDS.XTypes.BitmaskTypeFlag"
+    header: "cyclonedds.idl._typesupport.DDS.XTypes.MinimalBitmaskHeader"
+    flag_seq: "cyclonedds.idl._typesupport.DDS.XTypes.MinimalBitflagSeq"
 
 
 @dataclass
@@ -963,9 +1189,9 @@ class MinimalBitmaskType(idl.IdlStruct, typename="DDS.XTypes.MinimalBitmaskType"
 @annotate.nested
 class CommonBitfield(idl.IdlStruct, typename="DDS.XTypes.CommonBitfield"):
     position: types.uint16
-    flags: 'cyclonedds.idl._typesupport.DDS.XTypes.BitsetMemberFlag'
+    flags: "cyclonedds.idl._typesupport.DDS.XTypes.BitsetMemberFlag"
     bitcount: types.uint8
-    holder_type: 'cyclonedds.idl._typesupport.DDS.XTypes.TypeKind'
+    holder_type: "cyclonedds.idl._typesupport.DDS.XTypes.TypeKind"
 
 
 @dataclass
@@ -973,27 +1199,37 @@ class CommonBitfield(idl.IdlStruct, typename="DDS.XTypes.CommonBitfield"):
 @annotate.autoid("sequential")
 @annotate.nested
 class CompleteBitfield(idl.IdlStruct, typename="DDS.XTypes.CompleteBitfield"):
-    common: 'cyclonedds.idl._typesupport.DDS.XTypes.CommonBitfield'
-    detail: 'cyclonedds.idl._typesupport.DDS.XTypes.CompleteMemberDetail'
+    common: "cyclonedds.idl._typesupport.DDS.XTypes.CommonBitfield"
+    detail: "cyclonedds.idl._typesupport.DDS.XTypes.CompleteMemberDetail"
 
-CompleteBitfieldSeq = types.typedef['CompleteBitfieldSeq', types.sequence['cyclonedds.idl._typesupport.DDS.XTypes.CompleteBitfield']]
+
+CompleteBitfieldSeq = types.typedef[
+    "CompleteBitfieldSeq",
+    types.sequence["cyclonedds.idl._typesupport.DDS.XTypes.CompleteBitfield"],
+]
+
 
 @dataclass
 @annotate.appendable
 @annotate.autoid("sequential")
 @annotate.nested
 class MinimalBitfield(idl.IdlStruct, typename="DDS.XTypes.MinimalBitfield"):
-    common: 'cyclonedds.idl._typesupport.DDS.XTypes.CommonBitfield'
+    common: "cyclonedds.idl._typesupport.DDS.XTypes.CommonBitfield"
     name_hash: types.array[types.uint8, 4]
 
-MinimalBitfieldSeq = types.typedef['MinimalBitfieldSeq', types.sequence['cyclonedds.idl._typesupport.DDS.XTypes.MinimalBitfield']]
+
+MinimalBitfieldSeq = types.typedef[
+    "MinimalBitfieldSeq",
+    types.sequence["cyclonedds.idl._typesupport.DDS.XTypes.MinimalBitfield"],
+]
+
 
 @dataclass
 @annotate.appendable
 @annotate.autoid("sequential")
 @annotate.nested
 class CompleteBitsetHeader(idl.IdlStruct, typename="DDS.XTypes.CompleteBitsetHeader"):
-    detail: 'cyclonedds.idl._typesupport.DDS.XTypes.CompleteTypeDetail'
+    detail: "cyclonedds.idl._typesupport.DDS.XTypes.CompleteTypeDetail"
 
 
 @dataclass
@@ -1009,9 +1245,9 @@ class MinimalBitsetHeader(idl.IdlStruct, typename="DDS.XTypes.MinimalBitsetHeade
 @annotate.autoid("sequential")
 @annotate.nested
 class CompleteBitsetType(idl.IdlStruct, typename="DDS.XTypes.CompleteBitsetType"):
-    bitset_flags: 'cyclonedds.idl._typesupport.DDS.XTypes.BitsetTypeFlag'
-    header: 'cyclonedds.idl._typesupport.DDS.XTypes.CompleteBitsetHeader'
-    field_seq: 'cyclonedds.idl._typesupport.DDS.XTypes.CompleteBitfieldSeq'
+    bitset_flags: "cyclonedds.idl._typesupport.DDS.XTypes.BitsetTypeFlag"
+    header: "cyclonedds.idl._typesupport.DDS.XTypes.CompleteBitsetHeader"
+    field_seq: "cyclonedds.idl._typesupport.DDS.XTypes.CompleteBitfieldSeq"
 
 
 @dataclass
@@ -1019,9 +1255,9 @@ class CompleteBitsetType(idl.IdlStruct, typename="DDS.XTypes.CompleteBitsetType"
 @annotate.autoid("sequential")
 @annotate.nested
 class MinimalBitsetType(idl.IdlStruct, typename="DDS.XTypes.MinimalBitsetType"):
-    bitset_flags: 'cyclonedds.idl._typesupport.DDS.XTypes.BitsetTypeFlag'
-    header: 'cyclonedds.idl._typesupport.DDS.XTypes.MinimalBitsetHeader'
-    field_seq: 'cyclonedds.idl._typesupport.DDS.XTypes.MinimalBitfieldSeq'
+    bitset_flags: "cyclonedds.idl._typesupport.DDS.XTypes.BitsetTypeFlag"
+    header: "cyclonedds.idl._typesupport.DDS.XTypes.MinimalBitsetHeader"
+    field_seq: "cyclonedds.idl._typesupport.DDS.XTypes.MinimalBitfieldSeq"
 
 
 @dataclass
@@ -1032,20 +1268,42 @@ class CompleteExtendedType(idl.IdlStruct, typename="DDS.XTypes.CompleteExtendedT
     pass
 
 
-
 @annotate.final
 @annotate.nested
-class CompleteTypeObject(idl.IdlUnion, discriminator=types.uint8, discriminator_is_key=False, typename="DDS.XTypes.CompleteTypeObject"):
-    alias_type: types.case[[48], 'cyclonedds.idl._typesupport.DDS.XTypes.CompleteAliasType']
-    annotation_type: types.case[[80], 'cyclonedds.idl._typesupport.DDS.XTypes.CompleteAnnotationType']
-    struct_type: types.case[[81], 'cyclonedds.idl._typesupport.DDS.XTypes.CompleteStructType']
-    union_type: types.case[[82], 'cyclonedds.idl._typesupport.DDS.XTypes.CompleteUnionType']
-    bitset_type: types.case[[83], 'cyclonedds.idl._typesupport.DDS.XTypes.CompleteBitsetType']
-    sequence_type: types.case[[96], 'cyclonedds.idl._typesupport.DDS.XTypes.CompleteSequenceType']
-    array_type: types.case[[97], 'cyclonedds.idl._typesupport.DDS.XTypes.CompleteArrayType']
-    map_type: types.case[[98], 'cyclonedds.idl._typesupport.DDS.XTypes.CompleteMapType']
-    enumerated_type: types.case[[64], 'cyclonedds.idl._typesupport.DDS.XTypes.CompleteEnumeratedType']
-    bitmask_type: types.case[[65], 'cyclonedds.idl._typesupport.DDS.XTypes.CompleteBitmaskType']
+class CompleteTypeObject(
+    idl.IdlUnion,
+    discriminator=types.uint8,
+    discriminator_is_key=False,
+    typename="DDS.XTypes.CompleteTypeObject",
+):
+    alias_type: types.case[
+        [48], "cyclonedds.idl._typesupport.DDS.XTypes.CompleteAliasType"
+    ]
+    annotation_type: types.case[
+        [80], "cyclonedds.idl._typesupport.DDS.XTypes.CompleteAnnotationType"
+    ]
+    struct_type: types.case[
+        [81], "cyclonedds.idl._typesupport.DDS.XTypes.CompleteStructType"
+    ]
+    union_type: types.case[
+        [82], "cyclonedds.idl._typesupport.DDS.XTypes.CompleteUnionType"
+    ]
+    bitset_type: types.case[
+        [83], "cyclonedds.idl._typesupport.DDS.XTypes.CompleteBitsetType"
+    ]
+    sequence_type: types.case[
+        [96], "cyclonedds.idl._typesupport.DDS.XTypes.CompleteSequenceType"
+    ]
+    array_type: types.case[
+        [97], "cyclonedds.idl._typesupport.DDS.XTypes.CompleteArrayType"
+    ]
+    map_type: types.case[[98], "cyclonedds.idl._typesupport.DDS.XTypes.CompleteMapType"]
+    enumerated_type: types.case[
+        [64], "cyclonedds.idl._typesupport.DDS.XTypes.CompleteEnumeratedType"
+    ]
+    bitmask_type: types.case[
+        [65], "cyclonedds.idl._typesupport.DDS.XTypes.CompleteBitmaskType"
+    ]
 
 
 @dataclass
@@ -1056,82 +1314,153 @@ class MinimalExtendedType(idl.IdlStruct, typename="DDS.XTypes.MinimalExtendedTyp
     pass
 
 
-
 @annotate.final
 @annotate.nested
-class MinimalTypeObject(idl.IdlUnion, discriminator=types.uint8, discriminator_is_key=False, typename="DDS.XTypes.MinimalTypeObject"):
-    alias_type: types.case[[48], 'cyclonedds.idl._typesupport.DDS.XTypes.MinimalAliasType']
-    annotation_type: types.case[[80], 'cyclonedds.idl._typesupport.DDS.XTypes.MinimalAnnotationType']
-    struct_type: types.case[[81], 'cyclonedds.idl._typesupport.DDS.XTypes.MinimalStructType']
-    union_type: types.case[[82], 'cyclonedds.idl._typesupport.DDS.XTypes.MinimalUnionType']
-    bitset_type: types.case[[83], 'cyclonedds.idl._typesupport.DDS.XTypes.MinimalBitsetType']
-    sequence_type: types.case[[96], 'cyclonedds.idl._typesupport.DDS.XTypes.MinimalSequenceType']
-    array_type: types.case[[97], 'cyclonedds.idl._typesupport.DDS.XTypes.MinimalArrayType']
-    map_type: types.case[[98], 'cyclonedds.idl._typesupport.DDS.XTypes.MinimalMapType']
-    enumerated_type: types.case[[64], 'cyclonedds.idl._typesupport.DDS.XTypes.MinimalEnumeratedType']
-    bitmask_type: types.case[[65], 'cyclonedds.idl._typesupport.DDS.XTypes.MinimalBitmaskType']
-
+class MinimalTypeObject(
+    idl.IdlUnion,
+    discriminator=types.uint8,
+    discriminator_is_key=False,
+    typename="DDS.XTypes.MinimalTypeObject",
+):
+    alias_type: types.case[
+        [48], "cyclonedds.idl._typesupport.DDS.XTypes.MinimalAliasType"
+    ]
+    annotation_type: types.case[
+        [80], "cyclonedds.idl._typesupport.DDS.XTypes.MinimalAnnotationType"
+    ]
+    struct_type: types.case[
+        [81], "cyclonedds.idl._typesupport.DDS.XTypes.MinimalStructType"
+    ]
+    union_type: types.case[
+        [82], "cyclonedds.idl._typesupport.DDS.XTypes.MinimalUnionType"
+    ]
+    bitset_type: types.case[
+        [83], "cyclonedds.idl._typesupport.DDS.XTypes.MinimalBitsetType"
+    ]
+    sequence_type: types.case[
+        [96], "cyclonedds.idl._typesupport.DDS.XTypes.MinimalSequenceType"
+    ]
+    array_type: types.case[
+        [97], "cyclonedds.idl._typesupport.DDS.XTypes.MinimalArrayType"
+    ]
+    map_type: types.case[[98], "cyclonedds.idl._typesupport.DDS.XTypes.MinimalMapType"]
+    enumerated_type: types.case[
+        [64], "cyclonedds.idl._typesupport.DDS.XTypes.MinimalEnumeratedType"
+    ]
+    bitmask_type: types.case[
+        [65], "cyclonedds.idl._typesupport.DDS.XTypes.MinimalBitmaskType"
+    ]
 
 
 @annotate.appendable
 @annotate.nested
-class TypeObject(idl.IdlUnion, discriminator=types.uint8, discriminator_is_key=False, typename="DDS.XTypes.TypeObject"):
-    complete: types.case[[242], 'cyclonedds.idl._typesupport.DDS.XTypes.CompleteTypeObject']
-    minimal: types.case[[241], 'cyclonedds.idl._typesupport.DDS.XTypes.MinimalTypeObject']
+class TypeObject(
+    idl.IdlUnion,
+    discriminator=types.uint8,
+    discriminator_is_key=False,
+    typename="DDS.XTypes.TypeObject",
+):
+    complete: types.case[
+        [242], "cyclonedds.idl._typesupport.DDS.XTypes.CompleteTypeObject"
+    ]
+    minimal: types.case[
+        [241], "cyclonedds.idl._typesupport.DDS.XTypes.MinimalTypeObject"
+    ]
 
-TypeObjectSeq = types.typedef['TypeObjectSeq', types.sequence['cyclonedds.idl._typesupport.DDS.XTypes.TypeObject']]
-StronglyConnectedComponent = types.typedef['StronglyConnectedComponent', 'cyclonedds.idl._typesupport.DDS.XTypes.TypeObjectSeq']
+
+TypeObjectSeq = types.typedef[
+    "TypeObjectSeq", types.sequence["cyclonedds.idl._typesupport.DDS.XTypes.TypeObject"]
+]
+StronglyConnectedComponent = types.typedef[
+    "StronglyConnectedComponent", "cyclonedds.idl._typesupport.DDS.XTypes.TypeObjectSeq"
+]
+
 
 @dataclass
 @annotate.final
 @annotate.autoid("sequential")
 @annotate.nested
-class TypeIdentifierTypeObjectPair(idl.IdlStruct, typename="DDS.XTypes.TypeIdentifierTypeObjectPair"):
-    type_identifier: 'cyclonedds.idl._typesupport.DDS.XTypes.TypeIdentifier'
-    type_object: 'cyclonedds.idl._typesupport.DDS.XTypes.TypeObject'
+class TypeIdentifierTypeObjectPair(
+    idl.IdlStruct, typename="DDS.XTypes.TypeIdentifierTypeObjectPair"
+):
+    type_identifier: "cyclonedds.idl._typesupport.DDS.XTypes.TypeIdentifier"
+    type_object: "cyclonedds.idl._typesupport.DDS.XTypes.TypeObject"
 
-TypeIdentifierTypeObjectPairSeq = types.typedef['TypeIdentifierTypeObjectPairSeq', types.sequence['cyclonedds.idl._typesupport.DDS.XTypes.TypeIdentifierTypeObjectPair']]
+
+TypeIdentifierTypeObjectPairSeq = types.typedef[
+    "TypeIdentifierTypeObjectPairSeq",
+    types.sequence[
+        "cyclonedds.idl._typesupport.DDS.XTypes.TypeIdentifierTypeObjectPair"
+    ],
+]
+
 
 @dataclass
 @annotate.final
 @annotate.autoid("sequential")
 @annotate.nested
 class TypeIdentifierPair(idl.IdlStruct, typename="DDS.XTypes.TypeIdentifierPair"):
-    type_identifier1: 'cyclonedds.idl._typesupport.DDS.XTypes.TypeIdentifier'
-    type_identifier2: 'cyclonedds.idl._typesupport.DDS.XTypes.TypeIdentifier'
+    type_identifier1: "cyclonedds.idl._typesupport.DDS.XTypes.TypeIdentifier"
+    type_identifier2: "cyclonedds.idl._typesupport.DDS.XTypes.TypeIdentifier"
 
-TypeIdentifierPairSeq = types.typedef['TypeIdentifierPairSeq', types.sequence['cyclonedds.idl._typesupport.DDS.XTypes.TypeIdentifierPair']]
+
+TypeIdentifierPairSeq = types.typedef[
+    "TypeIdentifierPairSeq",
+    types.sequence["cyclonedds.idl._typesupport.DDS.XTypes.TypeIdentifierPair"],
+]
+
 
 @dataclass
 @annotate.appendable
 @annotate.autoid("sequential")
 @annotate.nested
-class TypeIdentifierWithSize(idl.IdlStruct, typename="DDS.XTypes.TypeIdentifierWithSize"):
-    type_id: 'cyclonedds.idl._typesupport.DDS.XTypes.TypeIdentifier'
+class TypeIdentifierWithSize(
+    idl.IdlStruct, typename="DDS.XTypes.TypeIdentifierWithSize"
+):
+    type_id: "cyclonedds.idl._typesupport.DDS.XTypes.TypeIdentifier"
     typeobject_serialized_size: types.uint32
 
-TypeIdentfierWithSizeSeq = types.typedef['TypeIdentfierWithSizeSeq', types.sequence['cyclonedds.idl._typesupport.DDS.XTypes.TypeIdentifierWithSize']]
+
+TypeIdentfierWithSizeSeq = types.typedef[
+    "TypeIdentfierWithSizeSeq",
+    types.sequence["cyclonedds.idl._typesupport.DDS.XTypes.TypeIdentifierWithSize"],
+]
+
 
 @dataclass
 @annotate.appendable
 @annotate.autoid("sequential")
 @annotate.nested
-class TypeIdentifierWithDependencies(idl.IdlStruct, typename="DDS.XTypes.TypeIdentifierWithDependencies"):
-    typeid_with_size: 'cyclonedds.idl._typesupport.DDS.XTypes.TypeIdentifierWithSize'
+class TypeIdentifierWithDependencies(
+    idl.IdlStruct, typename="DDS.XTypes.TypeIdentifierWithDependencies"
+):
+    typeid_with_size: "cyclonedds.idl._typesupport.DDS.XTypes.TypeIdentifierWithSize"
     dependent_typeid_count: types.int32
-    dependent_typeids: types.sequence['cyclonedds.idl._typesupport.DDS.XTypes.TypeIdentifierWithSize']
+    dependent_typeids: types.sequence[
+        "cyclonedds.idl._typesupport.DDS.XTypes.TypeIdentifierWithSize"
+    ]
 
-TypeIdentifierWithDependenciesSeq = types.typedef['TypeIdentifierWithDependenciesSeq', types.sequence['cyclonedds.idl._typesupport.DDS.XTypes.TypeIdentifierWithDependencies']]
+
+TypeIdentifierWithDependenciesSeq = types.typedef[
+    "TypeIdentifierWithDependenciesSeq",
+    types.sequence[
+        "cyclonedds.idl._typesupport.DDS.XTypes.TypeIdentifierWithDependencies"
+    ],
+]
+
 
 @dataclass
 @annotate.mutable
 @annotate.autoid("sequential")
 @annotate.nested
 class TypeInformation(idl.IdlStruct, typename="DDS.XTypes.TypeInformation"):
-    minimal: 'cyclonedds.idl._typesupport.DDS.XTypes.TypeIdentifierWithDependencies'
-    annotate.member_id('minimal', 4097)
-    complete: 'cyclonedds.idl._typesupport.DDS.XTypes.TypeIdentifierWithDependencies'
-    annotate.member_id('complete', 4098)
+    minimal: "cyclonedds.idl._typesupport.DDS.XTypes.TypeIdentifierWithDependencies"
+    annotate.member_id("minimal", 4097)
+    complete: "cyclonedds.idl._typesupport.DDS.XTypes.TypeIdentifierWithDependencies"
+    annotate.member_id("complete", 4098)
 
-TypeInformationSeq = types.typedef['TypeInformationSeq', types.sequence['cyclonedds.idl._typesupport.DDS.XTypes.TypeInformation']]
 
+TypeInformationSeq = types.typedef[
+    "TypeInformationSeq",
+    types.sequence["cyclonedds.idl._typesupport.DDS.XTypes.TypeInformation"],
+]

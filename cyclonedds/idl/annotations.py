@@ -19,10 +19,12 @@ class AnnotationException(Exception):
     pass
 
 
-T = TypeVar('T', bound=Union[Type[IdlStruct], Type[IdlUnion], Type[IdlBitmask], Type[IdlEnum]])
-TIS = TypeVar('TIS', bound=Type[IdlStruct])
-TIB = TypeVar('TIB', bound=Type[IdlBitmask])
-TIBE = TypeVar('TIBE', Type[IdlEnum], Type[IdlBitmask])
+T = TypeVar(
+    "T", bound=Union[Type[IdlStruct], Type[IdlUnion], Type[IdlBitmask], Type[IdlEnum]]
+)
+TIS = TypeVar("TIS", bound=Type[IdlStruct])
+TIB = TypeVar("TIB", bound=Type[IdlBitmask])
+TIBE = TypeVar("TIBE", Type[IdlEnum], Type[IdlBitmask])
 
 
 def __annotate(cls: T, annotation: str, value: Any) -> None:
@@ -45,6 +47,7 @@ def __field_annotate(pfield: str, annotation: str, value: Any) -> None:
 def default_literal(value: Any) -> Callable[[Any], None]:
     def apply_default_literal(apply_to: Any) -> None:
         __field_annotate(apply_to, "default_literal", value)
+
     return apply_default_literal
 
 
@@ -100,7 +103,9 @@ def autoid(autoid_type: str) -> Callable[[T], T]:
 
 def extensibility(extensibility_type: str) -> Callable[[T], T]:
     if extensibility_type not in ["final", "mutable", "appendable"]:
-        raise AnnotationException("Extensibility is either 'final', 'appendable' or 'mutable'.")
+        raise AnnotationException(
+            "Extensibility is either 'final', 'appendable' or 'mutable'."
+        )
 
     def extensibility_inner(cls: T) -> T:
         __annotate(cls, "extensibility", extensibility_type)
@@ -131,20 +136,40 @@ def keylist(list_of_keys: List[str]) -> Callable[[TIS], TIS]:
 
 def bit_bound(amount: int) -> Callable[[TIBE], TIBE]:
     if amount <= 0 or amount > 64:
-        raise AnnotationException(f"{amount} is not a valid bit_bound, must be between 1 and 64 inclusive.")
+        raise AnnotationException(
+            f"{amount} is not a valid bit_bound, must be between 1 and 64 inclusive."
+        )
 
     def bit_bound_inner(cls: TIBE) -> TIBE:
         __annotate(cls, "bit_bound", amount)
 
-        if hasattr(cls, "__idl_highest_position__") and amount <= cls.__idl_highest_position__:
-            raise AnnotationException(f"Position {cls.__idl_highest_position__} is outside of the bit boundary [0, {amount}).")
+        if (
+            hasattr(cls, "__idl_highest_position__")
+            and amount <= cls.__idl_highest_position__
+        ):
+            raise AnnotationException(
+                f"Position {cls.__idl_highest_position__} is outside of the bit boundary [0, {amount})."
+            )
         return cls
 
     return bit_bound_inner
 
 
 __all__ = [
-    "default_literal", "key", "position", "member_id", "member_hash_id", "xcdrv2", "cdrv0",
-    "nested", "must_understand", "autoid", "extensibility", "final", "appendable", "mutable",
-    "keylist", "bit_bound"
+    "default_literal",
+    "key",
+    "position",
+    "member_id",
+    "member_hash_id",
+    "xcdrv2",
+    "cdrv0",
+    "nested",
+    "must_understand",
+    "autoid",
+    "extensibility",
+    "final",
+    "appendable",
+    "mutable",
+    "keylist",
+    "bit_bound",
 ]

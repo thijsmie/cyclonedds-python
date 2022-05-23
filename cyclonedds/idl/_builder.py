@@ -16,14 +16,51 @@ from typing import Tuple, Type, Union
 
 from . import IdlStruct, IdlUnion, IdlBitmask
 from ._type_helper import get_origin, get_args
-from ._type_normalize import get_idl_annotations, get_idl_field_annotations, get_extended_type_hints, WrapOpt
-from ._machinery import Machine, NoneMachine, PrimitiveMachine, StringMachine, BytesMachine, ByteArrayMachine, UnionMachine, \
-    ArrayMachine, SequenceMachine, InstanceMachine, MappingMachine, EnumMachine, StructMachine, OptionalMachine, CharMachine, \
-    PLCdrMutableStructMachine, DelimitedCdrAppendableStructMachine, MutableMember, DelimitedCdrAppendableUnionMachine, \
-    PlainCdrV2ArrayOfPrimitiveMachine, PlainCdrV2SequenceOfPrimitiveMachine, LenType, BitMaskMachine, BitBoundEnumMachine
+from ._type_normalize import (
+    get_idl_annotations,
+    get_idl_field_annotations,
+    get_extended_type_hints,
+    WrapOpt,
+)
+from ._machinery import (
+    Machine,
+    NoneMachine,
+    PrimitiveMachine,
+    StringMachine,
+    BytesMachine,
+    ByteArrayMachine,
+    UnionMachine,
+    ArrayMachine,
+    SequenceMachine,
+    InstanceMachine,
+    MappingMachine,
+    EnumMachine,
+    StructMachine,
+    OptionalMachine,
+    CharMachine,
+    PLCdrMutableStructMachine,
+    DelimitedCdrAppendableStructMachine,
+    MutableMember,
+    DelimitedCdrAppendableUnionMachine,
+    PlainCdrV2ArrayOfPrimitiveMachine,
+    PlainCdrV2SequenceOfPrimitiveMachine,
+    LenType,
+    BitMaskMachine,
+    BitBoundEnumMachine,
+)
 
-from .types import array, bounded_str, sequence, _type_code_align_size_default_mapping, NoneType, char, typedef, uint8, \
-    case, default
+from .types import (
+    array,
+    bounded_str,
+    sequence,
+    _type_code_align_size_default_mapping,
+    NoneType,
+    char,
+    typedef,
+    uint8,
+    case,
+    default,
+)
 
 
 class XCDRSupported(IntFlag):
@@ -39,7 +76,7 @@ class Builder:
         bytes: BytesMachine,
         bytearray: ByteArrayMachine,
         NoneType: NoneMachine,
-        None: NoneMachine
+        None: NoneMachine,
     }
 
     @classmethod
@@ -58,21 +95,23 @@ class Builder:
         elif get_origin(_type) == list:
             return cls._scan_for_support(get_args(_type)[0], done)
         elif get_origin(_type) == dict:
-            return cls._scan_for_support(get_args(_type)[0], done) & cls._scan_for_support(get_args(_type)[1], done)
+            return cls._scan_for_support(
+                get_args(_type)[0], done
+            ) & cls._scan_for_support(get_args(_type)[1], done)
         elif isclass(_type) and issubclass(_type, IdlStruct):
             fields = get_extended_type_hints(_type)
             annotations = get_idl_annotations(_type)
 
             # Explicit setter
-            if 'xcdrv2' in annotations:
-                if annotations['xcdrv2']:
+            if "xcdrv2" in annotations:
+                if annotations["xcdrv2"]:
                     return XCDRSupported.SupportsV2
                 else:
                     return XCDRSupported.SupportsBasic
 
             # Appendable and mutable is definitely V2
-            if 'extensibility' in annotations:
-                if annotations['extensibility'] in ['appendable', 'mutable']:
+            if "extensibility" in annotations:
+                if annotations["extensibility"] in ["appendable", "mutable"]:
                     return XCDRSupported.SupportsV2
 
             # Check for optionals or nested mutable/appendable
@@ -86,15 +125,15 @@ class Builder:
             annotations = get_idl_annotations(_type)
 
             # Explicit setter
-            if 'xcdrv2' in annotations:
-                if annotations['xcdrv2']:
+            if "xcdrv2" in annotations:
+                if annotations["xcdrv2"]:
                     return XCDRSupported.SupportsV2
                 else:
                     return XCDRSupported.SupportsBasic
 
             # Appendable and mutable is definitely V2
-            if 'extensibility' in annotations:
-                if annotations['extensibility'] in ['appendable', 'mutable']:
+            if "extensibility" in annotations:
+                if annotations["extensibility"] in ["appendable", "mutable"]:
                     return XCDRSupported.SupportsV2
 
             # Check for optionals or nested mutable/appendable
@@ -105,7 +144,6 @@ class Builder:
             return support
         return XCDRSupported.SupportsBoth
 
-
     @classmethod
     def _machine_for_type(cls, _type, add_size_header, use_version_2):
         if _type in cls.easy_types:
@@ -113,29 +151,43 @@ class Builder:
         elif _type in _type_code_align_size_default_mapping:
             return PrimitiveMachine(_type)
         elif isinstance(_type, WrapOpt):
-            return OptionalMachine(cls._machine_for_type(_type.inner, add_size_header, use_version_2))
+            return OptionalMachine(
+                cls._machine_for_type(_type.inner, add_size_header, use_version_2)
+            )
         elif isclass(_type) and issubclass(_type, Enum):
             if "bit_bound" in get_idl_annotations(_type) and use_version_2:
-                return BitBoundEnumMachine(_type, get_idl_annotations(_type)["bit_bound"])
+                return BitBoundEnumMachine(
+                    _type, get_idl_annotations(_type)["bit_bound"]
+                )
             return EnumMachine(_type)
-        elif isclass(_type) and (issubclass(_type, IdlStruct) or issubclass(_type, IdlUnion)):
+        elif isclass(_type) and (
+            issubclass(_type, IdlStruct) or issubclass(_type, IdlUnion)
+        ):
             return InstanceMachine(_type, use_version_2)
         elif isclass(_type) and (issubclass(_type, IdlBitmask)):
             return BitMaskMachine(_type, get_idl_annotations(_type)["bit_bound"])
         elif get_origin(_type) == list:
             return SequenceMachine(
-                cls._machine_for_type(get_args(_type)[0], add_size_header, use_version_2),
-                add_size_header=add_size_header
+                cls._machine_for_type(
+                    get_args(_type)[0], add_size_header, use_version_2
+                ),
+                add_size_header=add_size_header,
             )
         elif get_origin(_type) == dict:
             return MappingMachine(
-                cls._machine_for_type(get_args(_type)[0], add_size_header, use_version_2),
-                cls._machine_for_type(get_args(_type)[1], add_size_header, use_version_2)
+                cls._machine_for_type(
+                    get_args(_type)[0], add_size_header, use_version_2
+                ),
+                cls._machine_for_type(
+                    get_args(_type)[1], add_size_header, use_version_2
+                ),
             )
         elif isinstance(_type, typedef):
             return cls._machine_for_type(_type.subtype, add_size_header, use_version_2)
         elif isinstance(_type, array):
-            submachine = cls._machine_for_type(_type.subtype, add_size_header, use_version_2)
+            submachine = cls._machine_for_type(
+                _type.subtype, add_size_header, use_version_2
+            )
 
             if isinstance(submachine, PrimitiveMachine):
                 if submachine.type == uint8:
@@ -148,34 +200,37 @@ class Builder:
                 asubmachine.add_size_header = False
                 asubmachine = asubmachine.submachine
 
-            if isinstance(asubmachine, (ByteArrayMachine, PlainCdrV2ArrayOfPrimitiveMachine, CharMachine)):
+            if isinstance(
+                asubmachine,
+                (ByteArrayMachine, PlainCdrV2ArrayOfPrimitiveMachine, CharMachine),
+            ):
                 add_size_header = False
 
             return ArrayMachine(
-                submachine,
-                size=_type.length,
-                add_size_header=add_size_header
+                submachine, size=_type.length, add_size_header=add_size_header
             )
         elif isinstance(_type, sequence):
-            submachine = cls._machine_for_type(_type.subtype, add_size_header, use_version_2)
+            submachine = cls._machine_for_type(
+                _type.subtype, add_size_header, use_version_2
+            )
 
             if isinstance(submachine, PrimitiveMachine):
-                return PlainCdrV2SequenceOfPrimitiveMachine(submachine.type, max_length=_type.max_length)
+                return PlainCdrV2SequenceOfPrimitiveMachine(
+                    submachine.type, max_length=_type.max_length
+                )
 
             if isinstance(submachine, (CharMachine)):
                 add_size_header = False
 
             return SequenceMachine(
-                submachine,
-                maxlen=_type.max_length,
-                add_size_header=add_size_header
+                submachine, maxlen=_type.max_length, add_size_header=add_size_header
             )
         elif isinstance(_type, bounded_str):
-            return StringMachine(
-                bound=_type.max_length
-            )
+            return StringMachine(bound=_type.max_length)
 
-        raise TypeError(f"{_type} is not valid in IDL classes because it cannot be encoded.")
+        raise TypeError(
+            f"{_type} is not valid in IDL classes because it cannot be encoded."
+        )
 
     @classmethod
     def _machine_struct(cls, struct: Type[IdlStruct]) -> Tuple[Machine, bool]:
@@ -228,7 +283,7 @@ class Builder:
                             1: LenType.OneByte,
                             2: LenType.TwoByte,
                             4: LenType.FourByte,
-                            8: LenType.EightByte
+                            8: LenType.EightByte,
                         }[machine.size]
                     elif isinstance(machine, PlainCdrV2SequenceOfPrimitiveMachine):
                         if machine.size == 1:
@@ -244,15 +299,19 @@ class Builder:
                     else:
                         lentype = LenType.NextIntLen
 
-                    mutablemembers.append(MutableMember(
-                        name=name,
-                        key=not keylist or name in keylist,
-                        optional=optional,
-                        lentype=lentype,
-                        must_understand=field_annotations.get(name, {}).get("must_understand", False),
-                        memberid=struct.__idl__.get_member_id(name),
-                        machine=machine
-                    ))
+                    mutablemembers.append(
+                        MutableMember(
+                            name=name,
+                            key=not keylist or name in keylist,
+                            optional=optional,
+                            lentype=lentype,
+                            must_understand=field_annotations.get(name, {}).get(
+                                "must_understand", False
+                            ),
+                            memberid=struct.__idl__.get_member_id(name),
+                            machine=machine,
+                        )
+                    )
 
                 v2_machine = PLCdrMutableStructMachine(struct, mutablemembers)
         else:
@@ -286,8 +345,12 @@ class Builder:
                 v0_cases[label] = v0_machine
                 v2_cases[label] = v2_machine
 
-        v0_discriminator = cls._machine_for_type(union.__idl_discriminator__, False, False)
-        v2_discriminator = cls._machine_for_type(union.__idl_discriminator__, True, True)
+        v0_discriminator = cls._machine_for_type(
+            union.__idl_discriminator__, False, False
+        )
+        v2_discriminator = cls._machine_for_type(
+            union.__idl_discriminator__, True, True
+        )
 
         v0_machine = UnionMachine(union, v0_discriminator, v0_cases, v0_default)
 
@@ -295,7 +358,9 @@ class Builder:
             v2_machine = UnionMachine(union, v2_discriminator, v2_cases, v2_default)
 
         elif extensibility == "appendable":
-            v2_machine = DelimitedCdrAppendableUnionMachine(union, v2_discriminator, v2_cases, v2_default)
+            v2_machine = DelimitedCdrAppendableUnionMachine(
+                union, v2_discriminator, v2_cases, v2_default
+            )
         else:
             # mutable
             raise NotImplementedError()

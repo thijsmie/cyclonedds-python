@@ -29,16 +29,27 @@ def isgoodentity(v: object) -> bool:
     bool
         Whether this entity is a valid :class:`Entity<cdds.core.entity.Entity>`.
     """
-    return \
-        v is not None and \
-        isinstance(v, Entity) and \
-        hasattr(v, "_ref") and \
-        type(v._ref) == int and \
-        v._ref > 0
+    return (
+        v is not None
+        and isinstance(v, Entity)
+        and hasattr(v, "_ref")
+        and type(v._ref) == int
+        and v._ref > 0
+    )
 
 
-def duration(*, weeks: float = 0, days: float = 0, hours: float = 0, minutes: float = 0, seconds: float = 0,
-             milliseconds: float = 0, microseconds: float = 0, nanoseconds: int = 0, infinite: bool = False) -> int:
+def duration(
+    *,
+    weeks: float = 0,
+    days: float = 0,
+    hours: float = 0,
+    minutes: float = 0,
+    seconds: float = 0,
+    milliseconds: float = 0,
+    microseconds: float = 0,
+    nanoseconds: int = 0,
+    infinite: bool = False
+) -> int:
     """Durations are always expressed in nanoseconds in DDS (dds_duration_t). This helper function lets
     you write time in a human readable format.
 

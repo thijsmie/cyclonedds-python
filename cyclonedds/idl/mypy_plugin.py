@@ -48,11 +48,19 @@ def strip_length_array_type(ctx: AnalyzeTypeContext):
         # ref of type itself
         return AnyType(TypeOfAny.special_form)
 
-    if len(ctx.type.args) != 2 or not isinstance(ctx.type.args[1], RawExpressionType) or \
-            ctx.type.args[1].base_type_name != "builtins.int":
-        ctx.api.fail("cyclonedds.idl.types.array requires two arguments, a subtype and a fixed size.", ctx.context)
+    if (
+        len(ctx.type.args) != 2
+        or not isinstance(ctx.type.args[1], RawExpressionType)
+        or ctx.type.args[1].base_type_name != "builtins.int"
+    ):
+        ctx.api.fail(
+            "cyclonedds.idl.types.array requires two arguments, a subtype and a fixed size.",
+            ctx.context,
+        )
         return AnyType(TypeOfAny.from_error)
-    return ctx.api.named_type('typing.Sequence', [ctx.api.analyze_type(ctx.type.args[0])])
+    return ctx.api.named_type(
+        "typing.Sequence", [ctx.api.analyze_type(ctx.type.args[0])]
+    )
 
 
 def resolve_type_def(ctx: AnalyzeTypeContext):
@@ -61,7 +69,10 @@ def resolve_type_def(ctx: AnalyzeTypeContext):
         return AnyType(TypeOfAny.special_form)
 
     if len(ctx.type.args) != 2:
-        ctx.api.fail("cyclonedds.idl.types.typedef requires a name and one type argument.", ctx.context)
+        ctx.api.fail(
+            "cyclonedds.idl.types.typedef requires a name and one type argument.",
+            ctx.context,
+        )
         return AnyType(TypeOfAny.from_error)
     return ctx.api.analyze_type(ctx.type.args[1])
 
@@ -72,16 +83,27 @@ def strip_length_sequence_type(ctx: AnalyzeTypeContext):
         return AnyType(TypeOfAny.special_form)
 
     if len(ctx.type.args) not in [1, 2]:
-        ctx.api.fail("cyclonedds.idl.types.sequence requires a subtype and an optional max size.", ctx.context)
+        ctx.api.fail(
+            "cyclonedds.idl.types.sequence requires a subtype and an optional max size.",
+            ctx.context,
+        )
         return AnyType(TypeOfAny.from_error)
-    elif len(ctx.type.args) == 2 and not isinstance(ctx.type.args[1], RawExpressionType):
-        ctx.api.fail("cyclonedds.idl.types.sequence max size should be an integer.", ctx.context)
+    elif len(ctx.type.args) == 2 and not isinstance(
+        ctx.type.args[1], RawExpressionType
+    ):
+        ctx.api.fail(
+            "cyclonedds.idl.types.sequence max size should be an integer.", ctx.context
+        )
         return AnyType(TypeOfAny.from_error)
     elif len(ctx.type.args) == 2 and ctx.type.args[1].base_type_name != "builtins.int":
-        ctx.api.fail("cyclonedds.idl.types.sequence max size should be an integer.", ctx.context)
+        ctx.api.fail(
+            "cyclonedds.idl.types.sequence max size should be an integer.", ctx.context
+        )
         return AnyType(TypeOfAny.from_error)
 
-    return ctx.api.named_type('typing.Sequence', [ctx.api.analyze_type(ctx.type.args[0])])
+    return ctx.api.named_type(
+        "typing.Sequence", [ctx.api.analyze_type(ctx.type.args[0])]
+    )
 
 
 def bounded_str_to_str(ctx: AnalyzeTypeContext):
@@ -89,11 +111,17 @@ def bounded_str_to_str(ctx: AnalyzeTypeContext):
         # ref of type itself
         return AnyType(TypeOfAny.special_form)
 
-    if len(ctx.type.args) != 1 or not isinstance(ctx.type.args[0], RawExpressionType) or \
-            ctx.type.args[0].base_type_name != "builtins.int":
-        ctx.api.fail("cyclonedds.idl.types.bound_str requires one argument, a fixed size.", ctx.context)
+    if (
+        len(ctx.type.args) != 1
+        or not isinstance(ctx.type.args[0], RawExpressionType)
+        or ctx.type.args[0].base_type_name != "builtins.int"
+    ):
+        ctx.api.fail(
+            "cyclonedds.idl.types.bound_str requires one argument, a fixed size.",
+            ctx.context,
+        )
         return AnyType(TypeOfAny.from_error)
-    return ctx.api.named_type('builtins.str', [])
+    return ctx.api.named_type("builtins.str", [])
 
 
 def union_default_type(ctx: AnalyzeTypeContext):
@@ -102,7 +130,9 @@ def union_default_type(ctx: AnalyzeTypeContext):
         return AnyType(TypeOfAny.special_form)
 
     if len(ctx.type.args) != 1:
-        ctx.api.fail("cyclonedds.idl.types.default requires one argument, a type.", ctx.context)
+        ctx.api.fail(
+            "cyclonedds.idl.types.default requires one argument, a type.", ctx.context
+        )
         return AnyType(TypeOfAny.from_error)
     return make_optional_type(ctx.api.analyze_type(ctx.type.args[0]))
 
@@ -113,6 +143,9 @@ def union_case_type(ctx: AnalyzeTypeContext):
         return AnyType(TypeOfAny.special_form)
 
     if len(ctx.type.args) != 2:
-        ctx.api.fail("cyclonedds.idl.types.case requires two arguments, a discriminator label and a type.", ctx.context)
+        ctx.api.fail(
+            "cyclonedds.idl.types.case requires two arguments, a discriminator label and a type.",
+            ctx.context,
+        )
         return AnyType(TypeOfAny.from_error)
     return make_optional_type(ctx.api.analyze_type(ctx.type.args[1]))

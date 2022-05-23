@@ -26,7 +26,7 @@ class QosParser:
     policies = {k.lower(): v for k, v in Qos._policy_mapper.items()}
 
     def __init__(self, data: List[str]) -> None:
-        self.pos = 0      # parser position in data
+        self.pos = 0  # parser position in data
         self.data = data  # data to parse
 
     @staticmethod
@@ -88,7 +88,7 @@ class QosParser:
             return self.string_list()
         elif _type == bytes:
             return self.binary_data()
-        elif _type == Union['Policy.History.KeepAll', 'Policy.History.KeepLast']:
+        elif _type == Union["Policy.History.KeepAll", "Policy.History.KeepLast"]:
             # This is a special case for DurabilityService which contains a History Policy
             ret = self.parse_policy()
             if ret.__scope__ != "History":
@@ -125,9 +125,12 @@ class QosParser:
         # Integers can represent: a duration or an amount
         data = self.pop().lower()
 
-        if '=' in data:
+        if "=" in data:
             # Allow writing durations like "seconds=10;minutes=12"
-            duration_expression = {k: float(v) for k, v in dict(value.split("=") for value in data.split(';')).items()}
+            duration_expression = {
+                k: float(v)
+                for k, v in dict(value.split("=") for value in data.split(";")).items()
+            }
             data = duration(**duration_expression)
         elif data in ["infinity", "inf"]:
             data = dds_infinity

@@ -42,13 +42,21 @@ class QosPerEntity:
         if entity == "topic":
             self.topic_qos = self.check_entity_qos("topic", EntityQosMapper.topic, qos)
         elif entity == "publisher":
-            self.publisher_qos = self.check_entity_qos("publisher", EntityQosMapper.pubsub, qos)
+            self.publisher_qos = self.check_entity_qos(
+                "publisher", EntityQosMapper.pubsub, qos
+            )
         elif entity == "subscriber":
-            self.subscriber_qos = self.check_entity_qos("subscriber", EntityQosMapper.pubsub, qos)
+            self.subscriber_qos = self.check_entity_qos(
+                "subscriber", EntityQosMapper.pubsub, qos
+            )
         elif entity == "datawriter":
-            self.datawriter_qos = self.check_entity_qos("datawriter", EntityQosMapper.writer, qos)
+            self.datawriter_qos = self.check_entity_qos(
+                "datawriter", EntityQosMapper.writer, qos
+            )
         elif entity == "datareader":
-            self.datareader_qos = self.check_entity_qos("datareader", EntityQosMapper.reader, qos)
+            self.datareader_qos = self.check_entity_qos(
+                "datareader", EntityQosMapper.reader, qos
+            )
         else:  # qos-all
             for e in ["topic", "publisher", "subscriber", "datawriter", "datareader"]:
                 self.entity_qos(qos, e)
@@ -61,5 +69,8 @@ class QosPerEntity:
             if policy_scope in eqos_mapper:
                 eq.append(q)
             elif self.entity != "all" and self.entity is not None:
-                warnings.warn(f"The {q} is not applicable for {entity}, will be ignored.", InapplicableQosWarning)
+                warnings.warn(
+                    f"The {q} is not applicable for {entity}, will be ignored.",
+                    InapplicableQosWarning,
+                )
         return Qos(*eq)

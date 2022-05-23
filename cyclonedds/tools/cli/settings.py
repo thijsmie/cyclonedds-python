@@ -27,6 +27,4 @@ click.rich_click.COMMAND_GROUPS = {
     ]
 }
 
-CONTEXT_SETTINGS = dict(
-    help_option_names=['-h', '--help']
-)
+CONTEXT_SETTINGS = dict(help_option_names=["-h", "--help"])

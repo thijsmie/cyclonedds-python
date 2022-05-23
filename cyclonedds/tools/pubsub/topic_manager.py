@@ -13,15 +13,35 @@
 import warnings
 from dataclasses import dataclass
 
-from .datastruct import datatypes, Integer, String, IntArray, StrArray, IntSequence, StrSequence
+from .datastruct import (
+    datatypes,
+    Integer,
+    String,
+    IntArray,
+    StrArray,
+    IntSequence,
+    StrSequence,
+)
 from .check_entity_qos import warning_msg
 
 from cyclonedds.pub import Publisher, DataWriter
 from cyclonedds.sub import Subscriber, DataReader
-from cyclonedds.builtin import BuiltinTopicDcpsPublication, BuiltinTopicDcpsSubscription, BuiltinDataReader
+from cyclonedds.builtin import (
+    BuiltinTopicDcpsPublication,
+    BuiltinTopicDcpsSubscription,
+    BuiltinDataReader,
+)
 from cyclonedds.topic import Topic
 from cyclonedds.dynamic import get_types_for_typeid
-from cyclonedds.core import Listener, DDSException, ReadCondition, ViewState, InstanceState, SampleState, WaitSet
+from cyclonedds.core import (
+    Listener,
+    DDSException,
+    ReadCondition,
+    ViewState,
+    InstanceState,
+    SampleState,
+    WaitSet,
+)
 from cyclonedds.util import duration
 
 
@@ -57,7 +77,7 @@ class QosListener(Listener):
         warnings.warn(
             "The Qos requested for subscription is incompatible with the Qos offered by publication. "
             "PubSub may not be available.",
-            IncompatibleQosWarning
+            IncompatibleQosWarning,
         )
 
 
@@ -67,7 +87,7 @@ class TypeEntities:
     writer: DataWriter
 
 
-class TopicManager():
+class TopicManager:
     def __init__(self, args, dp, eqos, waitset):
         self.dp = dp
 
@@ -86,7 +106,9 @@ class TopicManager():
         try:
             self.listener = QosListener()
             self.pub = Publisher(dp, qos=self.eqos.publisher_qos)
-            self.sub = Subscriber(dp, qos=self.eqos.subscriber_qos, listener=self.listener)
+            self.sub = Subscriber(
+                dp, qos=self.eqos.subscriber_qos, listener=self.listener
+            )
 
             if self.dynamic:
                 ds, tmap = discover_datatype(self.dp, self.topic_name)
@@ -95,13 +117,19 @@ class TopicManager():
                 print(f"Discovered datatype dynamically:{ds}")
             else:
                 for type in datatypes:
-                    self.entities[type] = self.create_entities(type, self.topic_name + type.postfix())
+                    self.entities[type] = self.create_entities(
+                        type, self.topic_name + type.postfix()
+                    )
 
         except DDSException:
-            raise Exception("The arguments inputted are considered invalid for cyclonedds.")
+            raise Exception(
+                "The arguments inputted are considered invalid for cyclonedds."
+            )
 
-        self.read_cond = ReadCondition((self.entities[Integer] if not self.dynamic else self.entity).reader,
-                                       ViewState.Any | InstanceState.Alive | SampleState.NotRead)
+        self.read_cond = ReadCondition(
+            (self.entities[Integer] if not self.dynamic else self.entity).reader,
+            ViewState.Any | InstanceState.Alive | SampleState.NotRead,
+        )
         waitset.attach(self.read_cond)
 
     def write(self, text):
@@ -124,7 +152,9 @@ class TopicManager():
             self.entities[Integer].writer.write(Integer(self.seq, text))
         elif type(text) is list:
             for i in text:
-                if not isinstance(i, type(text[0])):  # Check if elements in the list are the same type
+                if not isinstance(
+                    i, type(text[0])
+                ):  # Check if elements in the list are the same type
                     raise Exception(
                         "TypeError: Element type inconsistent, "
                         "input list should be a list of integer or a list of string."
@@ -159,7 +189,7 @@ class TopicManager():
                 if self.file:
                     self.track_samples["sequence " + str(sample.seq)] = {
                         "type": type.postfix(),
-                        "keyval": sample.keyval
+                        "keyval": sample.keyval,
                     }
 
     # Create topic, datawriter and datareader

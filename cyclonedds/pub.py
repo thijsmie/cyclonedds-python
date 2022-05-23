@@ -18,10 +18,22 @@ from .domain import DomainParticipant
 from .topic import Topic
 from .qos import _CQos, Qos, LimitedScopeQos, PublisherQos, DataWriterQos
 
-from cyclonedds._clayer import ddspy_write, ddspy_write_ts, ddspy_dispose, ddspy_writedispose, ddspy_writedispose_ts, \
-    ddspy_dispose_handle, ddspy_dispose_handle_ts, ddspy_register_instance, ddspy_unregister_instance,   \
-    ddspy_unregister_instance_handle, ddspy_unregister_instance_ts, ddspy_unregister_instance_handle_ts, \
-    ddspy_lookup_instance, ddspy_dispose_ts
+from cyclonedds._clayer import (
+    ddspy_write,
+    ddspy_write_ts,
+    ddspy_dispose,
+    ddspy_writedispose,
+    ddspy_writedispose_ts,
+    ddspy_dispose_handle,
+    ddspy_dispose_handle_ts,
+    ddspy_register_instance,
+    ddspy_unregister_instance,
+    ddspy_unregister_instance_handle,
+    ddspy_unregister_instance_ts,
+    ddspy_unregister_instance_handle_ts,
+    ddspy_lookup_instance,
+    ddspy_dispose_ts,
+)
 
 
 if TYPE_CHECKING:
@@ -30,12 +42,15 @@ if TYPE_CHECKING:
 
 class Publisher(Entity):
     def __init__(
-            self,
-            domain_participant: DomainParticipant,
-            qos: Optional[Qos] = None,
-            listener: Optional[Listener] = None):
+        self,
+        domain_participant: DomainParticipant,
+        qos: Optional[Qos] = None,
+        listener: Optional[Listener] = None,
+    ):
         if not isinstance(domain_participant, DomainParticipant):
-            raise TypeError(f"{domain_participant} is not a cyclonedds.domain.DomainParticipant.")
+            raise TypeError(
+                f"{domain_participant} is not a cyclonedds.domain.DomainParticipant."
+            )
 
         if qos is not None:
             if isinstance(qos, LimitedScopeQos) and not isinstance(qos, PublisherQos):
@@ -51,11 +66,9 @@ class Publisher(Entity):
         try:
             super().__init__(
                 self._create_publisher(
-                    domain_participant._ref,
-                    cqos,
-                    listener._ref if listener else None
+                    domain_participant._ref, cqos, listener._ref if listener else None
                 ),
-                listener=listener
+                listener=listener,
             )
         finally:
             if cqos:
@@ -84,8 +97,12 @@ class Publisher(Entity):
         raise DDSException(ret, f"Occurred while waiting for acks from {repr(self)}")
 
     @c_call("dds_create_publisher")
-    def _create_publisher(self, domain_participant: dds_c_t.entity, qos: dds_c_t.qos_p,
-                          listener: dds_c_t.listener_p) -> dds_c_t.entity:
+    def _create_publisher(
+        self,
+        domain_participant: dds_c_t.entity,
+        qos: dds_c_t.qos_p,
+        listener: dds_c_t.listener_p,
+    ) -> dds_c_t.entity:
         pass
 
     @c_call("dds_suspend")
@@ -97,21 +114,28 @@ class Publisher(Entity):
         pass
 
     @c_call("dds_wait_for_acks")
-    def _wait_for_acks(self, publisher: dds_c_t.entity, timeout: dds_c_t.duration) -> dds_c_t.returnv:
+    def _wait_for_acks(
+        self, publisher: dds_c_t.entity, timeout: dds_c_t.duration
+    ) -> dds_c_t.returnv:
         pass
 
 
-_T = TypeVar('_T')
+_T = TypeVar("_T")
+
 
 class DataWriter(Entity, Generic[_T]):
-    def __init__(self,
-                 publisher_or_participant: Union[DomainParticipant, Publisher],
-                 topic: Topic[_T],
-                 qos: Optional[Qos] = None,
-                 listener: Optional[Listener] = None):
+    def __init__(
+        self,
+        publisher_or_participant: Union[DomainParticipant, Publisher],
+        topic: Topic[_T],
+        qos: Optional[Qos] = None,
+        listener: Optional[Listener] = None,
+    ):
         if not isinstance(publisher_or_participant, (DomainParticipant, Publisher)):
-            raise TypeError(f"{publisher_or_participant} is not a cyclonedds.domain.DomainParticipant"
-                            " or cyclonedds.pub.Publisher.")
+            raise TypeError(
+                f"{publisher_or_participant} is not a cyclonedds.domain.DomainParticipant"
+                " or cyclonedds.pub.Publisher."
+            )
 
         if not isinstance(topic, Topic):
             raise TypeError(f"{topic} is not a cyclonedds.topic.Topic.")
@@ -129,9 +153,9 @@ class DataWriter(Entity, Generic[_T]):
                     publisher_or_participant._ref,
                     topic._ref,
                     cqos,
-                    listener._ref if listener else None
+                    listener._ref if listener else None,
                 ),
-                listener=listener
+                listener=listener,
             )
         finally:
             if cqos:
@@ -145,7 +169,10 @@ class DataWriter(Entity, Generic[_T]):
         ret = self._get_qos(self._ref, cqos)
         if ret == 0:
             data_repr_policy = _CQos._get_p_datarepresentation(cqos)
-            if data_repr_policy is None or (data_repr_policy.use_cdrv0_representation and data_repr_policy.use_xcdrv2_representation):
+            if data_repr_policy is None or (
+                data_repr_policy.use_cdrv0_representation
+                and data_repr_policy.use_xcdrv2_representation
+            ):
                 self._use_version_2 = None  # Use whatever is native to the datatype
             elif data_repr_policy.use_xcdrv2_representation:
                 self._use_version_2 = True
@@ -162,7 +189,7 @@ class DataWriter(Entity, Generic[_T]):
             raise TypeError(f"{sample} is not of type {self.data_type}")
 
         ser = sample.serialize(use_version_2=self._use_version_2)
-        ser = ser.ljust((len(ser) + 4 - 1) & ~(4 - 1), b'\0')
+        ser = ser.ljust((len(ser) + 4 - 1) & ~(4 - 1), b"\0")
 
         if timestamp is not None:
             ret = ddspy_write_ts(self._ref, ser, timestamp)
@@ -174,7 +201,7 @@ class DataWriter(Entity, Generic[_T]):
 
     def write_dispose(self, sample: _T, timestamp: Optional[int] = None):
         ser = sample.serialize(use_version_2=self._use_version_2)
-        ser = ser.ljust((len(ser) + 4 - 1) & ~(4 - 1), b'\0')
+        ser = ser.ljust((len(ser) + 4 - 1) & ~(4 - 1), b"\0")
 
         if timestamp is not None:
             ret = ddspy_writedispose_ts(self._ref, ser, timestamp)
@@ -182,11 +209,13 @@ class DataWriter(Entity, Generic[_T]):
             ret = ddspy_writedispose(self._ref, ser)
 
         if ret < 0:
-            raise DDSException(ret, f"Occurred while writedisposing sample in {repr(self)}")
+            raise DDSException(
+                ret, f"Occurred while writedisposing sample in {repr(self)}"
+            )
 
     def dispose(self, sample: _T, timestamp: Optional[int] = None):
         ser = sample.serialize(use_version_2=self._use_version_2)
-        ser = ser.ljust((len(ser) + 4 - 1) & ~(4 - 1), b'\0')
+        ser = ser.ljust((len(ser) + 4 - 1) & ~(4 - 1), b"\0")
 
         if timestamp is not None:
             ret = ddspy_dispose_ts(self._ref, ser, timestamp)
@@ -207,16 +236,18 @@ class DataWriter(Entity, Generic[_T]):
 
     def register_instance(self, sample: _T) -> int:
         ser = sample.serialize(use_version_2=self._use_version_2)
-        ser = ser.ljust((len(ser) + 4 - 1) & ~(4 - 1), b'\0')
+        ser = ser.ljust((len(ser) + 4 - 1) & ~(4 - 1), b"\0")
 
         ret = ddspy_register_instance(self._ref, ser)
         if ret < 0:
-            raise DDSException(ret, f"Occurred while registering instance in {repr(self)}")
+            raise DDSException(
+                ret, f"Occurred while registering instance in {repr(self)}"
+            )
         return ret
 
     def unregister_instance(self, sample: _T, timestamp: Optional[int] = None):
         ser = sample.serialize(use_version_2=self._use_version_2)
-        ser = ser.ljust((len(ser) + 4 - 1) & ~(4 - 1), b'\0')
+        ser = ser.ljust((len(ser) + 4 - 1) & ~(4 - 1), b"\0")
 
         if timestamp is not None:
             ret = ddspy_unregister_instance_ts(self._ref, ser, timestamp)
@@ -224,7 +255,9 @@ class DataWriter(Entity, Generic[_T]):
             ret = ddspy_unregister_instance(self._ref, ser)
 
         if ret < 0:
-            raise DDSException(ret, f"Occurred while unregistering instance in {repr(self)}")
+            raise DDSException(
+                ret, f"Occurred while unregistering instance in {repr(self)}"
+            )
 
     def unregister_instance_handle(self, handle: int, timestamp: Optional[int] = None):
         if timestamp is not None:
@@ -233,7 +266,9 @@ class DataWriter(Entity, Generic[_T]):
             ret = ddspy_unregister_instance_handle(self._ref, handle)
 
         if ret < 0:
-            raise DDSException(ret, f"Occurred while unregistering instance handle n {repr(self)}")
+            raise DDSException(
+                ret, f"Occurred while unregistering instance handle n {repr(self)}"
+            )
 
     def wait_for_acks(self, timeout: int) -> bool:
         ret = self._wait_for_acks(self._ref, timeout)
@@ -245,20 +280,29 @@ class DataWriter(Entity, Generic[_T]):
 
     def lookup_instance(self, sample: _T) -> Optional[int]:
         ser = sample.serialize(use_version_2=self._use_version_2)
-        ser = ser.ljust((len(ser) + 4 - 1) & ~(4 - 1), b'\0')
+        ser = ser.ljust((len(ser) + 4 - 1) & ~(4 - 1), b"\0")
 
         ret = ddspy_lookup_instance(self._ref, ser)
         if ret < 0:
-            raise DDSException(ret, f"Occurred while lookup up instance from {repr(self)}")
+            raise DDSException(
+                ret, f"Occurred while lookup up instance from {repr(self)}"
+            )
         if ret == 0:
             return None
         return ret
 
     @c_call("dds_create_writer")
-    def _create_writer(self, publisher: dds_c_t.entity, topic: dds_c_t.entity, qos: dds_c_t.qos_p,
-                       listener: dds_c_t.listener_p) -> dds_c_t.entity:
+    def _create_writer(
+        self,
+        publisher: dds_c_t.entity,
+        topic: dds_c_t.entity,
+        qos: dds_c_t.qos_p,
+        listener: dds_c_t.listener_p,
+    ) -> dds_c_t.entity:
         pass
 
     @c_call("dds_wait_for_acks")
-    def _wait_for_acks(self, publisher: dds_c_t.entity, timeout: dds_c_t.duration) -> dds_c_t.returnv:
+    def _wait_for_acks(
+        self, publisher: dds_c_t.entity, timeout: dds_c_t.duration
+    ) -> dds_c_t.returnv:
         pass

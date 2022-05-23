@@ -22,8 +22,12 @@ import cyclonedds.idl._typesupport.DDS
 @annotate.final
 @annotate.autoid("sequential")
 class TypeMapping(idl.IdlStruct, typename="DDS.XTypes.TypeMapping"):
-    identifier_object_pair_minimal: types.sequence['cyclonedds.idl._typesupport.DDS.XTypes.TypeIdentifierTypeObjectPair']
-    identifier_object_pair_complete: types.sequence['cyclonedds.idl._typesupport.DDS.XTypes.TypeIdentifierTypeObjectPair']
-    identifier_complete_minimal: types.sequence['cyclonedds.idl._typesupport.DDS.XTypes.TypeIdentifierPair']
-
-
+    identifier_object_pair_minimal: types.sequence[
+        "cyclonedds.idl._typesupport.DDS.XTypes.TypeIdentifierTypeObjectPair"
+    ]
+    identifier_object_pair_complete: types.sequence[
+        "cyclonedds.idl._typesupport.DDS.XTypes.TypeIdentifierTypeObjectPair"
+    ]
+    identifier_complete_minimal: types.sequence[
+        "cyclonedds.idl._typesupport.DDS.XTypes.TypeIdentifierPair"
+    ]

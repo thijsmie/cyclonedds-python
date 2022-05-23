@@ -27,16 +27,18 @@ if TYPE_CHECKING:
 
 _S = TypeVar("_S", bound=Union[IdlStruct, IdlUnion])
 
+
 class Topic(Entity, Generic[_S]):
     """Representing a Topic"""
 
     def __init__(
-            self,
-            domain_participant: 'cyclonedds.domain.DomainParticipant',
-            topic_name: AnyStr,
-            data_type: Type[_S],
-            qos: Optional[Qos] = None,
-            listener: Optional[Listener] = None):
+        self,
+        domain_participant: "cyclonedds.domain.DomainParticipant",
+        topic_name: AnyStr,
+        data_type: Type[_S],
+        qos: Optional[Qos] = None,
+        listener: Optional[Listener] = None,
+    ):
         if qos is not None:
             if isinstance(qos, LimitedScopeQos) and not isinstance(qos, TopicQos):
                 raise TypeError(f"{qos} is not appropriate for a Topic")
@@ -62,9 +64,9 @@ class Topic(Entity, Generic[_S]):
                     topic_name,
                     data_type,
                     cqos,
-                    listener._ref if listener else None
+                    listener._ref if listener else None,
                 ),
-                listener=listener
+                listener=listener,
             )
         finally:
             if cqos:
@@ -77,8 +79,10 @@ class Topic(Entity, Generic[_S]):
         name_pt = ct.cast(name, ct.c_char_p)
         ret = self._get_name(self._ref, name_pt, max_size)
         if ret < 0:
-            raise DDSException(ret, f"Occurred while fetching a topic name for {repr(self)}")
-        return bytes(name).split(b'\0', 1)[0].decode("ASCII")
+            raise DDSException(
+                ret, f"Occurred while fetching a topic name for {repr(self)}"
+            )
+        return bytes(name).split(b"\0", 1)[0].decode("ASCII")
 
     name = property(get_name, doc="Get topic name")
 
@@ -87,15 +91,21 @@ class Topic(Entity, Generic[_S]):
         name_pt = ct.cast(name, ct.c_char_p)
         ret = self._get_type_name(self._ref, name_pt, max_size)
         if ret < 0:
-            raise DDSException(ret, f"Occurred while fetching a topic type name for {repr(self)}")
-        return bytes(name).split(b'\0', 1)[0].decode("ASCII")
+            raise DDSException(
+                ret, f"Occurred while fetching a topic type name for {repr(self)}"
+            )
+        return bytes(name).split(b"\0", 1)[0].decode("ASCII")
 
     typename = property(get_type_name, doc="Get topic type name")
 
     @c_call("dds_get_name")
-    def _get_name(self, topic: dds_c_t.entity, name: ct.c_char_p, size: ct.c_size_t) -> dds_c_t.returnv:
+    def _get_name(
+        self, topic: dds_c_t.entity, name: ct.c_char_p, size: ct.c_size_t
+    ) -> dds_c_t.returnv:
         pass
 
     @c_call("dds_get_type_name")
-    def _get_type_name(self, topic: dds_c_t.entity, name: ct.c_char_p, size: ct.c_size_t) -> dds_c_t.returnv:
+    def _get_type_name(
+        self, topic: dds_c_t.entity, name: ct.c_char_p, size: ct.c_size_t
+    ) -> dds_c_t.returnv:
         pass

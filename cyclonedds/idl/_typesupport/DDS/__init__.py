@@ -6,4 +6,7 @@
 """
 
 from . import XTypes
-__all__ = ["XTypes", ]
+
+__all__ = [
+    "XTypes",
+]

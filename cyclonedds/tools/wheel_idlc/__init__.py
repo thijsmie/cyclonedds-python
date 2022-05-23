@@ -21,13 +21,15 @@ import cyclonedds
 from pathlib import Path
 
 
-libdir = Path(cyclonedds.__file__).resolve().parent / '.libs'
-idlc = (libdir / 'idlc.exe') if platform.system() == "Windows" else (libdir / 'idlc')
+libdir = Path(cyclonedds.__file__).resolve().parent / ".libs"
+idlc = (libdir / "idlc.exe") if platform.system() == "Windows" else (libdir / "idlc")
 
 
 def command():
     if not idlc.exists():
-        print("Python idlc entrypoint active but cyclonedds-python installation does not include idlc executable!")
+        print(
+            "Python idlc entrypoint active but cyclonedds-python installation does not include idlc executable!"
+        )
         sys.exit(1)
 
     environ = os.environ.copy()
@@ -35,10 +37,16 @@ def command():
     from cyclonedds.__library__ import library_path
 
     if platform.system() == "Windows":
-        environ["PATH"] = ";".join([str(library_path.parent)] + environ.get("PATH", "").split(";"))
+        environ["PATH"] = ";".join(
+            [str(library_path.parent)] + environ.get("PATH", "").split(";")
+        )
     elif platform.system() == "Darwin":
-        environ["DYLD_LIBRARY_PATH"] = ":".join([str(library_path.parent)] + environ.get("DYLD_LIBRARY_PATH", "").split(":"))
+        environ["DYLD_LIBRARY_PATH"] = ":".join(
+            [str(library_path.parent)] + environ.get("DYLD_LIBRARY_PATH", "").split(":")
+        )
     else:
-        environ["LD_LIBRARY_PATH"] = ":".join([str(library_path.parent)] + environ.get("LD_LIBRARY_PATH", "").split(":"))
+        environ["LD_LIBRARY_PATH"] = ":".join(
+            [str(library_path.parent)] + environ.get("LD_LIBRARY_PATH", "").split(":")
+        )
 
     os.execvpe(idlc, sys.argv, environ)

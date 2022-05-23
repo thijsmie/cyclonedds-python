@@ -12,16 +12,40 @@
 
 import asyncio
 import concurrent.futures
-from typing import AsyncGenerator, List, Optional, TypeVar, Union, Generator, Generic, TYPE_CHECKING
+from typing import (
+    AsyncGenerator,
+    List,
+    Optional,
+    TypeVar,
+    Union,
+    Generator,
+    Generic,
+    TYPE_CHECKING,
+)
 
-from .core import Entity, Listener, DDSException, WaitSet, ReadCondition, SampleState, InstanceState, ViewState
+from .core import (
+    Entity,
+    Listener,
+    DDSException,
+    WaitSet,
+    ReadCondition,
+    SampleState,
+    InstanceState,
+    ViewState,
+)
 from .domain import DomainParticipant
 from .topic import Topic
 from .internal import c_call, dds_c_t, InvalidSample
 from .qos import _CQos, Qos, LimitedScopeQos, SubscriberQos, DataReaderQos
 from .util import duration
 
-from cyclonedds._clayer import ddspy_read, ddspy_take, ddspy_read_handle, ddspy_take_handle, ddspy_lookup_instance
+from cyclonedds._clayer import (
+    ddspy_read,
+    ddspy_take,
+    ddspy_read_handle,
+    ddspy_take_handle,
+    ddspy_lookup_instance,
+)
 
 
 if TYPE_CHECKING:
@@ -30,12 +54,15 @@ if TYPE_CHECKING:
 
 class Subscriber(Entity):
     def __init__(
-            self,
-            domain_participant: 'cyclonedds.domain.DomainParticipant',
-            qos: Optional[Qos] = None,
-            listener: Optional[Listener] = None):
+        self,
+        domain_participant: "cyclonedds.domain.DomainParticipant",
+        qos: Optional[Qos] = None,
+        listener: Optional[Listener] = None,
+    ):
         if not isinstance(domain_participant, DomainParticipant):
-            raise TypeError(f"{domain_participant} is not a cyclonedds.domain.DomainParticipant.")
+            raise TypeError(
+                f"{domain_participant} is not a cyclonedds.domain.DomainParticipant."
+            )
 
         if qos is not None:
             if isinstance(qos, LimitedScopeQos) and not isinstance(qos, SubscriberQos):
@@ -51,11 +78,9 @@ class Subscriber(Entity):
         try:
             super().__init__(
                 self._create_subscriber(
-                    domain_participant._ref,
-                    cqos,
-                    listener._ref if listener else None
+                    domain_participant._ref, cqos, listener._ref if listener else None
                 ),
-                listener=listener
+                listener=listener,
             )
         finally:
             if cqos:
@@ -69,8 +94,12 @@ class Subscriber(Entity):
             raise DDSException(ret, f"Occurred while reading data in {repr(self)}")
 
     @c_call("dds_create_subscriber")
-    def _create_subscriber(self, domain_participant: dds_c_t.entity, qos: dds_c_t.qos_p,
-                           listener: dds_c_t.listener_p) -> dds_c_t.entity:
+    def _create_subscriber(
+        self,
+        domain_participant: dds_c_t.entity,
+        qos: dds_c_t.qos_p,
+        listener: dds_c_t.listener_p,
+    ) -> dds_c_t.entity:
         pass
 
     @c_call("dds_notify_readers")
@@ -78,18 +107,21 @@ class Subscriber(Entity):
         pass
 
 
-_T = TypeVar('_T')
+_T = TypeVar("_T")
+
 
 class DataReader(Entity, Generic[_T]):
-    """Subscribe to a topic and read/take the data published to it.
-    """
+    """Subscribe to a topic and read/take the data published to it."""
 
     def __init__(
-            self,
-            subscriber_or_participant: Union['cyclonedds.sub.Subscriber', 'cyclonedds.domain.DomainParticipant'],
-            topic: Topic[_T],
-            qos: Optional[Qos] = None,
-            listener: Optional[Listener] = None):
+        self,
+        subscriber_or_participant: Union[
+            "cyclonedds.sub.Subscriber", "cyclonedds.domain.DomainParticipant"
+        ],
+        topic: Topic[_T],
+        qos: Optional[Qos] = None,
+        listener: Optional[Listener] = None,
+    ):
         """Initialize the DataReader
 
         Parameters
@@ -107,8 +139,10 @@ class DataReader(Entity, Generic[_T]):
             Optionally supply a Listener.
         """
         if not isinstance(subscriber_or_participant, (Subscriber, DomainParticipant)):
-            raise TypeError(f"{subscriber_or_participant} is not a cyclonedds.domain.DomainParticipant"
-                            " or cyclonedds.sub.Subscriber.")
+            raise TypeError(
+                f"{subscriber_or_participant} is not a cyclonedds.domain.DomainParticipant"
+                " or cyclonedds.sub.Subscriber."
+            )
 
         if not isinstance(topic, Topic):
             raise TypeError(f"{topic} is not a cyclonedds.topic.Topic.")
@@ -130,9 +164,9 @@ class DataReader(Entity, Generic[_T]):
                     subscriber_or_participant._ref,
                     topic._ref,
                     cqos,
-                    listener._ref if listener else None
+                    listener._ref if listener else None,
                 ),
-                listener=listener
+                listener=listener,
             )
         finally:
             if cqos:
@@ -146,7 +180,9 @@ class DataReader(Entity, Generic[_T]):
     def topic(self) -> Topic[_T]:
         return self._topic
 
-    def read(self, N: int = 1, condition: Entity = None, instance_handle: int = None) -> List[_T]:
+    def read(
+        self, N: int = 1, condition: Entity = None, instance_handle: int = None
+    ) -> List[_T]:
         """Read a maximum of N samples, non-blocking. Optionally use a read/query-condition to select which samples
         you are interested in.
 
@@ -163,7 +199,9 @@ class DataReader(Entity, Generic[_T]):
             If any error code is returned by the DDS API it is converted into an exception.
         """
         if instance_handle is not None:
-            ret = ddspy_read_handle(condition._ref if condition else self._ref, N, instance_handle)
+            ret = ddspy_read_handle(
+                condition._ref if condition else self._ref, N, instance_handle
+            )
         else:
             ret = ddspy_read(condition._ref if condition else self._ref, N)
 
@@ -179,7 +217,9 @@ class DataReader(Entity, Generic[_T]):
                 samples.append(InvalidSample(data, info))
         return samples
 
-    def take(self, N: int = 1, condition: Entity = None, instance_handle: int = None) -> List[_T]:
+    def take(
+        self, N: int = 1, condition: Entity = None, instance_handle: int = None
+    ) -> List[_T]:
         """Take a maximum of N samples, non-blocking. Optionally use a read/query-condition to select which samples
         you are interested in.
 
@@ -196,7 +236,9 @@ class DataReader(Entity, Generic[_T]):
             If any error code is returned by the DDS API it is converted into an exception.
         """
         if instance_handle is not None:
-            ret = ddspy_take_handle(condition._ref if condition else self._ref, N, instance_handle)
+            ret = ddspy_take_handle(
+                condition._ref if condition else self._ref, N, instance_handle
+            )
         else:
             ret = ddspy_take(condition._ref if condition else self._ref, N)
 
@@ -220,8 +262,9 @@ class DataReader(Entity, Generic[_T]):
         DDSException
             If any error code is returned by the DDS API it is converted into an exception.
         """
-        self._next_condition = self._next_condition or \
-            ReadCondition(self, ViewState.Any | SampleState.NotRead | InstanceState.Alive)
+        self._next_condition = self._next_condition or ReadCondition(
+            self, ViewState.Any | SampleState.NotRead | InstanceState.Alive
+        )
         samples = self.read(condition=self._next_condition)
         if samples:
             return samples[0]
@@ -235,14 +278,17 @@ class DataReader(Entity, Generic[_T]):
         DDSException
             If any error code is returned by the DDS API it is converted into an exception.
         """
-        self._next_condition = self._next_condition or \
-            ReadCondition(self, ViewState.Any | SampleState.NotRead | InstanceState.Alive)
+        self._next_condition = self._next_condition or ReadCondition(
+            self, ViewState.Any | SampleState.NotRead | InstanceState.Alive
+        )
         samples = self.take(condition=self._next_condition)
         if samples:
             return samples[0]
         return None
 
-    def read_iter(self, condition=None, timeout: int = None) -> Generator[_T, None, None]:
+    def read_iter(
+        self, condition=None, timeout: int = None
+    ) -> Generator[_T, None, None]:
         """Shortcut method to iterate reading samples. Iteration will stop once the timeout you supply expires.
         Every time a sample is received the timeout is reset.
 
@@ -252,7 +298,9 @@ class DataReader(Entity, Generic[_T]):
             If any error code is returned by the DDS API it is converted into an exception.
         """
         waitset = WaitSet(self.participant)
-        condition = condition or ReadCondition(self, ViewState.Any | InstanceState.Alive | SampleState.NotRead)
+        condition = condition or ReadCondition(
+            self, ViewState.Any | InstanceState.Alive | SampleState.NotRead
+        )
         waitset.attach(condition)
         timeout = timeout or duration(weeks=99999)
 
@@ -272,7 +320,9 @@ class DataReader(Entity, Generic[_T]):
             raise TimeoutError()
         return sample
 
-    def take_iter(self, condition=None, timeout: int = None) -> Generator[_T, None, None]:
+    def take_iter(
+        self, condition=None, timeout: int = None
+    ) -> Generator[_T, None, None]:
         """Shortcut method to iterate taking samples. Iteration will stop once the timeout you supply expires.
         Every time a sample is received the timeout is reset.
 
@@ -282,7 +332,9 @@ class DataReader(Entity, Generic[_T]):
             If any error code is returned by the DDS API it is converted into an exception.
         """
         waitset = WaitSet(self.participant)
-        condition = condition or ReadCondition(self, ViewState.Any | InstanceState.Alive | SampleState.NotRead)
+        condition = condition or ReadCondition(
+            self, ViewState.Any | InstanceState.Alive | SampleState.NotRead
+        )
         waitset.attach(condition)
         timeout = timeout or duration(weeks=99999)
 
@@ -302,7 +354,9 @@ class DataReader(Entity, Generic[_T]):
             raise TimeoutError()
         return sample
 
-    async def read_aiter(self, condition=None, timeout: int = None) -> AsyncGenerator[_T, None]:
+    async def read_aiter(
+        self, condition=None, timeout: int = None
+    ) -> AsyncGenerator[_T, None]:
         """Shortcut method to asycn iterate reading samples. Iteration will stop once the timeout you supply expires.
         Every time a sample is received the timeout is reset.
 
@@ -312,7 +366,9 @@ class DataReader(Entity, Generic[_T]):
             If any error code is returned by the DDS API it is converted into an exception.
         """
         waitset = WaitSet(self.participant)
-        condition = condition or ReadCondition(self, ViewState.Any | InstanceState.Alive | SampleState.NotRead)
+        condition = condition or ReadCondition(
+            self, ViewState.Any | InstanceState.Alive | SampleState.NotRead
+        )
         waitset.attach(condition)
         timeout = timeout or duration(weeks=99999)
 
@@ -328,7 +384,9 @@ class DataReader(Entity, Generic[_T]):
                 if result == 0:
                     break
 
-    async def take_aiter(self, condition=None, timeout: int = None) -> AsyncGenerator[_T, None]:
+    async def take_aiter(
+        self, condition=None, timeout: int = None
+    ) -> AsyncGenerator[_T, None]:
         """Shortcut method to asycn iterate taking samples. Iteration will stop once the timeout you supply expires.
         Every time a sample is received the timeout is reset.
 
@@ -338,7 +396,9 @@ class DataReader(Entity, Generic[_T]):
             If any error code is returned by the DDS API it is converted into an exception.
         """
         waitset = WaitSet(self.participant)
-        condition = condition or ReadCondition(self, ViewState.Any | InstanceState.Alive | SampleState.NotRead)
+        condition = condition or ReadCondition(
+            self, ViewState.Any | InstanceState.Alive | SampleState.NotRead
+        )
         waitset.attach(condition)
         timeout = timeout or duration(weeks=99999)
 
@@ -361,23 +421,34 @@ class DataReader(Entity, Generic[_T]):
             return True
         elif ret == DDSException.DDS_RETCODE_TIMEOUT:
             return False
-        raise DDSException(ret, f"Occured while waiting for historical data in {repr(self)}")
+        raise DDSException(
+            ret, f"Occured while waiting for historical data in {repr(self)}"
+        )
 
     def lookup_instance(self, sample: _T) -> Optional[int]:
         ret = ddspy_lookup_instance(self._ref, sample.serialize())
         if ret < 0:
-            raise DDSException(ret, f"Occurred while lookup up instance from {repr(self)}")
+            raise DDSException(
+                ret, f"Occurred while lookup up instance from {repr(self)}"
+            )
         if ret == 0:
             return None
         return ret
 
     @c_call("dds_create_reader")
-    def _create_reader(self, subscriber: dds_c_t.entity, topic: dds_c_t.entity, qos: dds_c_t.qos_p,
-                       listener: dds_c_t.listener_p) -> dds_c_t.entity:
+    def _create_reader(
+        self,
+        subscriber: dds_c_t.entity,
+        topic: dds_c_t.entity,
+        qos: dds_c_t.qos_p,
+        listener: dds_c_t.listener_p,
+    ) -> dds_c_t.entity:
         pass
 
     @c_call("dds_reader_wait_for_historical_data")
-    def _wait_for_historical_data(self, reader: dds_c_t.entity, max_wait: dds_c_t.duration) -> dds_c_t.returnv:
+    def _wait_for_historical_data(
+        self, reader: dds_c_t.entity, max_wait: dds_c_t.duration
+    ) -> dds_c_t.returnv:
         pass
 
 

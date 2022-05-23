@@ -10,7 +10,8 @@
  * SPDX-License-Identifier: EPL-2.0 OR BSD-3-Clause
 """
 
-class EntityQosMapper():
+
+class EntityQosMapper:
     topic = {
         "Policy.Deadline",
         "Policy.DestinationOrder",
@@ -25,14 +26,14 @@ class EntityQosMapper():
         "Policy.Reliability",
         "Policy.ResourceLimits",
         "Policy.Topicdata",
-        "Policy.TransportPriority"
+        "Policy.TransportPriority",
     }
 
     pubsub = {
         "Policy.Groupdata",
         "Policy.IgnoreLocal",
         "Policy.Partition",
-        "Policy.PresentationAccessScope"
+        "Policy.PresentationAccessScope",
     }
 
     writer = {
@@ -51,7 +52,7 @@ class EntityQosMapper():
         "Policy.ResourceLimits",
         "Policy.TransportPriority",
         "Policy.Userdata",
-        "Policy.WriterDataLifecycle"
+        "Policy.WriterDataLifecycle",
     }
 
     reader = {
@@ -67,5 +68,5 @@ class EntityQosMapper():
         "Policy.Reliability",
         "Policy.ResourceLimits",
         "Policy.TimeBasedFilter",
-        "Policy.Userdata"
+        "Policy.Userdata",
     }
