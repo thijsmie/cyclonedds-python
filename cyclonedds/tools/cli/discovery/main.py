@@ -150,6 +150,7 @@ def ps_discovery(
     appname_get = core.Policy.Property("__ProcessName", "")
     pid_get = core.Policy.Property("__Pid", "")
     address_get = core.Policy.Property("__NetworkAddresses", "")
+    debugmonitor_get = core.Policy.Property("__DebugMonitor", "")
 
     start = datetime.now()
     end = start + runtime
@@ -174,6 +175,11 @@ def ps_discovery(
                 if p.qos[address_get] is not None
                 else "Unknown"
             )
+            debugmonitor = (
+                p.qos[debugmonitor_get].value
+                if p.qos[debugmonitor_get] is not None
+                else None
+            )
 
             key = f"{hostname}.{appname}.{pid}"
             name = (
@@ -197,6 +203,7 @@ def ps_discovery(
                     appname=appname,
                     pid=pid,
                     addresses=address,
+                    debugmonitor=debugmonitor,
                     participants=[participant],
                 )
 

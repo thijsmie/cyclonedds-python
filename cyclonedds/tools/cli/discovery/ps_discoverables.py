@@ -32,6 +32,7 @@ class PApplication:
     appname: str
     pid: str
     addresses: str
+    debugmonitor: Optional[str]
     participants: List["PParticipant"]
 
     def row(self) -> Sequence[RenderResult]:
