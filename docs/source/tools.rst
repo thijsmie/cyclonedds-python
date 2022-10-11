@@ -77,14 +77,3 @@ The ``performance`` subcommand is a nicer frontend to ``ddsperf`` with four mode
 .. image:: static/images/cyclonedds-performance-subscribe-demo.svg
     :alt: ``cyclonedds performance --duration 21s --render-output-once-on-exit --force-color-mode subscribe --triggering-mode waitset``
 
-
-Legacy tools
-^^^^^^^^^^^^
-
-There are two more tools in the Python repository which are scheduled for removal as soon as their full feature set is available using the main command line tool.
-
-.. toctree::
-    :maxdepth: 1
-    :glob:
-
-    tools.*

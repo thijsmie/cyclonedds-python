@@ -1,6 +1,6 @@
 import uuid
 from dataclasses import dataclass, field
-from typing import List, Optional, Sequence, Set
+from typing import List, Optional, Sequence, Set, Dict
 
 from rich.console import Console, ConsoleOptions, RenderResult
 from rich.table import Table
@@ -34,10 +34,13 @@ class PApplication:
     addresses: str
     participants: List["PParticipant"]
 
-    def row(self) -> Sequence[RenderResult]:
-        topics = [
+    def topics(self) -> Sequence[str]:
+        return [
             topic for topic in set().union(*(p.topics for p in self.participants))
         ]
+
+    def row(self) -> Sequence[RenderResult]:
+        topics = self.topics()
 
         if not topics:
             return None
@@ -49,6 +52,15 @@ class PApplication:
             "[bold magenta]" + "\n".join(str(p) for p in self.participants),
             "[bold bright_green]" + "\n".join(topics),
         )
+
+    def asdict(self) -> Dict[str, str]:
+        return {
+            "Host": self.hostname,
+            "Application": self.appname,
+            "Pid": self.pid,
+            "Participants": ';'.join((str(p) for p in self.participants)),
+            "Topics": ';'.join(self.topics())
+        }
 
 
 @dataclass

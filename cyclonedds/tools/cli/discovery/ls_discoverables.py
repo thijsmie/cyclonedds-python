@@ -42,6 +42,10 @@ class DParticipant(Discoverable):
             return self.sample.qos[Policy.EntityName].name
         return None
 
+    def fullname(self):
+        name = self.name()
+        return f"{name}({self.sample.key})" if name else f"{self.sample.key}"
+
     def __rich_console__(
         self, console: Console, options: ConsoleOptions
     ) -> RenderResult:

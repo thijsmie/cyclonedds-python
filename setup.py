@@ -135,8 +135,6 @@ setup(
     },
     entry_points={
         "console_scripts": [
-            "ddsls=cyclonedds.tools.ddsls:command",
-            "pubsub=cyclonedds.tools.pubsub:command",
             "cyclonedds=cyclonedds.tools.cli.main:cli"
         ],
     },
