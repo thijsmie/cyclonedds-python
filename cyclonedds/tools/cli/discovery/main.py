@@ -1,8 +1,10 @@
 from dataclasses import dataclass
+import json
 import time
 import re
 from typing import List
 from cyclonedds import core, domain, builtin, dynamic, util, internal
+from urllib.request import urlopen
 from datetime import datetime, timedelta
 from collections import defaultdict
 
@@ -11,6 +13,7 @@ from ..idl import IdlType
 from .ls_discoverables import DParticipant, DTopic, DPubSub
 from .ps_discoverables import PApplication, PParticipant, PSystem
 from .type_discoverables import DiscoveredType, TypeDiscoveryData
+from .whc_discoverables import WApplication, WSystem
 
 
 def ls_discovery(
@@ -330,4 +333,71 @@ def type_discovery(
         discovered_type.nested_dtypes = all_nested_datatypes
 
     live.result = discovery_data
+    live.delivered = True
+
+
+
+def whc_discovery(
+    live: LiveData, domain_id: int, runtime: timedelta, topic: str
+):
+    dp = domain.DomainParticipant(domain_id)
+
+    rdp = builtin.BuiltinDataReader(dp, builtin.BuiltinTopicDcpsParticipant)
+    rcp = core.ReadCondition(
+        rdp, core.SampleState.NotRead | core.ViewState.Any | core.InstanceState.Alive
+    )
+
+    applications = {}
+    participants = {}
+
+    hostname_get = core.Policy.Property("__Hostname", "")
+    appname_get = core.Policy.Property("__ProcessName", "")
+    pid_get = core.Policy.Property("__Pid", "")
+    debug_get = core.Policy.Property("__DebugMonitor", "")
+
+    start = datetime.now()
+    end = start + runtime
+    while datetime.now() < end and not live.terminate:
+        for p in rdp.take(N=20, condition=rcp):
+            if p.key == dp.guid:
+                continue
+
+            hostname = (
+                p.qos[hostname_get].value
+                if p.qos[hostname_get] is not None
+                else "Unknown"
+            )
+            appname = (
+                p.qos[appname_get].value
+                if p.qos[appname_get] is not None
+                else "Unknown"
+            )
+            pid = p.qos[pid_get].value if p.qos[pid_get] is not None else "Unknown"
+            debug_monitor = p.qos[debug_get].value if p.qos[debug_get] is not None else None
+
+            key = f"{hostname}.{appname}.{pid}"
+            live.entities += 1
+
+            if key not in applications:
+                applications[key] = WApplication(
+                    hostname=hostname,
+                    appname=appname,
+                    pid=pid,
+                    debug_monitor=debug_monitor
+                )
+
+        # yield thread
+        time.sleep(0.01)
+
+    for app in applications.values():
+        if app.debug_monitor is None:
+            continue
+
+        try:
+            with urlopen(app.debug_monitor.replace("tcp/", "http://"), timeout=2.0) as response:
+                app.data = json.load(response)
+        except:
+            app.data = {"error": "Faulty response"}
+
+    live.result = WSystem(list(applications.values()))
     live.delivered = True
