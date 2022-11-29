@@ -97,7 +97,8 @@ class FuzzingConfig:
             idl_file: Optional[str] = None,
             typenames: Optional[str] = None,
             skip_types: int = 0,
-            mutation_failure_fatal: bool = False
+            mutation_failure_fatal: bool = False,
+            max_total_time: float = -1.0
         ) -> None:
         self.num_types: int = num_types
         self.num_samples: int = num_samples
@@ -107,3 +108,4 @@ class FuzzingConfig:
         self.typenames: Optional[List[str]] = None if typenames is None else typenames.split(',')
         self.skip_types: int = skip_types
         self.mutation_failure_fatal: bool = mutation_failure_fatal
+        self.max_total_time: float = max_total_time

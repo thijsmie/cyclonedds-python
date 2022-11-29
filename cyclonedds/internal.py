@@ -55,6 +55,7 @@ def _loader_cyclonedds_home_gen(name):
         if "CYCLONEDDS_HOME" not in os.environ:
             return None
 
+        os.add_dll_directory(os.environ["CYCLONEDDS_HOME"])
         return _load(os.path.join(os.environ["CYCLONEDDS_HOME"], name))
     return _loader_cyclonedds_home
 

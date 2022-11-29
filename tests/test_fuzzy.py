@@ -1,5 +1,6 @@
 import sys
 import pytest
+from datetime import datetime
 
 from support_modules.test_tools.fixtures import FuzzingConfig
 
@@ -22,9 +23,15 @@ def test_fuzzing_types(fuzzing_config: FuzzingConfig):
     log = FileStream(sys.stdout)
     all_succeeded = True
 
+    start_time = datetime.now()
+
     for i, typename in enumerate(ctx.topic_type_names):
         if i < fuzzing_config.skip_types:
-            log << f"Testing {typename}(skipped):" << log.endl
+            log << f"Not testing {typename} (skipped):" << log.endl
+            continue
+
+        if fuzzing_config.max_total_time > 0 and (datetime.now() - start_time) > fuzzing_config.max_total_time:
+            log << f"Not testing {typename} (skipped due to runtime limit reached):" << log.endl
             continue
 
         typelog = Stream()
