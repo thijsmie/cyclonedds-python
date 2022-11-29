@@ -395,6 +395,17 @@ class XTBuilder:
             _ctype = toscan.pop()
             my_node_name = _ctype.__idl_typename__.replace('.', '::')
 
+            if isclass(_ctype) and issubclass(_ctype, IdlStruct):
+                # get_extended_type_hints will not check if this struct inherits from something
+                for v in _ctype.mro():
+                    if isclass(v) and issubclass(v, IdlStruct) and not v == IdlStruct and not v == _ctype:
+                        scan_node_name = v.__idl_typename__.replace('.', '::')
+                        if scan_node_name not in graph:
+                            graph[scan_node_name] = set()
+                            graph_types[scan_node_name] = v
+
+                        graph[my_node_name].add(scan_node_name)
+
             if isclass(_ctype) and issubclass(_ctype, IdlUnion):
                 # get_extended_type_hints will not inspect the discriminator, and that can be an enum
                 discriminator_type = _ctype.__idl_discriminator__
