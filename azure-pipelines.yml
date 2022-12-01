@@ -90,7 +90,7 @@ jobs:
   - download: current
     artifact: cyclone-$(Agent.OS)-$(build_type)
   - pwsh: |
-      Write-Host "###vso[task.setvariable variable=PATH;]$(Pipeline.Workspace)\\cyclone-$(Agent.OS)-$(build_type)\\bin;${env:PATH}"
+      Write-Host "###vso[task.setvariable variable=PATH;]$(Pipeline.Workspace)\cyclone-$(Agent.OS)-$(build_type)\bin;${env:PATH}"
       Write-Host "###vso[task.setvariable variable=CYCLONEDDS_HOME;]$(Pipeline.Workspace)\cyclone-$(Agent.OS)-$(build_type)"
       Write-Host "###vso[task.setvariable variable=CMAKE_PREFIX_PATH;]$(Pipeline.Workspace)\cyclone-$(Agent.OS)-$(build_type)"
     condition: eq(variables['Agent.OS'], 'Windows_NT')

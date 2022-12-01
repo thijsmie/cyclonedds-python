@@ -11,6 +11,7 @@
 """
 
 import os
+import sys
 import uuid
 import inspect
 import platform
@@ -31,9 +32,21 @@ class CycloneDDSLoaderException(Exception):
 def _load(path):
     """Most basic loader, return the loaded DLL on path"""
     try:
-        library = ct.CDLL(path)
-    except OSError:
-        raise CycloneDDSLoaderException(f"Failed to load CycloneDDS library from {path}")
+        if sys.version_info < (3, 8):
+            library = ct.CDLL(path)
+        else:
+            library = ct.CDLL(path, winmode=1)
+    except OSError as e:
+        print(os.environ)
+        try:
+            print(os.listdir(r"D:\a\1\cyclone-Windows_NT-Debug"))
+        except:
+            pass
+        try:
+            print(os.listdir(r"D:\a\1\cyclone-Windows_NT-Debug\bin"))
+        except:
+            pass
+        raise CycloneDDSLoaderException(f"Failed to load CycloneDDS library from {path} due to error {e}")
     if not library:
         raise CycloneDDSLoaderException(f"Failed to load CycloneDDS library from {path}")
     return library
@@ -55,7 +68,6 @@ def _loader_cyclonedds_home_gen(name):
         if "CYCLONEDDS_HOME" not in os.environ:
             return None
 
-        os.add_dll_directory(os.environ["CYCLONEDDS_HOME"])
         return _load(os.path.join(os.environ["CYCLONEDDS_HOME"], name))
     return _loader_cyclonedds_home
 
